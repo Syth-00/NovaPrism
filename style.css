@@ -426,3 +426,141 @@ tbody tr:last-child td {
   table { font-size: 12px; }
   thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
 }
+
+/* ---------- Sidebar layout (dashboard) ---------- */
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  gap: 20px;
+  padding: 20px clamp(14px, 3vw, 32px);
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar .brand {
+  margin-bottom: 4px;
+  padding: 0 6px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
+.nav-item.active svg {
+  color: var(--accent-2);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.view { display: none; flex-direction: column; gap: 20px; }
+.view.active { display: flex; }
+
+/* ---------- Data Login (credential manager) ---------- */
+
+.add-account-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.add-account-form .field { margin-bottom: 0; }
+
+@media (max-width: 720px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; position: static; flex-direction: row; align-items: center; justify-content: space-between; }
+  .sidebar .brand { margin-bottom: 0; }
+  .nav-list { flex-direction: row; }
+  .add-account-form { grid-template-columns: 1fr; }
+}
+
+.pw-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+.pw-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.pw-toggle:hover {
+  color: var(--accent-2);
+  background: rgba(255,255,255,0.05);
+}
+
+.btn-danger-ghost {
+  background: rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.25);
+  color: var(--danger);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-danger-ghost:hover {
+  background: rgba(251, 113, 133, 0.18);
+}
