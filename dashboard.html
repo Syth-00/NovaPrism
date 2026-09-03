@@ -10,72 +10,149 @@
 </head>
 <body>
 
-<div class="dash-wrap">
+<div class="app-shell">
 
-  <div class="glass topbar">
+  <!-- Sidebar -->
+  <div class="glass sidebar">
     <div class="brand">
       <span class="brand-dot"></span>
       <span class="brand-name">NovaPrism</span>
     </div>
-    <div class="user-chip">
-      <div class="avatar" id="avatarInitial">A</div>
-      <span id="welcomeText">Halo, admin</span>
-      <button class="btn-ghost" id="logoutBtn">Keluar</button>
-    </div>
-  </div>
 
-  <div class="stat-row">
-    <div class="glass stat-card">
-      <div class="label">Total percobaan login</div>
-      <div class="value" id="statTotal">0</div>
-    </div>
-    <div class="glass stat-card">
-      <div class="label">Login berhasil</div>
-      <div class="value accent" id="statSuccess">0</div>
-    </div>
-    <div class="glass stat-card">
-      <div class="label">Login gagal</div>
-      <div class="value" id="statFailed">0</div>
-    </div>
-    <div class="glass stat-card">
-      <div class="label">Login terakhir</div>
-      <div class="value" id="statLast" style="font-size:16px;">—</div>
-    </div>
-  </div>
-
-  <div class="glass panel">
-    <div class="panel-head">
-      <div>
-        <h2>Riwayat login</h2>
-        <p>Data ini tersimpan di browser kamu (localStorage) sebagai contoh sementara.</p>
+    <div class="nav-list">
+      <div class="nav-item active" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        <span>Beranda</span>
       </div>
-      <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
+      <div class="nav-item" data-view="datalogin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4.5"/><path d="M11.5 9 20 9m0 0v3.5M20 9h-3.2"/></svg>
+        <span>Data Login</span>
+      </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Waktu</th>
-          <th>Perangkat</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="logTableBody">
-        <!-- diisi oleh script.js -->
-      </tbody>
-    </table>
-    <div class="empty-state" id="emptyState" style="display:none;">
-      Belum ada data login yang tercatat.
+    <div style="margin-top:auto;">
+      <button class="btn-ghost" id="logoutBtn" style="width:100%;">Keluar</button>
     </div>
   </div>
 
+  <!-- Main content -->
+  <div class="main-content">
+
+    <div class="glass topbar">
+      <div class="user-chip">
+        <div class="avatar" id="avatarInitial">?</div>
+        <span id="welcomeText">Halo</span>
+      </div>
+      <span class="hint" style="margin:0; padding:6px 12px;" id="pageLabel">Beranda</span>
+    </div>
+
+    <!-- View: Beranda (default, sama seperti sebelumnya) -->
+    <div class="view active" id="view-home">
+      <div class="stat-row">
+        <div class="glass stat-card">
+          <div class="label">Total percobaan login</div>
+          <div class="value" id="statTotal">0</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="label">Login berhasil</div>
+          <div class="value accent" id="statSuccess">0</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="label">Login gagal</div>
+          <div class="value" id="statFailed">0</div>
+        </div>
+        <div class="glass stat-card">
+          <div class="label">Login terakhir</div>
+          <div class="value" id="statLast" style="font-size:16px;">—</div>
+        </div>
+      </div>
+
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Riwayat login</h2>
+            <p>Data ini tersimpan di browser kamu (localStorage) sebagai contoh sementara.</p>
+          </div>
+          <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Email / ID</th>
+              <th>Waktu</th>
+              <th>Perangkat</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          Belum ada data login yang tercatat.
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Data Login (kelola akun yang boleh login) -->
+    <div class="view" id="view-datalogin">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Data Login</h2>
+            <p>Akun di bawah ini yang dipakai untuk masuk ke halaman login. Tambah, hapus, atau kelola sendiri di sini.</p>
+          </div>
+        </div>
+
+        <form class="add-account-form" id="addAccountForm">
+          <div class="field">
+            <label for="newEmail">Email / ID</label>
+            <input type="text" id="newEmail" placeholder="nama@email.com" required />
+          </div>
+          <div class="field">
+            <label for="newPassword">Password</label>
+            <input type="text" id="newPassword" placeholder="Buat password" required />
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top:0; width:auto; padding:12px 20px;">Tambah</button>
+        </form>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Email / ID</th>
+              <th>Password</th>
+              <th>Dibuat</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="accountTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="accountEmptyState" style="display:none;">
+          Belum ada akun. Tambahkan akun pertama kamu di atas.
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script src="script.js"></script>
 <script>
   requireLogin();
   renderDashboard();
+  renderAccounts();
+
+  // Navigasi sidebar
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      item.classList.add("active");
+      const viewId = "view-" + item.dataset.view;
+      document.getElementById(viewId).classList.add("active");
+      document.getElementById("pageLabel").textContent =
+        item.dataset.view === "home" ? "Beranda" : "Data Login";
+    });
+  });
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
     logout();
@@ -86,6 +163,17 @@
       clearLoginRecords();
       renderDashboard();
     }
+  });
+
+  document.getElementById("addAccountForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const email = document.getElementById("newEmail").value.trim();
+    const password = document.getElementById("newPassword").value;
+    if (!email || !password) return;
+    addAccount(email, password);
+    document.getElementById("newEmail").value = "";
+    document.getElementById("newPassword").value = "";
+    renderAccounts();
   });
 </script>
 </body>
