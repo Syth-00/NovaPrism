@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaPrism</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="dash-wrap">
+
+  <div class="glass topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">NovaPrism</span>
+    </div>
+    <div class="user-chip">
+      <div class="avatar" id="avatarInitial">A</div>
+      <span id="welcomeText">Halo, admin</span>
+      <button class="btn-ghost" id="logoutBtn">Keluar</button>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="glass stat-card">
+      <div class="label">Total percobaan login</div>
+      <div class="value" id="statTotal">0</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="label">Login berhasil</div>
+      <div class="value accent" id="statSuccess">0</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="label">Login gagal</div>
+      <div class="value" id="statFailed">0</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="label">Login terakhir</div>
+      <div class="value" id="statLast" style="font-size:16px;">—</div>
+    </div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head">
+      <div>
+        <h2>Riwayat login</h2>
+        <p>Data ini tersimpan di browser kamu (localStorage) sebagai contoh sementara.</p>
+      </div>
+      <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Waktu</th>
+          <th>Perangkat</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody">
+        <!-- diisi oleh script.js -->
+      </tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      Belum ada data login yang tercatat.
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+<script>
+  requireLogin();
+  renderDashboard();
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    logout();
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (confirm("Hapus semua riwayat login?")) {
+      clearLoginRecords();
+      renderDashboard();
+    }
+  });
+</script>
+</body>
+</html>
