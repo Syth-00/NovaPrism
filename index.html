@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pulse — Masuk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="glass login-card">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Pulse</span>
+    </div>
+
+    <h1>Selamat datang kembali</h1>
+    <p class="sub">Masuk untuk membuka dashboard aktivitas login kamu.</p>
+
+    <p class="error-msg" id="errorMsg">Username atau password salah.</p>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Masukkan username" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-primary">Masuk</button>
+    </form>
+
+    <div class="hint">
+      Demo akun: <strong>admin</strong> / <strong>admin123</strong><br/>
+      Ini masih autentikasi sisi-browser untuk contoh. Untuk login sungguhan, sambungkan ke Cloudflare Workers + database.
+    </div>
+
+    <div class="bg-picker">
+      Ganti background (URL gambar)
+      <input type="text" id="bgInput" placeholder="https://contoh.com/gambar.jpg" />
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
