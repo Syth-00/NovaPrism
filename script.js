@@ -1,20 +1,65 @@
 /* ============================================
-   PULSE — Logic sederhana untuk demo login & dashboard
-   Semua data disimpan di localStorage (sisi browser).
-   Ganti bagian AUTH ini dengan pemanggilan API/Cloudflare
-   Worker asli begitu backend-nya siap.
+   NOVAPRISM — Logic login & dashboard
+   Semua data (akun & riwayat) disimpan di localStorage
+   (sisi browser). Ganti bagian AUTH ini dengan pemanggilan
+   API/Cloudflare Worker asli begitu backend-nya siap.
    ============================================ */
 
 const STORAGE_KEYS = {
   session: "novaprism_session",
   records: "novaprism_login_records",
   bgImage: "novaprism_bg_image",
+  accounts: "novaprism_accounts",
 };
 
-// Kredensial demo. GANTI dengan verifikasi backend untuk produksi.
-const DEMO_USER = { username: "admin", password: "admin123" };
+// ---------- Akun (Data Login) ----------
 
-// ---------- Utilitas umum ----------
+function getAccounts() {
+  const raw = localStorage.getItem(STORAGE_KEYS.accounts);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function seedDefaultAccountIfNeeded() {
+  const existing = getAccounts();
+  if (existing === null) {
+    // Akun awal, BUKAN admin/admin123 — silakan ganti/hapus lewat menu "Data Login".
+    const defaultAccount = [{
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      email: "owner@novaprism.io",
+      password: "NovaPrism#2026",
+      createdAt: new Date().toISOString(),
+    }];
+    localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(defaultAccount));
+  }
+}
+seedDefaultAccountIfNeeded();
+
+function saveAccounts(accounts) {
+  localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
+}
+
+function addAccount(email, password) {
+  const accounts = getAccounts() || [];
+  accounts.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    email,
+    password,
+    createdAt: new Date().toISOString(),
+  });
+  saveAccounts(accounts);
+}
+
+function deleteAccount(id) {
+  const accounts = (getAccounts() || []).filter(a => a.id !== id);
+  saveAccounts(accounts);
+}
+
+function findAccount(email, password) {
+  const accounts = getAccounts() || [];
+  return accounts.find(a => a.email === email && a.password === password) || null;
+}
+
+// ---------- Riwayat login ----------
 
 function getRecords() {
   const raw = localStorage.getItem(STORAGE_KEYS.records);
@@ -81,21 +126,21 @@ const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
     const errorMsg = document.getElementById("errorMsg");
 
-    const success = username === DEMO_USER.username && password === DEMO_USER.password;
+    const matched = findAccount(email, password);
 
     saveRecord({
-      username: username || "(kosong)",
+      username: email || "(kosong)",
       time: new Date().toISOString(),
       device: detectDevice(),
-      status: success ? "success" : "failed",
+      status: matched ? "success" : "failed",
     });
 
-    if (success) {
-      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ username, loginAt: new Date().toISOString() }));
+    if (matched) {
+      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ email, loginAt: new Date().toISOString() }));
       window.location.href = "dashboard.html";
     } else {
       errorMsg.style.display = "block";
@@ -122,8 +167,8 @@ function renderDashboard() {
   const records = getRecords();
 
   if (session) {
-    document.getElementById("welcomeText").textContent = `Halo, ${session.username}`;
-    document.getElementById("avatarInitial").textContent = session.username.charAt(0).toUpperCase();
+    document.getElementById("welcomeText").textContent = `Halo, ${session.email}`;
+    document.getElementById("avatarInitial").textContent = session.email.charAt(0).toUpperCase();
   }
 
   const total = records.length;
@@ -154,6 +199,56 @@ function renderDashboard() {
       <td>${r.device}</td>
       <td><span class="status-pill ${r.status}"><span class="dot"></span>${r.status === "success" ? "Berhasil" : "Gagal"}</span></td>
     `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Render tabel Data Login ----------
+
+function renderAccounts() {
+  const tbody = document.getElementById("accountTableBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("accountEmptyState");
+  const accounts = getAccounts() || [];
+
+  tbody.innerHTML = "";
+
+  if (accounts.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  accounts.forEach(a => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${a.email}</td>
+      <td>
+        <span class="pw-cell">
+          <span class="pw-value" data-visible="false">••••••••</span>
+          <button type="button" class="pw-toggle">lihat</button>
+        </span>
+      </td>
+      <td>${formatTime(a.createdAt)}</td>
+      <td><button type="button" class="btn-danger-ghost" data-id="${a.id}">Hapus</button></td>
+    `;
+
+    const pwValueEl = tr.querySelector(".pw-value");
+    const pwToggleEl = tr.querySelector(".pw-toggle");
+    pwToggleEl.addEventListener("click", () => {
+      const visible = pwValueEl.dataset.visible === "true";
+      pwValueEl.textContent = visible ? "••••••••" : a.password;
+      pwValueEl.dataset.visible = String(!visible);
+      pwToggleEl.textContent = visible ? "lihat" : "sembunyikan";
+    });
+
+    tr.querySelector(".btn-danger-ghost").addEventListener("click", () => {
+      if (confirm(`Hapus akun ${a.email}?`)) {
+        deleteAccount(a.id);
+        renderAccounts();
+      }
+    });
+
     tbody.appendChild(tr);
   });
 }
