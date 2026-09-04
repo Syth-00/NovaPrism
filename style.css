@@ -564,3 +564,95 @@ tbody tr:last-child td {
 .btn-danger-ghost:hover {
   background: rgba(251, 113, 133, 0.18);
 }
+
+.btn-mini {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-mini:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.action-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Akses (badges & checkbox group) ---------- */
+
+.access-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 220px;
+}
+
+.access-badge {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  white-space: nowrap;
+}
+
+.access-badge.empty {
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  border-color: var(--glass-border);
+}
+
+.access-group-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.access-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.access-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.access-check:has(input:checked) {
+  border-color: rgba(192, 132, 252, 0.5);
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.access-check input {
+  accent-color: var(--accent);
+}
+
+.edit-access-row td {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 16px 12px;
+}
+
+.edit-access-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
