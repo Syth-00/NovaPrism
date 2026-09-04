@@ -115,11 +115,17 @@
           <button type="submit" class="btn-primary" style="margin-top:0; width:auto; padding:12px 20px;">Tambah</button>
         </form>
 
+        <div style="margin-bottom:22px;">
+          <div class="access-group-label">Akses menu untuk akun baru:</div>
+          <div class="access-checks" id="newAccessChecks"></div>
+        </div>
+
         <table>
           <thead>
             <tr>
               <th>Email / ID</th>
               <th>Password</th>
+              <th>Akses</th>
               <th>Dibuat</th>
               <th></th>
             </tr>
@@ -140,6 +146,7 @@
   requireLogin();
   renderDashboard();
   renderAccounts();
+  renderAddAccessChecks();
 
   // Navigasi sidebar
   document.querySelectorAll(".nav-item").forEach(item => {
@@ -153,6 +160,10 @@
         item.dataset.view === "home" ? "Beranda" : "Data Login";
     });
   });
+
+  // Baru diterapkan setelah listener klik sidebar siap, karena fungsi ini
+  // bisa memicu .click() untuk pindah ke menu pertama yang boleh diakses.
+  applyAccessControl();
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
     logout();
@@ -170,12 +181,22 @@
     const email = document.getElementById("newEmail").value.trim();
     const password = document.getElementById("newPassword").value;
     if (!email || !password) return;
-    addAccount(email, password);
+
+    const access = Array.from(
+      document.querySelectorAll("#newAccessChecks input[type='checkbox']:checked")
+    ).map(i => i.value);
+
+    if (access.length === 0) {
+      alert("Pilih minimal satu menu akses untuk akun ini.");
+      return;
+    }
+
+    addAccount(email, password, access);
     document.getElementById("newEmail").value = "";
     document.getElementById("newPassword").value = "";
+    renderAddAccessChecks();
     renderAccounts();
   });
 </script>
 </body>
 </html>
-
