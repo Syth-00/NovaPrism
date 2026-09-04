@@ -12,6 +12,18 @@ const STORAGE_KEYS = {
   accounts: "novaprism_accounts",
 };
 
+// Daftar menu yang tersedia di sidebar. Kalau nanti nambah menu baru di
+// dashboard.html, cukup daftarin di sini (key harus sama dengan data-view
+// pada elemen .nav-item) — otomatis muncul jadi pilihan akses.
+const MENU_CONFIG = [
+  { key: "home", label: "Beranda" },
+  { key: "datalogin", label: "Data Login" },
+];
+
+function allMenuKeys() {
+  return MENU_CONFIG.map(m => m.key);
+}
+
 // ---------- Akun (Data Login) ----------
 
 function getAccounts() {
@@ -19,14 +31,19 @@ function getAccounts() {
   return raw ? JSON.parse(raw) : null;
 }
 
+function getAccountByEmail(email) {
+  return (getAccounts() || []).find(a => a.email === email) || null;
+}
+
 function seedDefaultAccountIfNeeded() {
   const existing = getAccounts();
   if (existing === null) {
-    // Akun awal, BUKAN admin/admin123 — silakan ganti/hapus lewat menu "Data Login".
+    // Akun awal, akses penuh ke semua menu — silakan ganti/hapus lewat menu "Data Login".
     const defaultAccount = [{
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       email: "owner@novaprism.io",
       password: "NovaPrism#2026",
+      access: allMenuKeys(),
       createdAt: new Date().toISOString(),
     }];
     localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(defaultAccount));
@@ -38,15 +55,25 @@ function saveAccounts(accounts) {
   localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
 }
 
-function addAccount(email, password) {
+function addAccount(email, password, access) {
   const accounts = getAccounts() || [];
   accounts.unshift({
     id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
     email,
     password,
+    access: access && access.length ? access : ["home"],
     createdAt: new Date().toISOString(),
   });
   saveAccounts(accounts);
+}
+
+function updateAccountAccess(id, access) {
+  const accounts = getAccounts() || [];
+  const account = accounts.find(a => a.id === id);
+  if (account) {
+    account.access = access && access.length ? access : ["home"];
+    saveAccounts(accounts);
+  }
 }
 
 function deleteAccount(id) {
@@ -162,6 +189,37 @@ function logout() {
   window.location.href = "index.html";
 }
 
+// Sembunyikan menu sidebar yang ga termasuk akses akun yang sedang login,
+// dan pindah ke menu pertama yang boleh diakses kalau menu aktif ternyata
+// disembunyikan.
+function applyAccessControl() {
+  const session = JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || "null");
+  if (!session) return;
+
+  const account = getAccountByEmail(session.email);
+  if (!account) {
+    // Akun sudah dihapus dari Data Login tapi sesi masih tersimpan.
+    logout();
+    return;
+  }
+
+  const access = account.access && account.access.length ? account.access : ["home"];
+  let activeIsVisible = false;
+  let firstVisibleItem = null;
+
+  document.querySelectorAll(".nav-item").forEach(item => {
+    const key = item.dataset.view;
+    const allowed = access.includes(key);
+    item.style.display = allowed ? "" : "none";
+    if (allowed && !firstVisibleItem) firstVisibleItem = item;
+    if (allowed && item.classList.contains("active")) activeIsVisible = true;
+  });
+
+  if (!activeIsVisible && firstVisibleItem) {
+    firstVisibleItem.click();
+  }
+}
+
 function renderDashboard() {
   const session = JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || "null");
   const records = getRecords();
@@ -203,6 +261,24 @@ function renderDashboard() {
   });
 }
 
+// ---------- Checkbox akses (dipakai di form tambah & edit akun) ----------
+
+function accessCheckboxesHTML(selected) {
+  return MENU_CONFIG.map(m => `
+    <label class="access-check">
+      <input type="checkbox" value="${m.key}" ${selected.includes(m.key) ? "checked" : ""} />
+      <span>${m.label}</span>
+    </label>
+  `).join("");
+}
+
+function renderAddAccessChecks() {
+  const container = document.getElementById("newAccessChecks");
+  if (!container) return;
+  // Default: akun baru dicentang akses "Beranda" saja, biar admin sadar milih sendiri sisanya.
+  container.innerHTML = accessCheckboxesHTML(["home"]);
+}
+
 // ---------- Render tabel Data Login ----------
 
 function renderAccounts() {
@@ -220,6 +296,11 @@ function renderAccounts() {
   emptyState.style.display = "none";
 
   accounts.forEach(a => {
+    const access = a.access && a.access.length ? a.access : [];
+    const badgesHTML = access.length
+      ? MENU_CONFIG.filter(m => access.includes(m.key)).map(m => `<span class="access-badge">${m.label}</span>`).join("")
+      : `<span class="access-badge empty">Tidak ada akses</span>`;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.email}</td>
@@ -229,8 +310,14 @@ function renderAccounts() {
           <button type="button" class="pw-toggle">lihat</button>
         </span>
       </td>
+      <td><div class="access-badges">${badgesHTML}</div></td>
       <td>${formatTime(a.createdAt)}</td>
-      <td><button type="button" class="btn-danger-ghost" data-id="${a.id}">Hapus</button></td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-edit-id="${a.id}">Edit akses</button>
+          <button type="button" class="btn-danger-ghost" data-id="${a.id}">Hapus</button>
+        </div>
+      </td>
     `;
 
     const pwValueEl = tr.querySelector(".pw-value");
@@ -249,6 +336,52 @@ function renderAccounts() {
       }
     });
 
+    tr.querySelector("[data-edit-id]").addEventListener("click", () => {
+      toggleEditAccessRow(tr, a);
+    });
+
     tbody.appendChild(tr);
+  });
+}
+
+// Buka/tutup baris edit akses tepat di bawah baris akun yang diklik.
+// Hanya satu baris edit yang boleh terbuka dalam satu waktu.
+function toggleEditAccessRow(rowEl, account) {
+  const tbody = rowEl.parentElement;
+  const existing = tbody.querySelector(".edit-access-row");
+  const alreadyOpenForThis = existing && existing.dataset.forId === account.id;
+
+  if (existing) existing.remove();
+  if (alreadyOpenForThis) return;
+
+  const editRow = document.createElement("tr");
+  editRow.className = "edit-access-row";
+  editRow.dataset.forId = account.id;
+  editRow.innerHTML = `
+    <td colspan="5">
+      <div class="access-group-label">Atur menu yang boleh diakses <strong>${account.email}</strong>:</div>
+      <div class="access-checks" id="editAccessChecks-${account.id}">
+        ${accessCheckboxesHTML(account.access || [])}
+      </div>
+      <div class="edit-access-actions">
+        <button type="button" class="btn-mini" data-save-id="${account.id}">Simpan</button>
+        <button type="button" class="btn-ghost" data-cancel-id="${account.id}">Batal</button>
+      </div>
+    </td>
+  `;
+  rowEl.insertAdjacentElement("afterend", editRow);
+
+  editRow.querySelector("[data-save-id]").addEventListener("click", () => {
+    const checked = Array.from(editRow.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+    if (checked.length === 0) {
+      alert("Pilih minimal satu menu, kalau tidak akun ini ga bisa buka apa-apa setelah login.");
+      return;
+    }
+    updateAccountAccess(account.id, checked);
+    renderAccounts();
+  });
+
+  editRow.querySelector("[data-cancel-id]").addEventListener("click", () => {
+    editRow.remove();
   });
 }
