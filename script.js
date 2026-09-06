@@ -293,31 +293,33 @@ function searchRekening(rawInput) {
   const cache = getRekeningCache();
   const list = cache ? cache.list : [];
 
-  resultList.innerHTML = queries.map(q => {
-    const nq = normalizeForSearch(q);
-    const match = list.find(r =>
-      normalizeForSearch(r.nomor) === nq ||
-      normalizeForSearch(r.nomor).includes(nq) ||
-      normalizeForSearch(r.nama).includes(nq)
-    );
+  const matches = queries
+    .map(q => {
+      const nq = normalizeForSearch(q);
+      const match = list.find(r =>
+        normalizeForSearch(r.nomor) === nq ||
+        normalizeForSearch(r.nomor).includes(nq) ||
+        normalizeForSearch(r.nama).includes(nq)
+      );
+      return match ? { query: q, match } : null;
+    })
+    .filter(Boolean);
 
-    if (match) {
-      return `
-        <div class="rek-result-item found">
-          <span class="status-pill success"><span class="dot"></span>Ditemukan</span>
-          <div class="rek-result-detail">
-            <strong>${match.nama}</strong>
-            <span>${match.nomor}</span>
-          </div>
-          <div class="rek-result-query">dicari: "${q}"</div>
-        </div>`;
-    }
-    return `
-      <div class="rek-result-item not-found">
-        <span class="status-pill failed"><span class="dot"></span>Tidak ditemukan</span>
-        <div class="rek-result-query">dicari: "${q}"</div>
-      </div>`;
-  }).join("");
+  if (matches.length === 0) {
+    resultList.innerHTML = `<div class="empty-state">Tidak ada satu pun yang cocok dengan data di sheet.</div>`;
+    return;
+  }
+
+  resultList.innerHTML = matches.map(({ query, match }) => `
+    <div class="rek-result-item found">
+      <span class="status-pill success"><span class="dot"></span>Ditemukan</span>
+      <div class="rek-result-detail">
+        <strong>${match.nama}</strong>
+        <span>${match.nomor}</span>
+      </div>
+      <div class="rek-result-query">dicari: "${query}"</div>
+    </div>`
+  ).join("");
 }
 
 function requireLogin() {
