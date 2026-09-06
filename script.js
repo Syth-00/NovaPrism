@@ -281,6 +281,15 @@ function normalizeForSearch(s) {
   return (s || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
 }
 
+// Ambil deretan digit terpanjang dari sebuah baris — dipakai untuk kasus
+// baris campuran seperti "BCA Yesi Gusman 7621598108", di mana nomor
+// rekeningnya nempel bareng nama bank & nama pemilik.
+function extractLongestDigits(line) {
+  const matches = line.match(/\d{4,}/g);
+  if (!matches || matches.length === 0) return null;
+  return matches.reduce((a, b) => (b.length > a.length ? b : a), "");
+}
+
 function searchRekening(rawInput) {
   const resultList = document.getElementById("rekResultList");
   const queries = rawInput.split("\n").map(q => q.trim()).filter(Boolean);
@@ -295,12 +304,25 @@ function searchRekening(rawInput) {
 
   const matches = queries
     .map(q => {
-      const nq = normalizeForSearch(q);
-      const match = list.find(r =>
-        normalizeForSearch(r.nomor) === nq ||
-        normalizeForSearch(r.nomor).includes(nq) ||
-        normalizeForSearch(r.nama).includes(nq)
-      );
+      // Prioritas 1: cocokkan berdasarkan nomor rekening yang diekstrak dari baris
+      // (menangani baris campuran seperti "BCA Nama Pemilik 1234567890").
+      const digits = extractLongestDigits(q);
+      let match = null;
+      if (digits) {
+        const nDigits = normalizeForSearch(digits);
+        match = list.find(r => normalizeForSearch(r.nomor) === nDigits);
+      }
+
+      // Prioritas 2 (fallback): cocokkan seluruh baris sebagai nomor/nama.
+      if (!match) {
+        const nq = normalizeForSearch(q);
+        match = list.find(r =>
+          normalizeForSearch(r.nomor) === nq ||
+          (nq.length >= 4 && normalizeForSearch(r.nomor).includes(nq)) ||
+          (nq.length >= 3 && normalizeForSearch(r.nama).includes(nq))
+        );
+      }
+
       return match ? { query: q, match } : null;
     })
     .filter(Boolean);
