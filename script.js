@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   records: "novaprism_login_records",
   bgImage: "novaprism_bg_image",
   accounts: "novaprism_accounts",
+  rekening: "novaprism_rekening",
 };
 
 // Daftar menu yang tersedia di sidebar. Kalau nanti nambah menu baru di
@@ -18,7 +19,13 @@ const STORAGE_KEYS = {
 const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
   { key: "datalogin", label: "Data Login" },
+  { key: "rekening", label: "Cek Rekening" },
 ];
+
+function menuLabel(key) {
+  const found = MENU_CONFIG.find(m => m.key === key);
+  return found ? found.label : key;
+}
 
 function allMenuKeys() {
   return MENU_CONFIG.map(m => m.key);
@@ -176,6 +183,142 @@ if (loginForm) {
 }
 
 // ---------- Auth guard & dashboard (dashboard.html) ----------
+
+// ---------- Cek Rekening: sinkron dari Google Sheet ----------
+
+// Ganti sheetId/gid ini kalau kamu pindah ke spreadsheet atau tab lain.
+// gid dilihat dari URL sheet setelah "#gid=..." saat tab "CEK REK" sedang dibuka.
+const SHEET_CONFIG = {
+  sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE",
+  gid: "2056151193",
+};
+
+function sheetCsvUrl() {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/export?format=csv&gid=${SHEET_CONFIG.gid}`;
+}
+
+function getRekeningCache() {
+  const raw = localStorage.getItem(STORAGE_KEYS.rekening);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function saveRekeningCache(list) {
+  localStorage.setItem(STORAGE_KEYS.rekening, JSON.stringify({
+    list,
+    syncedAt: new Date().toISOString(),
+  }));
+}
+
+// Kolom A = nama rekening, kolom B = nomor rekening. Baris pertama dianggap
+// header (dilewati) kalau kolom B pada baris itu bukan berupa angka.
+function parseSheetCsvToRekening(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  const rows = lines.map(parseCsvLine);
+  if (rows.length === 0) return [];
+
+  const looksLikeHeader = rows[0][1] && !/\d/.test(rows[0][1]);
+  const dataRows = looksLikeHeader ? rows.slice(1) : rows;
+
+  return dataRows
+    .map(cols => ({ nama: (cols[0] || "").trim(), nomor: (cols[1] || "").trim() }))
+    .filter(r => r.nama || r.nomor);
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      result.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+async function syncRekeningFromSheet() {
+  const statusEl = document.getElementById("rekSyncStatus");
+  if (statusEl) {
+    statusEl.textContent = "Menyinkron data dari Google Sheet...";
+    statusEl.className = "rek-sync-status";
+  }
+  try {
+    const res = await fetch(sheetCsvUrl());
+    if (!res.ok) throw new Error("Sheet ga bisa diakses (status " + res.status + "). Pastikan sharing-nya \"Anyone with the link\".");
+    const text = await res.text();
+    const list = parseSheetCsvToRekening(text);
+    saveRekeningCache(list);
+    renderSyncStatus();
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "Gagal sinkron: " + err.message;
+      statusEl.className = "rek-sync-status error";
+    }
+  }
+}
+
+function renderSyncStatus() {
+  const statusEl = document.getElementById("rekSyncStatus");
+  if (!statusEl) return;
+  const cache = getRekeningCache();
+  if (!cache) {
+    statusEl.textContent = "Belum pernah disinkron.";
+    statusEl.className = "rek-sync-status";
+    return;
+  }
+  statusEl.textContent = `${cache.list.length} data rekening — terakhir disinkron ${formatTime(cache.syncedAt)}.`;
+  statusEl.className = "rek-sync-status success";
+}
+
+function normalizeForSearch(s) {
+  return (s || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function searchRekening(rawInput) {
+  const resultList = document.getElementById("rekResultList");
+  const queries = rawInput.split("\n").map(q => q.trim()).filter(Boolean);
+
+  if (queries.length === 0) {
+    resultList.innerHTML = `<div class="empty-state">Tempel dulu nomor rekening atau nama yang mau dicari.</div>`;
+    return;
+  }
+
+  const cache = getRekeningCache();
+  const list = cache ? cache.list : [];
+
+  resultList.innerHTML = queries.map(q => {
+    const nq = normalizeForSearch(q);
+    const match = list.find(r =>
+      normalizeForSearch(r.nomor) === nq ||
+      normalizeForSearch(r.nomor).includes(nq) ||
+      normalizeForSearch(r.nama).includes(nq)
+    );
+
+    if (match) {
+      return `
+        <div class="rek-result-item found">
+          <span class="status-pill success"><span class="dot"></span>Ditemukan</span>
+          <div class="rek-result-detail">
+            <strong>${match.nama}</strong>
+            <span>${match.nomor}</span>
+          </div>
+          <div class="rek-result-query">dicari: "${q}"</div>
+        </div>`;
+    }
+    return `
+      <div class="rek-result-item not-found">
+        <span class="status-pill failed"><span class="dot"></span>Tidak ditemukan</span>
+        <div class="rek-result-query">dicari: "${q}"</div>
+      </div>`;
+  }).join("");
+}
 
 function requireLogin() {
   const session = localStorage.getItem(STORAGE_KEYS.session);
