@@ -28,6 +28,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4.5"/><path d="M11.5 9 20 9m0 0v3.5M20 9h-3.2"/></svg>
         <span>Data Login</span>
       </div>
+      <div class="nav-item" data-view="rekening">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="9" rx="1.5"/><path d="M3 10 12 4l9 6"/><path d="M7 14v2M12 14v2M17 14v2"/></svg>
+        <span>Cek Rekening</span>
+      </div>
     </div>
 
     <div style="margin-top:auto;">
@@ -138,6 +142,36 @@
       </div>
     </div>
 
+    <!-- View: Cek Rekening (data ditarik dari Google Sheet, dua kolom cari & hasil) -->
+    <div class="view" id="view-rekening">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Cek Rekening</h2>
+            <p>Data ditarik dari Google Sheet, sheet <strong>CEK REK</strong> — kolom A = nama rekening, kolom B = nomor rekening.</p>
+          </div>
+          <button class="btn-ghost" id="syncSheetBtn">Sinkron ulang</button>
+        </div>
+
+        <div class="rek-sync-status" id="rekSyncStatus">Belum pernah disinkron.</div>
+
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label for="rekSearchInput">Rekening yang ingin dicek</label>
+            <p class="rek-search-hint">Tempel nomor rekening atau nama. Bisa lebih dari satu, satu per baris.</p>
+            <textarea id="rekSearchInput" rows="6" placeholder="1234567890&#10;Budi Santoso"></textarea>
+            <button type="button" class="btn-primary" id="rekSearchBtn" style="margin-top:12px;">Cari</button>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Hasil pencarian</label>
+            <div class="rek-result-list" id="rekResultList">
+              <div class="empty-state">Belum ada pencarian.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -156,8 +190,7 @@
       item.classList.add("active");
       const viewId = "view-" + item.dataset.view;
       document.getElementById(viewId).classList.add("active");
-      document.getElementById("pageLabel").textContent =
-        item.dataset.view === "home" ? "Beranda" : "Data Login";
+      document.getElementById("pageLabel").textContent = menuLabel(item.dataset.view);
     });
   });
 
@@ -197,6 +230,22 @@
     renderAddAccessChecks();
     renderAccounts();
   });
+
+  // ---------- Cek Rekening: sinkron dari Google Sheet ----------
+  renderSyncStatus();
+
+  document.getElementById("syncSheetBtn").addEventListener("click", () => {
+    syncRekeningFromSheet();
+  });
+
+  document.getElementById("rekSearchBtn").addEventListener("click", () => {
+    searchRekening(document.getElementById("rekSearchInput").value);
+  });
+
+  // Kalau belum pernah sinkron sama sekali, coba tarik otomatis saat dashboard dibuka.
+  if (!getRekeningCache()) {
+    syncRekeningFromSheet();
+  }
 </script>
 </body>
 </html>
