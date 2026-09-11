@@ -13,7 +13,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ============ 1. GANTI DENGAN CONFIG DARI FIREBASE CONSOLE ============
- // Your web app's Firebase configuration
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCdNfBIY9gK0LKPqNmJLkCq30XAnqaiR8E",
     authDomain: "novaprism-393c6.firebaseapp.com",
@@ -22,11 +28,12 @@ import {
     messagingSenderId: "710392896339",
     appId: "1:710392896339:web:d192a561813fbc06e11fa6"
   };
-// =====================================================================
 
+  // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+</script>
 
 // ---------- Menu config (sama seperti sebelumnya) ----------
 const MENU_CONFIG = [
