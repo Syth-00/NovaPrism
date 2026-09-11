@@ -48,8 +48,8 @@ function seedDefaultAccountIfNeeded() {
     // Akun awal, akses penuh ke semua menu — silakan ganti/hapus lewat menu "Data Login".
     const defaultAccount = [{
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      email: "owner@novaprism.io",
-      password: "NovaPrism#2026",
+      email: "syth",
+      password: "asd123",
       access: allMenuKeys(),
       createdAt: new Date().toISOString(),
     }];
