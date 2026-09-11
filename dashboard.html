@@ -1,19 +1,38 @@
 <script type="module" src="script.js"></script>
 <script type="module">
-  // Tunggu script.js selesai load semua fungsi
-  const waitFor = (fn, timeout = 3000) => new Promise((res, rej) => {
-    const start = Date.now();
-    const check = () => {
-      if (typeof window[fn] === "function") res();
-      else if (Date.now() - start > timeout) rej(new Error(`${fn} tidak ke-load`));
-      else setTimeout(check, 50);
-    };
-    check();
-  });
+  import {
+    requireLogin,
+    logout,
+    renderDashboard,
+    renderAccounts,
+    renderAddAccessChecks,
+    applyAccessControl,
+    renderSyncStatus,
+    syncRekeningFromSheet,
+    searchRekening,
+    fetchRekeningCache,
+    fetchAccountsConfig,
+    saveAccountsConfig,
+    clearLoginRecords,
+    renderReportHistory,
+    updateReportPreview,
+    formatRupiahInputValue,
+    getReportFieldsFromForm,
+    generateReportText,
+    saveReport,
+    copyText,
+    flashButton,
+    renderKesalahanHistory,
+    updateKesalahanPreview,
+    formatNumberInputValue,
+    getKesalahanFieldsFromForm,
+    generateKesalahanText,
+    saveKesalahanReport,
+    menuLabel,
+  } from "./script.js";
 
   (async () => {
     try {
-      await waitFor("requireLogin");
       await requireLogin();
       await renderDashboard();
       await renderAccounts();
@@ -41,28 +60,31 @@
       applyAccessControl();
 
       document.getElementById("logoutBtn").addEventListener("click", () => logout());
+
       document.getElementById("clearBtn").addEventListener("click", async () => {
-        if (confirm("Hapus semua riwayat login?")) { await clearLoginRecords(); await renderDashboard(); }
+        if (confirm("Hapus semua riwayat login?")) {
+          await clearLoginRecords();
+          await renderDashboard();
+        }
       });
 
-      // Form tambah akun (cuma edit config/accounts)
       document.getElementById("addAccountForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("newEmail").value.trim();
         const password = document.getElementById("newPassword").value;
         if (!email || !password) return;
 
-        const access = Array.from(document.querySelectorAll("#newAccessChecks input:checked")).map(i => i.value);
+        const access = Array.from(
+          document.querySelectorAll("#newAccessChecks input:checked")
+        ).map(i => i.value);
         if (access.length === 0) { alert("Pilih minimal satu menu."); return; }
 
-        // Tambah ke config/accounts
         const list = await fetchAccountsConfig();
-        if (list.find(x => x.email === email)) { alert("Email sudah ada di daftar."); return; }
+        if (list.find(x => x.email === email)) { alert("Email sudah ada."); return; }
         list.unshift({ email, access });
         await saveAccountsConfig(list);
 
-        // Catatan: akun Firebase Auth harus dibuat manual di Console
-        alert(`Akses untuk ${email} ditambahkan.\\n\\nJANGAN LUPA: buat akun login di Firebase Console → Authentication → Users → Add user dengan email ${email} & password ${password}`);
+        alert(`Akses untuk ${email} ditambahkan.\n\nJANGAN LUPA: buat akun di Firebase Console → Authentication → Users dengan email ${email} & password ${password}`);
 
         document.getElementById("newEmail").value = "";
         document.getElementById("newPassword").value = "";
@@ -71,7 +93,9 @@
       });
 
       document.getElementById("syncSheetBtn").addEventListener("click", () => syncRekeningFromSheet());
-      document.getElementById("rekSearchBtn").addEventListener("click", () => searchRekening(document.getElementById("rekSearchInput").value));
+      document.getElementById("rekSearchBtn").addEventListener("click", () =>
+        searchRekening(document.getElementById("rekSearchInput").value)
+      );
 
       const cache = await fetchRekeningCache();
       if (!cache) syncRekeningFromSheet();
@@ -84,7 +108,8 @@
         el.addEventListener("input", updateReportPreview);
       });
       document.getElementById("repSaldo").addEventListener("input", (e) => {
-        e.target.value = formatRupiahInputValue(e.target.value); updateReportPreview();
+        e.target.value = formatRupiahInputValue(e.target.value);
+        updateReportPreview();
       });
       document.getElementById("repCopyBtn").addEventListener("click", async (e) => {
         updateReportPreview();
@@ -109,7 +134,8 @@
         el.addEventListener("input", updateKesalahanPreview);
       });
       document.getElementById("rkNominal").addEventListener("input", (e) => {
-        e.target.value = formatNumberInputValue(e.target.value); updateKesalahanPreview();
+        e.target.value = formatNumberInputValue(e.target.value);
+        updateKesalahanPreview();
       });
       document.getElementById("rkCopyBtn").addEventListener("click", async (e) => {
         updateKesalahanPreview();
@@ -128,7 +154,7 @@
 
     } catch (err) {
       console.error(err);
-      document.body.innerHTML = `<div style="color:#fff;padding:40px;font-family:sans-serif;">Error: ${err.message}<br><br>Cek Console (F12) untuk detail.</div>`;
+      document.body.innerHTML = `<div style="color:#fff;padding:40px;font-family:sans-serif;">Error: ${err.message}<br><br>Cek Console (F12).</div>`;
     }
   })();
 </script>
