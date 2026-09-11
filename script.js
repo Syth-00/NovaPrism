@@ -13,12 +13,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ============ 1. GANTI DENGAN CONFIG DARI FIREBASE CONSOLE ============
- <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
   // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCdNfBIY9gK0LKPqNmJLkCq30XAnqaiR8E",
@@ -33,7 +27,6 @@ import {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-</script>
 
 // ---------- Menu config (sama seperti sebelumnya) ----------
 const MENU_CONFIG = [
@@ -67,7 +60,7 @@ async function saveAccountsConfig(list) {
 async function fetchRecords() {
   const q = query(collection(db, "records"), orderBy("time", "desc"), limit(50));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
 }
 
 async function addRecord(record) {
