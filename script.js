@@ -359,6 +359,13 @@ function searchRekening(rawInput) {
 
 // ---------- Reportan Bank: generator teks + riwayat ----------
 
+// Format input Saldo otomatis jadi "Rp X.XXX.XXX" saat diketik.
+function formatRupiahInputValue(raw) {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  return "Rp " + Number(digits).toLocaleString("id-ID");
+}
+
 function generateReportText(f) {
   return [
     `Info : ${f.info}`,
