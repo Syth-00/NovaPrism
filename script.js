@@ -1,6 +1,6 @@
 /* ============================================
    NOVAPRISM — Logic login & dashboard
-   Semua data (akun, riwayat, rekening, report) disimpan di localStorage.
+   Semua data disimpan di localStorage.
    ============================================ */
 
 const STORAGE_KEYS = {
@@ -13,7 +13,6 @@ const STORAGE_KEYS = {
   reportsKesalahan: "novaprism_reports_kesalahan",
 };
 
-// Daftar menu yang tersedia di sidebar.
 const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
   { key: "datalogin", label: "Data Login" },
@@ -31,7 +30,7 @@ function allMenuKeys() {
   return MENU_CONFIG.map(m => m.key);
 }
 
-// ---------- Akun (Data Login) ----------
+// ---------- Akun ----------
 
 function getAccounts() {
   const raw = localStorage.getItem(STORAGE_KEYS.accounts);
@@ -46,7 +45,7 @@ function seedDefaultAccountIfNeeded() {
   const existing = getAccounts();
   if (existing === null) {
     const defaultAccount = [{
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
       email: "syth",
       password: "asd123",
       access: allMenuKeys(),
@@ -64,7 +63,7 @@ function saveAccounts(accounts) {
 function addAccount(email, password, access) {
   const accounts = getAccounts() || [];
   accounts.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
     email,
     password,
     access: access && access.length ? access : ["home"],
@@ -124,7 +123,7 @@ function formatTime(iso) {
   });
 }
 
-// ---------- Background custom ----------
+// ---------- Background ----------
 
 function applyBackground(url) {
   if (url) {
@@ -153,7 +152,7 @@ if (bgInputEl) {
   });
 }
 
-// ---------- Login form (index.html) ----------
+// ---------- Login form ----------
 
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
@@ -181,7 +180,7 @@ if (loginForm) {
   });
 }
 
-// ---------- Auth guard & dashboard (dashboard.html) ----------
+// ---------- Auth guard & dashboard ----------
 
 function requireLogin() {
   const session = localStorage.getItem(STORAGE_KEYS.session);
@@ -270,7 +269,7 @@ function renderDashboard() {
   });
 }
 
-// ---------- Cek Rekening: sinkron dari Google Sheet ----------
+// ---------- Cek Rekening ----------
 
 const SHEET_CONFIG = {
   sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE",
@@ -502,7 +501,7 @@ function getReports() {
 function saveReport(fields, text) {
   const reports = getReports();
   reports.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
     ...fields,
     text,
     createdAt: new Date().toISOString(),
@@ -612,7 +611,7 @@ function getKesalahanReports() {
 function saveKesalahanReport(fields, text) {
   const reports = getKesalahanReports();
   reports.unshift({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
     ...fields,
     text,
     createdAt: new Date().toISOString(),
