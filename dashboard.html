@@ -210,7 +210,7 @@
             </div>
             <div class="field">
               <label for="repSaldo">Saldo</label>
-              <input type="text" id="repSaldo" placeholder="Contoh: Rp 5.000.000" />
+              <input type="text" id="repSaldo" placeholder="Ketik angkanya aja, contoh: 5000000" inputmode="numeric" />
             </div>
             <div class="field">
               <label for="repLampiran">Lampiran</label>
@@ -338,7 +338,13 @@
   updateReportPreview();
 
   document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
+    if (el.id === "repSaldo") return; // diformat terpisah biar auto-format Rupiah
     el.addEventListener("input", updateReportPreview);
+  });
+
+  document.getElementById("repSaldo").addEventListener("input", (e) => {
+    e.target.value = formatRupiahInputValue(e.target.value);
+    updateReportPreview();
   });
 
   document.getElementById("repCopyBtn").addEventListener("click", async (e) => {
