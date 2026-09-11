@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   accounts: "novaprism_accounts",
   rekening: "novaprism_rekening",
   reports: "novaprism_reports",
+  reportsKesalahan: "novaprism_reports_kesalahan",
 };
 
 // Daftar menu yang tersedia di sidebar. Kalau nanti nambah menu baru di
@@ -22,6 +23,7 @@ const MENU_CONFIG = [
   { key: "datalogin", label: "Data Login" },
   { key: "rekening", label: "Cek Rekening" },
   { key: "report", label: "Reportan Bank" },
+  { key: "reportkesalahan", label: "Reportan Kesalahan" },
 ];
 
 function menuLabel(key) {
@@ -488,6 +490,116 @@ function renderReportHistory() {
   });
 }
 
+// ---------- Reportan Kesalahan (sub-menu dari grup Reportan) ----------
+
+// Format angka pakai titik ribuan tanpa prefix "Rp" (dipakai bareng "Rp." statis di template).
+function formatNumberInputValue(raw) {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("id-ID");
+}
+
+function generateKesalahanText(f) {
+  return [
+    `Info : ${f.info}`,
+    `Perihal : ${f.perihal}`,
+    `Staff : ${f.staffNama} - ${f.staffKode}`,
+    ``,
+    `UserID : ${f.userId}`,
+    `Nama Rekening : ${f.namaRek}`,
+    `Nomor Rekening : ${f.nomorRek} (${f.jenisBank})`,
+    `Nominal : Rp. ${f.nominal}`,
+    `Lampiran : ${f.lampiran}`,
+    ``,
+    `Keterangan :`,
+    `${f.keterangan}`,
+  ].join("\n");
+}
+
+function getKesalahanFieldsFromForm() {
+  return {
+    info: document.getElementById("rkInfo").value,
+    perihal: document.getElementById("rkPerihal").value,
+    staffNama: document.getElementById("rkStaffNama").value,
+    staffKode: document.getElementById("rkStaffKode").value,
+    userId: document.getElementById("rkUserId").value,
+    namaRek: document.getElementById("rkNamaRek").value,
+    nomorRek: document.getElementById("rkNomorRek").value,
+    jenisBank: document.getElementById("rkJenisBank").value,
+    nominal: document.getElementById("rkNominal").value,
+    lampiran: document.getElementById("rkLampiran").value,
+    keterangan: document.getElementById("rkKeterangan").value,
+  };
+}
+
+function updateKesalahanPreview() {
+  const preview = document.getElementById("rkPreview");
+  if (!preview) return;
+  preview.textContent = generateKesalahanText(getKesalahanFieldsFromForm());
+}
+
+function getKesalahanReports() {
+  const raw = localStorage.getItem(STORAGE_KEYS.reportsKesalahan);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveKesalahanReport(fields, text) {
+  const reports = getKesalahanReports();
+  reports.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    ...fields,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  localStorage.setItem(STORAGE_KEYS.reportsKesalahan, JSON.stringify(reports.slice(0, 50)));
+}
+
+function deleteKesalahanReport(id) {
+  const reports = getKesalahanReports().filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEYS.reportsKesalahan, JSON.stringify(reports));
+}
+
+function renderKesalahanHistory() {
+  const tbody = document.getElementById("rkHistoryBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("rkEmptyState");
+  const reports = getKesalahanReports();
+
+  tbody.innerHTML = "";
+  if (reports.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  reports.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.perihal || "—"}</td>
+      <td>${r.userId || "—"}</td>
+      <td>${r.namaRek || "—"}</td>
+      <td>${formatTime(r.createdAt)}</td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+        </div>
+      </td>
+    `;
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text);
+      flashButton(e.target, "Tersalin!");
+    });
+    tr.querySelector("[data-del-id]").addEventListener("click", () => {
+      if (confirm("Hapus report ini dari riwayat?")) {
+        deleteKesalahanReport(r.id);
+        renderKesalahanHistory();
+      }
+    });
+    tbody.appendChild(tr);
+  });
+}
+
 function requireLogin() {
   const session = localStorage.getItem(STORAGE_KEYS.session);
   if (!session) {
@@ -526,7 +638,15 @@ function applyAccessControl() {
     if (allowed && item.classList.contains("active")) activeIsVisible = true;
   });
 
+  // Sembunyikan seluruh grup "Reportan" kalau ga ada satu pun sub-menunya yang boleh diakses.
+  document.querySelectorAll(".nav-group").forEach(group => {
+    const hasVisibleChild = Array.from(group.querySelectorAll(".nav-item")).some(i => i.style.display !== "none");
+    group.style.display = hasVisibleChild ? "" : "none";
+  });
+
   if (!activeIsVisible && firstVisibleItem) {
+    const parentGroup = firstVisibleItem.closest(".nav-group");
+    if (parentGroup) parentGroup.classList.remove("collapsed");
     firstVisibleItem.click();
   }
 }
