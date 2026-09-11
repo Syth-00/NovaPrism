@@ -1,27 +1,19 @@
 /* ============================================
    NOVAPRISM — Logic login & dashboard
-   Akun, riwayat login, dan report sekarang disimpan lewat
-   Cloudflare Worker (backend terpisah — bisa D1 atau KV, script.js
-   ini ga peduli, karena cuma manggil alamat API-nya), bukan
-   localStorage lagi — jadi data ga hilang walau kamu ganti PC/browser.
-   Cek Rekening (Google Sheet) & background image tetap lokal,
-   karena Sheet sudah jadi sumber data pusat & background cuma
-   preferensi tampilan per device.
+   Semua data (akun, riwayat, rekening, report) disimpan di localStorage.
    ============================================ */
 
-// GANTI dengan URL Worker kamu setelah deploy (lihat README-BACKEND.md
-// di folder novaprism-backend). Contoh: "https://novaprism-api.namamu.workers.dev"
-const API_BASE_URL = "GANTI_DENGAN_URL_WORKER_KAMU";
-
 const STORAGE_KEYS = {
-  session: "novaprism_session",   // sekarang cuma nyimpen {token, email}
+  session: "novaprism_session",
+  records: "novaprism_login_records",
   bgImage: "novaprism_bg_image",
+  accounts: "novaprism_accounts",
   rekening: "novaprism_rekening",
+  reports: "novaprism_reports",
+  reportsKesalahan: "novaprism_reports_kesalahan",
 };
 
-// Daftar menu yang tersedia di sidebar. Kalau nanti nambah menu baru di
-// dashboard.html, cukup daftarin di sini (key harus sama dengan data-view
-// pada elemen .nav-item) — otomatis muncul jadi pilihan akses.
+// Daftar menu yang tersedia di sidebar.
 const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
   { key: "datalogin", label: "Data Login" },
@@ -35,105 +27,93 @@ function menuLabel(key) {
   return found ? found.label : key;
 }
 
-// ---------- Komunikasi ke Worker (API) ----------
-
-function getToken() {
-  const raw = localStorage.getItem(STORAGE_KEYS.session);
-  const session = raw ? JSON.parse(raw) : null;
-  return session ? session.token : null;
-}
-
-async function apiFetch(path, options = {}) {
-  const token = getToken();
-  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
-  if (token) headers["Authorization"] = "Bearer " + token;
-
-  const res = await fetch(API_BASE_URL + path, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    if (res.status === 401) {
-      // Sesi habis/ga valid — paksa balik ke halaman login.
-      localStorage.removeItem(STORAGE_KEYS.session);
-      window.location.href = "index.html";
-    }
-    throw new Error(data.error || "Terjadi kesalahan pada server.");
-  }
-  return data;
-}
-
-// Disimpan sekali per load dashboard supaya applyAccessControl() ga perlu fetch ulang.
-let currentAccess = [];
-
-// ---------- Auth ----------
-
-async function login(email, password) {
-  const res = await fetch(API_BASE_URL + "/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) return { ok: false, error: data.error || "Login gagal." };
-
-  localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ token: data.token, email: data.email }));
-  currentAccess = data.access || [];
-  return { ok: true };
-}
-
-function requireLogin() {
-  if (!getToken()) {
-    window.location.href = "index.html";
-  }
-}
-
-async function logout() {
-  try { await apiFetch("/api/logout", { method: "POST" }); } catch (e) { /* abaikan, tetap logout */ }
-  localStorage.removeItem(STORAGE_KEYS.session);
-  window.location.href = "index.html";
-}
-
-// Validasi token ke server + ambil access terbaru. Dipanggil sekali saat
-// dashboard dibuka. Kalau token ga valid/kadaluarsa, apiFetch otomatis
-// nendang balik ke index.html.
-async function checkSession() {
-  const data = await apiFetch("/api/session");
-  currentAccess = data.access || [];
-  return data;
+function allMenuKeys() {
+  return MENU_CONFIG.map(m => m.key);
 }
 
 // ---------- Akun (Data Login) ----------
 
-async function getAccounts() {
-  return apiFetch("/api/accounts");
+function getAccounts() {
+  const raw = localStorage.getItem(STORAGE_KEYS.accounts);
+  return raw ? JSON.parse(raw) : null;
 }
 
-async function addAccount(email, password, access) {
-  return apiFetch("/api/accounts", {
-    method: "POST",
-    body: JSON.stringify({ email, password, access }),
+function getAccountByEmail(email) {
+  return (getAccounts() || []).find(a => a.email === email) || null;
+}
+
+function seedDefaultAccountIfNeeded() {
+  const existing = getAccounts();
+  if (existing === null) {
+    const defaultAccount = [{
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      email: "syth",
+      password: "asd123",
+      access: allMenuKeys(),
+      createdAt: new Date().toISOString(),
+    }];
+    localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(defaultAccount));
+  }
+}
+seedDefaultAccountIfNeeded();
+
+function saveAccounts(accounts) {
+  localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
+}
+
+function addAccount(email, password, access) {
+  const accounts = getAccounts() || [];
+  accounts.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    email,
+    password,
+    access: access && access.length ? access : ["home"],
+    createdAt: new Date().toISOString(),
   });
+  saveAccounts(accounts);
 }
 
-async function updateAccountAccess(id, access) {
-  return apiFetch(`/api/accounts/${id}/access`, {
-    method: "PATCH",
-    body: JSON.stringify({ access }),
-  });
+function updateAccountAccess(id, access) {
+  const accounts = getAccounts() || [];
+  const account = accounts.find(a => a.id === id);
+  if (account) {
+    account.access = access && access.length ? access : ["home"];
+    saveAccounts(accounts);
+  }
 }
 
-async function deleteAccount(id) {
-  return apiFetch(`/api/accounts/${id}`, { method: "DELETE" });
+function deleteAccount(id) {
+  const accounts = (getAccounts() || []).filter(a => a.id !== id);
+  saveAccounts(accounts);
+}
+
+function findAccount(email, password) {
+  const accounts = getAccounts() || [];
+  return accounts.find(a => a.email === email && a.password === password) || null;
 }
 
 // ---------- Riwayat login ----------
 
-async function getRecords() {
-  return apiFetch("/api/records");
+function getRecords() {
+  const raw = localStorage.getItem(STORAGE_KEYS.records);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function clearLoginRecords() {
-  return apiFetch("/api/records", { method: "DELETE" });
+function saveRecord(record) {
+  const records = getRecords();
+  records.unshift(record);
+  localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records.slice(0, 50)));
+}
+
+function clearLoginRecords() {
+  localStorage.removeItem(STORAGE_KEYS.records);
+}
+
+function detectDevice() {
+  const ua = navigator.userAgent;
+  if (/Mobi|Android/i.test(ua)) return "Mobile";
+  if (/Tablet|iPad/i.test(ua)) return "Tablet";
+  return "Desktop";
 }
 
 function formatTime(iso) {
@@ -144,7 +124,7 @@ function formatTime(iso) {
   });
 }
 
-// ---------- Background custom (tetap lokal — preferensi tampilan per device) ----------
+// ---------- Background custom ----------
 
 function applyBackground(url) {
   if (url) {
@@ -177,39 +157,121 @@ if (bgInputEl) {
 
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
+  loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
     const errorMsg = document.getElementById("errorMsg");
-    const submitBtn = loginForm.querySelector("button[type=submit]");
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Memeriksa...";
-    errorMsg.style.display = "none";
+    const matched = findAccount(email, password);
 
-    try {
-      const result = await login(email, password);
-      if (result.ok) {
-        window.location.href = "dashboard.html";
-        return;
-      }
-      errorMsg.textContent = result.error;
+    saveRecord({
+      username: email || "(kosong)",
+      time: new Date().toISOString(),
+      device: detectDevice(),
+      status: matched ? "success" : "failed",
+    });
+
+    if (matched) {
+      localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ email, loginAt: new Date().toISOString() }));
+      window.location.href = "dashboard.html";
+    } else {
       errorMsg.style.display = "block";
-    } catch (err) {
-      errorMsg.textContent = "Ga bisa menghubungi server. Cek koneksi atau konfigurasi API_BASE_URL.";
-      errorMsg.style.display = "block";
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Masuk";
     }
   });
 }
 
-// ---------- Cek Rekening: sinkron dari Google Sheet (tetap sama, tidak perlu migrasi) ----------
+// ---------- Auth guard & dashboard (dashboard.html) ----------
 
-// Ganti sheetId/gid ini kalau kamu pindah ke spreadsheet atau tab lain.
-// gid dilihat dari URL sheet setelah "#gid=..." saat tab "CEK REK" sedang dibuka.
+function requireLogin() {
+  const session = localStorage.getItem(STORAGE_KEYS.session);
+  if (!session) {
+    window.location.href = "index.html";
+  }
+}
+
+function logout() {
+  localStorage.removeItem(STORAGE_KEYS.session);
+  window.location.href = "index.html";
+}
+
+function applyAccessControl() {
+  const session = JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || "null");
+  if (!session) return;
+
+  const account = getAccountByEmail(session.email);
+  if (!account) {
+    logout();
+    return;
+  }
+
+  const access = account.access && account.access.length ? account.access : ["home"];
+  let activeIsVisible = false;
+  let firstVisibleItem = null;
+
+  document.querySelectorAll(".nav-item").forEach(item => {
+    const key = item.dataset.view;
+    const allowed = access.includes(key);
+    item.style.display = allowed ? "" : "none";
+    if (allowed && !firstVisibleItem) firstVisibleItem = item;
+    if (allowed && item.classList.contains("active")) activeIsVisible = true;
+  });
+
+  document.querySelectorAll(".nav-group").forEach(group => {
+    const hasVisibleChild = Array.from(group.querySelectorAll(".nav-item")).some(i => i.style.display !== "none");
+    group.style.display = hasVisibleChild ? "" : "none";
+  });
+
+  if (!activeIsVisible && firstVisibleItem) {
+    const parentGroup = firstVisibleItem.closest(".nav-group");
+    if (parentGroup) parentGroup.classList.remove("collapsed");
+    firstVisibleItem.click();
+  }
+}
+
+function renderDashboard() {
+  const session = JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || "null");
+  const records = getRecords();
+
+  if (session) {
+    document.getElementById("welcomeText").textContent = `Halo, ${session.email}`;
+    document.getElementById("avatarInitial").textContent = session.email.charAt(0).toUpperCase();
+  }
+
+  const total = records.length;
+  const successCount = records.filter(r => r.status === "success").length;
+  const failedCount = total - successCount;
+  const last = records[0];
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statSuccess").textContent = successCount;
+  document.getElementById("statFailed").textContent = failedCount;
+  document.getElementById("statLast").textContent = last ? formatTime(last.time) : "—";
+
+  const tbody = document.getElementById("logTableBody");
+  const emptyState = document.getElementById("emptyState");
+  tbody.innerHTML = "";
+
+  if (records.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  records.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.username}</td>
+      <td>${formatTime(r.time)}</td>
+      <td>${r.device}</td>
+      <td><span class="status-pill ${r.status}"><span class="dot"></span>${r.status === "success" ? "Berhasil" : "Gagal"}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Cek Rekening: sinkron dari Google Sheet ----------
+
 const SHEET_CONFIG = {
   sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE",
   gid: "2056151193",
@@ -231,8 +293,6 @@ function saveRekeningCache(list) {
   }));
 }
 
-// Kolom A = nama rekening, kolom B = nomor rekening. Baris pertama dianggap
-// header (dilewati) kalau kolom B pada baris itu bukan berupa angka.
 function parseSheetCsvToRekening(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
   const rows = lines.map(parseCsvLine);
@@ -303,22 +363,16 @@ function normalizeForSearch(s) {
   return (s || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
 }
 
-// Ambil deretan digit terpanjang dari sebuah baris — dipakai untuk kasus
-// baris campuran seperti "BCA Yesi Gusman 7621598108", di mana nomor
-// rekeningnya nempel bareng nama bank & nama pemilik.
 function extractLongestDigits(line) {
   const matches = line.match(/\d{4,}/g);
   if (!matches || matches.length === 0) return null;
   return matches.reduce((a, b) => (b.length > a.length ? b : a), "");
 }
 
-// Buang semua yang bukan digit, lalu buang nol di depan — soalnya Google Sheets
-// sering menyimpan nomor rekening sebagai angka murni dan otomatis
-// menghilangkan nol di depannya (mis. "078401012113508" jadi "78401012113508").
 function normalizeAccountNumber(s) {
   const digitsOnly = (s || "").replace(/\D/g, "");
   const stripped = digitsOnly.replace(/^0+/, "");
-  return stripped || digitsOnly; // kalau semuanya nol, jangan sampai jadi string kosong
+  return stripped || digitsOnly;
 }
 
 function searchRekening(rawInput) {
@@ -341,6 +395,7 @@ function searchRekening(rawInput) {
         const nDigits = normalizeAccountNumber(digits);
         match = list.find(r => normalizeAccountNumber(r.nomor) === nDigits);
       }
+
       if (!match) {
         const nq = normalizeForSearch(q);
         match = list.find(r =>
@@ -350,6 +405,7 @@ function searchRekening(rawInput) {
           (nq.length >= 3 && normalizeForSearch(r.nama).includes(nq))
         );
       }
+
       return match ? { query: q, match } : null;
     })
     .filter(Boolean);
@@ -371,7 +427,7 @@ function searchRekening(rawInput) {
   ).join("");
 }
 
-// ---------- Reportan Bank: generator teks + riwayat ----------
+// ---------- Reportan Bank ----------
 
 function formatRupiahInputValue(raw) {
   const digits = raw.replace(/\D/g, "");
@@ -438,23 +494,32 @@ function flashButton(btn, tempLabel) {
   setTimeout(() => { btn.textContent = original; }, 1500);
 }
 
-async function getReports() {
-  return apiFetch("/api/reports");
+function getReports() {
+  const raw = localStorage.getItem(STORAGE_KEYS.reports);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function saveReport(fields, text) {
-  return apiFetch("/api/reports", { method: "POST", body: JSON.stringify({ ...fields, text }) });
+function saveReport(fields, text) {
+  const reports = getReports();
+  reports.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    ...fields,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports.slice(0, 50)));
 }
 
-async function deleteReport(id) {
-  return apiFetch(`/api/reports/${id}`, { method: "DELETE" });
+function deleteReport(id) {
+  const reports = getReports().filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports));
 }
 
-async function renderReportHistory() {
+function renderReportHistory() {
   const tbody = document.getElementById("reportHistoryBody");
   if (!tbody) return;
   const emptyState = document.getElementById("reportEmptyState");
-  const reports = await getReports();
+  const reports = getReports();
 
   tbody.innerHTML = "";
   if (reports.length === 0) {
@@ -481,9 +546,9 @@ async function renderReportHistory() {
       await copyText(r.text);
       flashButton(e.target, "Tersalin!");
     });
-    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+    tr.querySelector("[data-del-id]").addEventListener("click", () => {
       if (confirm("Hapus report ini dari riwayat?")) {
-        await deleteReport(r.id);
+        deleteReport(r.id);
         renderReportHistory();
       }
     });
@@ -491,7 +556,7 @@ async function renderReportHistory() {
   });
 }
 
-// ---------- Reportan Kesalahan (sub-menu dari grup Reportan) ----------
+// ---------- Reportan Kesalahan ----------
 
 function formatNumberInputValue(raw) {
   const digits = raw.replace(/\D/g, "");
@@ -539,23 +604,32 @@ function updateKesalahanPreview() {
   preview.textContent = generateKesalahanText(getKesalahanFieldsFromForm());
 }
 
-async function getKesalahanReports() {
-  return apiFetch("/api/reports-kesalahan");
+function getKesalahanReports() {
+  const raw = localStorage.getItem(STORAGE_KEYS.reportsKesalahan);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function saveKesalahanReport(fields, text) {
-  return apiFetch("/api/reports-kesalahan", { method: "POST", body: JSON.stringify({ ...fields, text }) });
+function saveKesalahanReport(fields, text) {
+  const reports = getKesalahanReports();
+  reports.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    ...fields,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  localStorage.setItem(STORAGE_KEYS.reportsKesalahan, JSON.stringify(reports.slice(0, 50)));
 }
 
-async function deleteKesalahanReport(id) {
-  return apiFetch(`/api/reports-kesalahan/${id}`, { method: "DELETE" });
+function deleteKesalahanReport(id) {
+  const reports = getKesalahanReports().filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEYS.reportsKesalahan, JSON.stringify(reports));
 }
 
-async function renderKesalahanHistory() {
+function renderKesalahanHistory() {
   const tbody = document.getElementById("rkHistoryBody");
   if (!tbody) return;
   const emptyState = document.getElementById("rkEmptyState");
-  const reports = await getKesalahanReports();
+  const reports = getKesalahanReports();
 
   tbody.innerHTML = "";
   if (reports.length === 0) {
@@ -582,9 +656,9 @@ async function renderKesalahanHistory() {
       await copyText(r.text);
       flashButton(e.target, "Tersalin!");
     });
-    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+    tr.querySelector("[data-del-id]").addEventListener("click", () => {
       if (confirm("Hapus report ini dari riwayat?")) {
-        await deleteKesalahanReport(r.id);
+        deleteKesalahanReport(r.id);
         renderKesalahanHistory();
       }
     });
@@ -592,78 +666,7 @@ async function renderKesalahanHistory() {
   });
 }
 
-// ---------- Kontrol akses sidebar ----------
-
-// Sembunyikan menu sidebar yang ga termasuk akses akun yang sedang login,
-// berdasarkan `currentAccess` yang sudah diambil lewat checkSession().
-function applyAccessControl() {
-  const access = currentAccess && currentAccess.length ? currentAccess : ["home"];
-  let activeIsVisible = false;
-  let firstVisibleItem = null;
-
-  document.querySelectorAll(".nav-item").forEach(item => {
-    const key = item.dataset.view;
-    const allowed = access.includes(key);
-    item.style.display = allowed ? "" : "none";
-    if (allowed && !firstVisibleItem) firstVisibleItem = item;
-    if (allowed && item.classList.contains("active")) activeIsVisible = true;
-  });
-
-  document.querySelectorAll(".nav-group").forEach(group => {
-    const hasVisibleChild = Array.from(group.querySelectorAll(".nav-item")).some(i => i.style.display !== "none");
-    group.style.display = hasVisibleChild ? "" : "none";
-  });
-
-  if (!activeIsVisible && firstVisibleItem) {
-    const parentGroup = firstVisibleItem.closest(".nav-group");
-    if (parentGroup) parentGroup.classList.remove("collapsed");
-    firstVisibleItem.click();
-  }
-}
-
-async function renderDashboard() {
-  const raw = localStorage.getItem(STORAGE_KEYS.session);
-  const session = raw ? JSON.parse(raw) : null;
-  if (session) {
-    document.getElementById("welcomeText").textContent = `Halo, ${session.email}`;
-    document.getElementById("avatarInitial").textContent = session.email.charAt(0).toUpperCase();
-  }
-
-  const records = await getRecords();
-
-  const total = records.length;
-  const successCount = records.filter(r => r.status === "success").length;
-  const failedCount = total - successCount;
-  const last = records[0];
-
-  document.getElementById("statTotal").textContent = total;
-  document.getElementById("statSuccess").textContent = successCount;
-  document.getElementById("statFailed").textContent = failedCount;
-  document.getElementById("statLast").textContent = last ? formatTime(last.time) : "—";
-
-  const tbody = document.getElementById("logTableBody");
-  const emptyState = document.getElementById("emptyState");
-  tbody.innerHTML = "";
-
-  if (records.length === 0) {
-    emptyState.style.display = "block";
-    return;
-  }
-  emptyState.style.display = "none";
-
-  records.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.username}</td>
-      <td>${formatTime(r.time)}</td>
-      <td>${r.device}</td>
-      <td><span class="status-pill ${r.status}"><span class="dot"></span>${r.status === "success" ? "Berhasil" : "Gagal"}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ---------- Checkbox akses (dipakai di form tambah & edit akun) ----------
+// ---------- Checkbox akses ----------
 
 function accessCheckboxesHTML(selected) {
   return MENU_CONFIG.map(m => `
@@ -682,11 +685,11 @@ function renderAddAccessChecks() {
 
 // ---------- Render tabel Data Login ----------
 
-async function renderAccounts() {
+function renderAccounts() {
   const tbody = document.getElementById("accountTableBody");
   if (!tbody) return;
   const emptyState = document.getElementById("accountEmptyState");
-  const accounts = await getAccounts();
+  const accounts = getAccounts() || [];
 
   tbody.innerHTML = "";
 
@@ -705,7 +708,12 @@ async function renderAccounts() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.email}</td>
-      <td><span class="access-badge" style="opacity:.6;">tersimpan di server</span></td>
+      <td>
+        <span class="pw-cell">
+          <span class="pw-value" data-visible="false">••••••••</span>
+          <button type="button" class="pw-toggle">lihat</button>
+        </span>
+      </td>
       <td><div class="access-badges">${badgesHTML}</div></td>
       <td>${formatTime(a.createdAt)}</td>
       <td>
@@ -716,9 +724,18 @@ async function renderAccounts() {
       </td>
     `;
 
-    tr.querySelector(".btn-danger-ghost").addEventListener("click", async () => {
+    const pwValueEl = tr.querySelector(".pw-value");
+    const pwToggleEl = tr.querySelector(".pw-toggle");
+    pwToggleEl.addEventListener("click", () => {
+      const visible = pwValueEl.dataset.visible === "true";
+      pwValueEl.textContent = visible ? "••••••••" : a.password;
+      pwValueEl.dataset.visible = String(!visible);
+      pwToggleEl.textContent = visible ? "lihat" : "sembunyikan";
+    });
+
+    tr.querySelector(".btn-danger-ghost").addEventListener("click", () => {
       if (confirm(`Hapus akun ${a.email}?`)) {
-        await deleteAccount(a.id);
+        deleteAccount(a.id);
         renderAccounts();
       }
     });
@@ -731,7 +748,6 @@ async function renderAccounts() {
   });
 }
 
-// Buka/tutup baris edit akses tepat di bawah baris akun yang diklik.
 function toggleEditAccessRow(rowEl, account) {
   const tbody = rowEl.parentElement;
   const existing = tbody.querySelector(".edit-access-row");
@@ -757,13 +773,13 @@ function toggleEditAccessRow(rowEl, account) {
   `;
   rowEl.insertAdjacentElement("afterend", editRow);
 
-  editRow.querySelector("[data-save-id]").addEventListener("click", async () => {
+  editRow.querySelector("[data-save-id]").addEventListener("click", () => {
     const checked = Array.from(editRow.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
     if (checked.length === 0) {
       alert("Pilih minimal satu menu, kalau tidak akun ini ga bisa buka apa-apa setelah login.");
       return;
     }
-    await updateAccountAccess(account.id, checked);
+    updateAccountAccess(account.id, checked);
     renderAccounts();
   });
 
