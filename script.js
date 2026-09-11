@@ -13,14 +13,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ============ 1. GANTI DENGAN CONFIG DARI FIREBASE CONSOLE ============
-const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "novaprism.firebaseapp.com",
-  projectId: "novaprism",
-  storageBucket: "novaprism.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};
+ // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdNfBIY9gK0LKPqNmJLkCq30XAnqaiR8E",
+    authDomain: "novaprism-393c6.firebaseapp.com",
+    projectId: "novaprism-393c6",
+    storageBucket: "novaprism-393c6.firebasestorage.app",
+    messagingSenderId: "710392896339",
+    appId: "1:710392896339:web:d192a561813fbc06e11fa6"
+  };
 // =====================================================================
 
 const app = initializeApp(firebaseConfig);
