@@ -503,7 +503,7 @@ function generateKesalahanText(f) {
   return [
     `Info : ${f.info}`,
     `Perihal : ${f.perihal}`,
-    `Staff : ${f.staffNama} - ${f.staffKode}`,
+    `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`,
     ``,
     `UserID : ${f.userId}`,
     `Nama Rekening : ${f.namaRek}`,
@@ -522,6 +522,7 @@ function getKesalahanFieldsFromForm() {
     perihal: document.getElementById("rkPerihal").value,
     staffNama: document.getElementById("rkStaffNama").value,
     staffKode: document.getElementById("rkStaffKode").value,
+    agenNama: document.getElementById("rkAgenNama").value,
     userId: document.getElementById("rkUserId").value,
     namaRek: document.getElementById("rkNamaRek").value,
     nomorRek: document.getElementById("rkNomorRek").value,
