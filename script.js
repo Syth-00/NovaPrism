@@ -584,3 +584,34 @@ async function renderKesalahanHistory() {
     tbody.appendChild(tr);
   });
 }
+// ---------- Export untuk dipakai di dashboard.html ----------
+export {
+  requireLogin,
+  logout,
+  renderDashboard,
+  renderAccounts,
+  renderAddAccessChecks,
+  applyAccessControl,
+  renderSyncStatus,
+  syncRekeningFromSheet,
+  searchRekening,
+  fetchRekeningCache,
+  fetchAccountsConfig,
+  saveAccountsConfig,
+  clearLoginRecords,
+  renderReportHistory,
+  updateReportPreview,
+  formatRupiahInputValue,
+  getReportFieldsFromForm,
+  generateReportText,
+  saveReport,
+  copyText,
+  flashButton,
+  renderKesalahanHistory,
+  updateKesalahanPreview,
+  formatNumberInputValue,
+  getKesalahanFieldsFromForm,
+  generateKesalahanText,
+  saveKesalahanReport,
+  menuLabel,
+};
