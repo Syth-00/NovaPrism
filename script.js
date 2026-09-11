@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   bgImage: "novaprism_bg_image",
   accounts: "novaprism_accounts",
   rekening: "novaprism_rekening",
+  reports: "novaprism_reports",
 };
 
 // Daftar menu yang tersedia di sidebar. Kalau nanti nambah menu baru di
@@ -20,6 +21,7 @@ const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
   { key: "datalogin", label: "Data Login" },
   { key: "rekening", label: "Cek Rekening" },
+  { key: "report", label: "Reportan Bank" },
 ];
 
 function menuLabel(key) {
@@ -353,6 +355,130 @@ function searchRekening(rawInput) {
       <div class="rek-result-query">dicari: "${query}"</div>
     </div>`
   ).join("");
+}
+
+// ---------- Reportan Bank: generator teks + riwayat ----------
+
+function generateReportText(f) {
+  return [
+    `Info : ${f.info}`,
+    `Perihal : ${f.perihal}`,
+    ``,
+    `${f.bank}`,
+    `Nama Rekening : ${f.namaRek}`,
+    `Nomor Rekening : ${f.nomorRek}`,
+    `Saldo : ${f.saldo}`,
+    `Lampiran : ${f.lampiran}`,
+    ``,
+    `Keterangan :`,
+    `${f.keterangan}`,
+  ].join("\n");
+}
+
+function getReportFieldsFromForm() {
+  return {
+    info: document.getElementById("repInfo").value,
+    perihal: document.getElementById("repPerihal").value,
+    bank: document.getElementById("repBank").value,
+    namaRek: document.getElementById("repNamaRek").value,
+    nomorRek: document.getElementById("repNomorRek").value,
+    saldo: document.getElementById("repSaldo").value,
+    lampiran: document.getElementById("repLampiran").value,
+    keterangan: document.getElementById("repKeterangan").value,
+  };
+}
+
+function updateReportPreview() {
+  const preview = document.getElementById("reportPreview");
+  if (!preview) return;
+  preview.textContent = generateReportText(getReportFieldsFromForm());
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    // Fallback untuk browser/konteks yang ga dukung Clipboard API
+    const tmp = document.createElement("textarea");
+    tmp.value = text;
+    tmp.style.position = "fixed";
+    tmp.style.opacity = "0";
+    document.body.appendChild(tmp);
+    tmp.focus();
+    tmp.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(tmp);
+    return ok;
+  }
+}
+
+function flashButton(btn, tempLabel) {
+  const original = btn.textContent;
+  btn.textContent = tempLabel;
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function getReports() {
+  const raw = localStorage.getItem(STORAGE_KEYS.reports);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveReport(fields, text) {
+  const reports = getReports();
+  reports.unshift({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    ...fields,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports.slice(0, 50)));
+}
+
+function deleteReport(id) {
+  const reports = getReports().filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEYS.reports, JSON.stringify(reports));
+}
+
+function renderReportHistory() {
+  const tbody = document.getElementById("reportHistoryBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("reportEmptyState");
+  const reports = getReports();
+
+  tbody.innerHTML = "";
+  if (reports.length === 0) {
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  reports.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.perihal || "—"}</td>
+      <td>${r.bank || "—"}</td>
+      <td>${r.namaRek || "—"}</td>
+      <td>${formatTime(r.createdAt)}</td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+        </div>
+      </td>
+    `;
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text);
+      flashButton(e.target, "Tersalin!");
+    });
+    tr.querySelector("[data-del-id]").addEventListener("click", () => {
+      if (confirm("Hapus report ini dari riwayat?")) {
+        deleteReport(r.id);
+        renderReportHistory();
+      }
+    });
+    tbody.appendChild(tr);
+  });
 }
 
 function requireLogin() {
