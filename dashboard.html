@@ -145,7 +145,7 @@
           <thead>
             <tr>
               <th>Email / ID</th>
-              <th>Password</th>
+              <th>Keamanan</th>
               <th>Akses</th>
               <th>Dibuat</th>
               <th></th>
@@ -378,9 +378,19 @@
 
 <script src="script.js"></script>
 <script>
-  requireLogin();
-  renderDashboard();
-  renderAccounts();
+(async function init() {
+  requireLogin(); // cek token ada di localStorage, kalau ga ada langsung redirect
+
+  try {
+    await checkSession(); // validasi token ke server + ambil access terbaru
+  } catch (err) {
+    // apiFetch sudah otomatis redirect ke index.html kalau 401,
+    // jadi di sini cukup hentikan eksekusi lanjutan.
+    return;
+  }
+
+  await renderDashboard();
+  await renderAccounts();
   renderAddAccessChecks();
 
   // Navigasi sidebar
@@ -410,14 +420,14 @@
     logout();
   });
 
-  document.getElementById("clearBtn").addEventListener("click", () => {
+  document.getElementById("clearBtn").addEventListener("click", async () => {
     if (confirm("Hapus semua riwayat login?")) {
-      clearLoginRecords();
+      await clearLoginRecords();
       renderDashboard();
     }
   });
 
-  document.getElementById("addAccountForm").addEventListener("submit", (e) => {
+  document.getElementById("addAccountForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("newEmail").value.trim();
     const password = document.getElementById("newPassword").value;
@@ -432,11 +442,15 @@
       return;
     }
 
-    addAccount(email, password, access);
-    document.getElementById("newEmail").value = "";
-    document.getElementById("newPassword").value = "";
-    renderAddAccessChecks();
-    renderAccounts();
+    try {
+      await addAccount(email, password, access);
+      document.getElementById("newEmail").value = "";
+      document.getElementById("newPassword").value = "";
+      renderAddAccessChecks();
+      renderAccounts();
+    } catch (err) {
+      alert(err.message);
+    }
   });
 
   // ---------- Cek Rekening: sinkron dari Google Sheet ----------
@@ -450,17 +464,16 @@
     searchRekening(document.getElementById("rekSearchInput").value);
   });
 
-  // Kalau belum pernah sinkron sama sekali, coba tarik otomatis saat dashboard dibuka.
   if (!getRekeningCache()) {
     syncRekeningFromSheet();
   }
 
   // ---------- Reportan Bank ----------
-  renderReportHistory();
+  await renderReportHistory();
   updateReportPreview();
 
   document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
-    if (el.id === "repSaldo") return; // diformat terpisah biar auto-format Rupiah
+    if (el.id === "repSaldo") return;
     el.addEventListener("input", updateReportPreview);
   });
 
@@ -476,10 +489,10 @@
     flashButton(e.target, "Tersalin!");
   });
 
-  document.getElementById("repSaveBtn").addEventListener("click", () => {
+  document.getElementById("repSaveBtn").addEventListener("click", async () => {
     const fields = getReportFieldsFromForm();
     const text = generateReportText(fields);
-    saveReport(fields, text);
+    await saveReport(fields, text);
     renderReportHistory();
   });
 
@@ -489,11 +502,11 @@
   });
 
   // ---------- Reportan Kesalahan ----------
-  renderKesalahanHistory();
+  await renderKesalahanHistory();
   updateKesalahanPreview();
 
   document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
-    if (el.id === "rkNominal") return; // diformat terpisah biar auto-format angka
+    if (el.id === "rkNominal") return;
     el.addEventListener("input", updateKesalahanPreview);
   });
 
@@ -509,10 +522,10 @@
     flashButton(e.target, "Tersalin!");
   });
 
-  document.getElementById("rkSaveBtn").addEventListener("click", () => {
+  document.getElementById("rkSaveBtn").addEventListener("click", async () => {
     const fields = getKesalahanFieldsFromForm();
     const text = generateKesalahanText(fields);
-    saveKesalahanReport(fields, text);
+    await saveKesalahanReport(fields, text);
     renderKesalahanHistory();
   });
 
@@ -520,6 +533,7 @@
     document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
     updateKesalahanPreview();
   });
+})();
 </script>
 </body>
 </html>
