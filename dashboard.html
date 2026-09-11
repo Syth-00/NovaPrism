@@ -32,9 +32,22 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="9" rx="1.5"/><path d="M3 10 12 4l9 6"/><path d="M7 14v2M12 14v2M17 14v2"/></svg>
         <span>Cek Rekening</span>
       </div>
-      <div class="nav-item" data-view="report">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/><path d="M9.5 12.5h6M9.5 15.5h6M9.5 18h3.5"/></svg>
-        <span>Reportan Bank</span>
+
+      <div class="nav-group" id="navGroup-reportan">
+        <div class="nav-group-header" data-group="reportan">
+          <span>Reportan</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="nav-group-items" id="navGroupItems-reportan">
+          <div class="nav-item nav-item-sub" data-view="report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/><path d="M9.5 12.5h6M9.5 15.5h6M9.5 18h3.5"/></svg>
+            <span>Reportan Bank</span>
+          </div>
+          <div class="nav-item nav-item-sub" data-view="reportkesalahan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+            <span>Reportan Kesalahan</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -258,6 +271,104 @@
       </div>
     </div>
 
+    <!-- View: Reportan Kesalahan (sub-menu dari grup Reportan) -->
+    <div class="view" id="view-reportkesalahan">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Reportan Kesalahan</h2>
+            <p>Isi kolom di kiri, hasilnya otomatis kebentuk di kanan — tinggal klik Salin.</p>
+          </div>
+        </div>
+
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field">
+              <label for="rkInfo">Info</label>
+              <input type="text" id="rkInfo" placeholder="Contoh: Laporan kesalahan input" />
+            </div>
+            <div class="field">
+              <label for="rkPerihal">Perihal</label>
+              <input type="text" id="rkPerihal" placeholder="Contoh: Salah input nominal" />
+            </div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div>
+                <label for="rkStaffNama">Staff</label>
+                <input type="text" id="rkStaffNama" placeholder="Nama staff, contoh: andi" />
+              </div>
+              <div>
+                <label for="rkStaffKode">Kode</label>
+                <input type="text" id="rkStaffKode" placeholder="8798769" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="rkUserId">UserID</label>
+              <input type="text" id="rkUserId" placeholder="ID user terkait" />
+            </div>
+            <div class="field">
+              <label for="rkNamaRek">Nama Rekening</label>
+              <input type="text" id="rkNamaRek" placeholder="Nama pemilik rekening" />
+            </div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div>
+                <label for="rkNomorRek">Nomor Rekening</label>
+                <input type="text" id="rkNomorRek" placeholder="1234567890" />
+              </div>
+              <div>
+                <label for="rkJenisBank">Jenis Bank</label>
+                <input type="text" id="rkJenisBank" placeholder="BCA" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="rkNominal">Nominal</label>
+              <input type="text" id="rkNominal" placeholder="Ketik angkanya aja, contoh: 5000000" inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="rkLampiran">Lampiran</label>
+              <input type="text" id="rkLampiran" placeholder="Link/nama file bukti (opsional)" />
+            </div>
+            <div class="field">
+              <label for="rkKeterangan">Keterangan</label>
+              <textarea id="rkKeterangan" rows="4" placeholder="Catatan tambahan..."></textarea>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rkCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rkSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rkResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Preview</label>
+            <pre class="report-preview" id="rkPreview"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head">
+          <div>
+            <h2>Riwayat Reportan Kesalahan</h2>
+            <p>Report yang pernah kamu simpan, tinggal klik "Salin" untuk pakai lagi.</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Perihal</th>
+              <th>UserID</th>
+              <th>Nama Rekening</th>
+              <th>Waktu</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rkHistoryBody"></tbody>
+        </table>
+        <div class="empty-state" id="rkEmptyState" style="display:none;">
+          Belum ada report tersimpan.
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -277,6 +388,13 @@
       const viewId = "view-" + item.dataset.view;
       document.getElementById(viewId).classList.add("active");
       document.getElementById("pageLabel").textContent = menuLabel(item.dataset.view);
+    });
+  });
+
+  // Grup sidebar yang bisa dilipat (collapsible), misalnya "Reportan"
+  document.querySelectorAll(".nav-group-header").forEach(header => {
+    header.addEventListener("click", () => {
+      header.closest(".nav-group").classList.toggle("collapsed");
     });
   });
 
@@ -364,6 +482,39 @@
   document.getElementById("repResetBtn").addEventListener("click", () => {
     document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
     updateReportPreview();
+  });
+
+  // ---------- Reportan Kesalahan ----------
+  renderKesalahanHistory();
+  updateKesalahanPreview();
+
+  document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
+    if (el.id === "rkNominal") return; // diformat terpisah biar auto-format angka
+    el.addEventListener("input", updateKesalahanPreview);
+  });
+
+  document.getElementById("rkNominal").addEventListener("input", (e) => {
+    e.target.value = formatNumberInputValue(e.target.value);
+    updateKesalahanPreview();
+  });
+
+  document.getElementById("rkCopyBtn").addEventListener("click", async (e) => {
+    updateKesalahanPreview();
+    const text = document.getElementById("rkPreview").textContent;
+    await copyText(text);
+    flashButton(e.target, "Tersalin!");
+  });
+
+  document.getElementById("rkSaveBtn").addEventListener("click", () => {
+    const fields = getKesalahanFieldsFromForm();
+    const text = generateKesalahanText(fields);
+    saveKesalahanReport(fields, text);
+    renderKesalahanHistory();
+  });
+
+  document.getElementById("rkResetBtn").addEventListener("click", () => {
+    document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
+    updateKesalahanPreview();
   });
 </script>
 </body>
