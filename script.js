@@ -48,8 +48,8 @@ function seedDefaultAccountIfNeeded() {
     // Akun awal, akses penuh ke semua menu — silakan ganti/hapus lewat menu "Data Login".
     const defaultAccount = [{
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      email: "syth",
-      password: "asd123",
+      email: "owner@novaprism.io",
+      password: "NovaPrism#2026",
       access: allMenuKeys(),
       createdAt: new Date().toISOString(),
     }];
@@ -290,6 +290,15 @@ function extractLongestDigits(line) {
   return matches.reduce((a, b) => (b.length > a.length ? b : a), "");
 }
 
+// Buang semua yang bukan digit, lalu buang nol di depan — soalnya Google Sheets
+// sering menyimpan nomor rekening sebagai angka murni dan otomatis
+// menghilangkan nol di depannya (mis. "078401012113508" jadi "78401012113508").
+function normalizeAccountNumber(s) {
+  const digitsOnly = (s || "").replace(/\D/g, "");
+  const stripped = digitsOnly.replace(/^0+/, "");
+  return stripped || digitsOnly; // kalau semuanya nol, jangan sampai jadi string kosong
+}
+
 function searchRekening(rawInput) {
   const resultList = document.getElementById("rekResultList");
   const queries = rawInput.split("\n").map(q => q.trim()).filter(Boolean);
@@ -305,18 +314,20 @@ function searchRekening(rawInput) {
   const matches = queries
     .map(q => {
       // Prioritas 1: cocokkan berdasarkan nomor rekening yang diekstrak dari baris
-      // (menangani baris campuran seperti "BCA Nama Pemilik 1234567890").
+      // (menangani baris campuran seperti "BCA Nama Pemilik 1234567890"),
+      // dengan nol di depan diabaikan.
       const digits = extractLongestDigits(q);
       let match = null;
       if (digits) {
-        const nDigits = normalizeForSearch(digits);
-        match = list.find(r => normalizeForSearch(r.nomor) === nDigits);
+        const nDigits = normalizeAccountNumber(digits);
+        match = list.find(r => normalizeAccountNumber(r.nomor) === nDigits);
       }
 
       // Prioritas 2 (fallback): cocokkan seluruh baris sebagai nomor/nama.
       if (!match) {
         const nq = normalizeForSearch(q);
         match = list.find(r =>
+          normalizeAccountNumber(r.nomor) === normalizeAccountNumber(q) ||
           normalizeForSearch(r.nomor) === nq ||
           (nq.length >= 4 && normalizeForSearch(r.nomor).includes(nq)) ||
           (nq.length >= 3 && normalizeForSearch(r.nama).includes(nq))
