@@ -11,7 +11,7 @@
 
 // GANTI dengan URL Worker kamu setelah deploy (lihat README-BACKEND.md
 // di folder novaprism-backend). Contoh: "https://novaprism-api.namamu.workers.dev"
-const API_BASE_URL = "novaprism-api.smbjacky.workers.dev";
+const API_BASE_URL = "GANTI_DENGAN_URL_WORKER_KAMU";
 
 const STORAGE_KEYS = {
   session: "novaprism_session",   // sekarang cuma nyimpen {token, email}
