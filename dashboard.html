@@ -107,7 +107,7 @@
     <div class="view" id="view-datalogin">
       <div class="glass panel">
         <div class="panel-head">
-          <div><h2>Data Login</h2><p>Kelola akun & akses. Akun master (★) otomatis dapat semua menu.</p></div>
+          <div><h2>Data Login</h2><p>Akun dengan badge ★ MASTER otomatis dapat semua menu.</p></div>
         </div>
         <form class="add-account-form" id="addAccountForm">
           <div class="field"><label for="newEmail">Email / ID</label><input type="text" id="newEmail" placeholder="nama@email.com" required /></div>
@@ -367,14 +367,20 @@
               <div><label for="rsbAgenNama">Nama Agen</label><input type="text" id="rsbAgenNama" /></div>
             </div>
 
-            <div class="access-group-label" style="margin-top:16px;">Dari (pengirim)</div>
+            <div class="field" style="display:grid; grid-template-columns:80px 1fr; gap:10px; align-items:center; margin-top:16px;">
+              <label for="rsbDariUserId" style="margin:0;">Dari :</label>
+              <input type="text" id="rsbDariUserId" placeholder="Isi dari mana" />
+            </div>
             <div class="field"><label for="rsbDariNamaRek">Nama rekening pengirim</label><input type="text" id="rsbDariNamaRek" /></div>
             <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
               <div><label for="rsbDariNomorRek">Nomor rekening pengirim</label><input type="text" id="rsbDariNomorRek" /></div>
               <div><label for="rsbDariJenisBank">Jenis Bank</label><input type="text" id="rsbDariJenisBank" /></div>
             </div>
 
-            <div class="access-group-label" style="margin-top:16px;">Tujuan (penerima)</div>
+            <div class="field" style="display:grid; grid-template-columns:80px 1fr; gap:10px; align-items:center; margin-top:16px;">
+              <label for="rsbTujuanUserId" style="margin:0;">Tujuan :</label>
+              <input type="text" id="rsbTujuanUserId" placeholder="Isi tujuan ke mana" />
+            </div>
             <div class="field"><label for="rsbTujuanNamaRek">Nama rekening penerima</label><input type="text" id="rsbTujuanNamaRek" /></div>
             <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
               <div><label for="rsbTujuanNomorRek">Nomor rekening penerima</label><input type="text" id="rsbTujuanNomorRek" /></div>
