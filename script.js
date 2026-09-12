@@ -1,34 +1,21 @@
 /* ============================================
-   NOVAPRISM — Firebase Firestore Version
-   Data bersama, multi-user, multi-device.
+   NOVAPRISM — Supabase Version
+   Multi-user, data shared, single admin panel.
    ============================================ */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, collection, getDocs,
-  addDoc, deleteDoc, query, orderBy, limit
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ============ 1. GANTI DENGAN CONFIG DARI FIREBASE CONSOLE ============
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdNfBIY9gK0LKPqNmJLkCq30XAnqaiR8E",
-    authDomain: "novaprism-393c6.firebaseapp.com",
-    projectId: "novaprism-393c6",
-    storageBucket: "novaprism-393c6.firebasestorage.app",
-    messagingSenderId: "710392896339",
-    appId: "1:710392896339:web:d192a561813fbc06e11fa6"
-  };
+// ============ GANTI DENGAN URL & KEY DARI SUPABASE ============
+const SUPABASE_URL = "https://xxxxx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs...";
+// ===============================================================
 
-  // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ---------- Menu config (sama seperti sebelumnya) ----------
+const SESSION_KEY = "novaprism_session";
+const BG_KEY = "novaprism_bg_image";
+
+// ---------- Menu config ----------
 const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
   { key: "datalogin", label: "Data Login" },
@@ -42,83 +29,15 @@ function menuLabel(key) {
   return found ? found.label : key;
 }
 
-// ---------- Session (pakai Firebase Auth) ----------
-let currentUser = null;
-let currentAccess = ["home"];
-
-// ---------- Akun: baca dari config/accounts ----------
-async function fetchAccountsConfig() {
-  const docSnap = await getDoc(doc(db, "config", "accounts"));
-  return docSnap.exists() ? docSnap.data().list || [] : [];
+// ---------- Session ----------
+function getSession() {
+  const raw = localStorage.getItem(SESSION_KEY);
+  return raw ? JSON.parse(raw) : null;
 }
+function setSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
 
-async function saveAccountsConfig(list) {
-  await setDoc(doc(db, "config", "accounts"), { list });
-}
-
-// ---------- Riwayat login (shared) ----------
-async function fetchRecords() {
-  const q = query(collection(db, "records"), orderBy("time", "desc"), limit(50));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-}
-
-async function addRecord(record) {
-  await addDoc(collection(db, "records"), record);
-}
-
-async function clearLoginRecords() {
-  const snap = await getDocs(collection(db, "records"));
-  for (const d of snap.docs) await deleteDoc(d.ref);
-}
-
-// ---------- Rekening cache (shared) ----------
-async function fetchRekeningCache() {
-  const docSnap = await getDoc(doc(db, "config", "rekening"));
-  return docSnap.exists() ? docSnap.data() : null;
-}
-
-async function saveRekeningCache(list) {
-  await setDoc(doc(db, "config", "rekening"), {
-    list, syncedAt: new Date().toISOString()
-  });
-}
-
-// ---------- Reports (shared) ----------
-async function fetchReports() {
-  const q = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(50));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-async function saveReport(fields, text) {
-  await addDoc(collection(db, "reports"), {
-    ...fields, text, createdAt: new Date().toISOString()
-  });
-}
-
-async function deleteReport(id) {
-  await deleteDoc(doc(db, "reports", id));
-}
-
-// ---------- Reports Kesalahan (shared) ----------
-async function fetchKesalahanReports() {
-  const q = query(collection(db, "reportsKesalahan"), orderBy("createdAt", "desc"), limit(50));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-async function saveKesalahanReport(fields, text) {
-  await addDoc(collection(db, "reportsKesalahan"), {
-    ...fields, text, createdAt: new Date().toISOString()
-  });
-}
-
-async function deleteKesalahanReport(id) {
-  await deleteDoc(doc(db, "reportsKesalahan", id));
-}
-
-// ---------- Helper (tetap sama) ----------
+// ---------- Helpers ----------
 function detectDevice() {
   const ua = navigator.userAgent;
   if (/Mobi|Android/i.test(ua)) return "Mobile";
@@ -134,6 +53,26 @@ function formatTime(iso) {
   });
 }
 
+// ---------- Background ----------
+function applyBackground(url) {
+  if (url) document.documentElement.style.setProperty("--user-bg-image", `url("${url}")`);
+}
+function loadSavedBackground() {
+  const saved = localStorage.getItem(BG_KEY);
+  if (saved) applyBackground(saved);
+}
+loadSavedBackground();
+
+const bgInputEl = document.getElementById("bgInput");
+if (bgInputEl) {
+  const saved = localStorage.getItem(BG_KEY);
+  if (saved) bgInputEl.value = saved;
+  bgInputEl.addEventListener("change", () => {
+    const url = bgInputEl.value.trim();
+    if (url) { localStorage.setItem(BG_KEY, url); applyBackground(url); }
+  });
+}
+
 // ---------- Login form (index.html) ----------
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
@@ -142,53 +81,60 @@ if (loginForm) {
     const email = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
     const errorMsg = document.getElementById("errorMsg");
+    const btn = loginForm.querySelector("button[type='submit']");
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Memeriksa...";
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      await addRecord({
-        username: email,
-        time: new Date().toISOString(),
-        device: detectDevice(),
-        status: "success",
-      });
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("email, access")
+      .eq("email", email)
+      .eq("password", password)
+      .maybeSingle();
+
+    const matched = !error && data;
+
+    await supabase.from("records").insert({
+      username: email || "(kosong)",
+      device: detectDevice(),
+      status: matched ? "success" : "failed",
+    });
+
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+
+    if (matched) {
+      setSession({ email: data.email, access: data.access || ["home"] });
       window.location.href = "dashboard.html";
-    } catch (err) {
+    } else {
       errorMsg.style.display = "block";
-      await addRecord({
-        username: email || "(kosong)",
-        time: new Date().toISOString(),
-        device: detectDevice(),
-        status: "failed",
-      });
     }
   });
 }
 
-// ---------- Dashboard guard (dashboard.html) ----------
-async function requireLogin() {
-  return new Promise((resolve, reject) => {
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "index.html"; reject(); return; }
-      currentUser = user;
-      const accounts = await fetchAccountsConfig();
-      const entry = accounts.find(a => a.email === user.email);
-      currentAccess = entry ? entry.access : ["home"];
-      resolve();
-    });
-  });
+// ---------- Auth guard & logout (dashboard.html) ----------
+function requireLogin() {
+  const session = getSession();
+  if (!session) {
+    window.location.href = "index.html";
+    return null;
+  }
+  return session;
 }
 
-async function logout() {
-  await signOut(auth);
+function logout() {
+  clearSession();
   window.location.href = "index.html";
 }
 
-function applyAccessControl() {
+function applyAccessControl(session) {
+  const access = (session && session.access) || ["home"];
   let activeIsVisible = false;
   let firstVisibleItem = null;
 
   document.querySelectorAll(".nav-item").forEach(item => {
-    const allowed = currentAccess.includes(item.dataset.view);
+    const allowed = access.includes(item.dataset.view);
     item.style.display = allowed ? "" : "none";
     if (allowed && !firstVisibleItem) firstVisibleItem = item;
     if (allowed && item.classList.contains("active")) activeIsVisible = true;
@@ -206,10 +152,124 @@ function applyAccessControl() {
   }
 }
 
-async function renderDashboard() {
+// ---------- Accounts ----------
+async function fetchAccountsConfig() {
+  const { data } = await supabase
+    .from("accounts")
+    .select("*")
+    .order("created_at", { ascending: false });
+  return data || [];
+}
+
+async function addAccount(email, password, access) {
+  const { error } = await supabase.from("accounts").insert({ email, password, access });
+  return !error;
+}
+
+async function updateAccountAccess(email, access) {
+  await supabase.from("accounts").update({ access }).eq("email", email);
+}
+
+async function deleteAccount(email) {
+  await supabase.from("accounts").delete().eq("email", email);
+}
+
+// ---------- Records (riwayat login) ----------
+async function fetchRecords() {
+  const { data } = await supabase
+    .from("records")
+    .select("*")
+    .order("time", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function clearLoginRecords() {
+  await supabase.from("records").delete().neq("status", "__never__");
+}
+
+// ---------- Rekening cache ----------
+async function fetchRekeningCache() {
+  const { data } = await supabase.from("rekening").select("*").eq("id", 1).maybeSingle();
+  if (!data) return null;
+  return { list: data.list || [], syncedAt: data.synced_at };
+}
+
+async function saveRekeningCache(list) {
+  await supabase.from("rekening").upsert({
+    id: 1,
+    list,
+    synced_at: new Date().toISOString(),
+  });
+}
+
+// ---------- Reports (bank) ----------
+async function fetchReports() {
+  const { data } = await supabase
+    .from("reports")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function saveReport(fields, text) {
+  await supabase.from("reports").insert({
+    info: fields.info,
+    perihal: fields.perihal,
+    bank: fields.bank,
+    nama_rek: fields.namaRek,
+    nomor_rek: fields.nomorRek,
+    saldo: fields.saldo,
+    lampiran: fields.lampiran,
+    keterangan: fields.keterangan,
+    text,
+  });
+}
+
+async function deleteReport(id) {
+  await supabase.from("reports").delete().eq("id", id);
+}
+
+// ---------- Reports (kesalahan) ----------
+async function fetchKesalahanReports() {
+  const { data } = await supabase
+    .from("reports_kesalahan")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function saveKesalahanReport(fields, text) {
+  await supabase.from("reports_kesalahan").insert({
+    info: fields.info,
+    perihal: fields.perihal,
+    staff_nama: fields.staffNama,
+    staff_kode: fields.staffKode,
+    agen_nama: fields.agenNama,
+    user_id: fields.userId,
+    nama_rek: fields.namaRek,
+    nomor_rek: fields.nomorRek,
+    jenis_bank: fields.jenisBank,
+    nominal: fields.nominal,
+    lampiran: fields.lampiran,
+    keterangan: fields.keterangan,
+    text,
+  });
+}
+
+async function deleteKesalahanReport(id) {
+  await supabase.from("reports_kesalahan").delete().eq("id", id);
+}
+
+// ---------- Render: Dashboard ----------
+async function renderDashboard(session) {
   const records = await fetchRecords();
-  document.getElementById("welcomeText").textContent = `Halo, ${currentUser.email}`;
-  document.getElementById("avatarInitial").textContent = currentUser.email.charAt(0).toUpperCase();
+  if (session) {
+    document.getElementById("welcomeText").textContent = `Halo, ${session.email}`;
+    document.getElementById("avatarInitial").textContent = session.email.charAt(0).toUpperCase();
+  }
 
   const total = records.length;
   const successCount = records.filter(r => r.status === "success").length;
@@ -227,16 +287,25 @@ async function renderDashboard() {
   records.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.username}</td>
+      <td>${r.username || "—"}</td>
       <td>${formatTime(r.time)}</td>
-      <td>${r.device}</td>
+      <td>${r.device || "—"}</td>
       <td><span class="status-pill ${r.status}"><span class="dot"></span>${r.status === "success" ? "Berhasil" : "Gagal"}</span></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// ---------- Data Login: render daftar akun ----------
+// ---------- Render: Accounts ----------
+function accessCheckboxesHTML(selected) {
+  return MENU_CONFIG.map(m => `
+    <label class="access-check">
+      <input type="checkbox" value="${m.key}" ${selected.includes(m.key) ? "checked" : ""} />
+      <span>${m.label}</span>
+    </label>
+  `).join("");
+}
+
 async function renderAccounts() {
   const tbody = document.getElementById("accountTableBody");
   if (!tbody) return;
@@ -248,51 +317,68 @@ async function renderAccounts() {
   emptyState.style.display = "none";
 
   accounts.forEach(a => {
-    const badges = (a.access || []).map(k => {
-      const m = MENU_CONFIG.find(x => x.key === k);
-      return m ? `<span class="access-badge">${m.label}</span>` : "";
-    }).join("");
+    const access = a.access || [];
+    const badgesHTML = access.length
+      ? MENU_CONFIG.filter(m => access.includes(m.key)).map(m => `<span class="access-badge">${m.label}</span>`).join("")
+      : `<span class="access-badge empty">Tidak ada akses</span>`;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.email}</td>
-      <td><div class="access-badges">${badges || '<span class="access-badge empty">Tidak ada</span>'}</div></td>
+      <td>
+        <span class="pw-cell">
+          <span class="pw-value" data-visible="false">••••••••</span>
+          <button type="button" class="pw-toggle">lihat</button>
+        </span>
+      </td>
+      <td><div class="access-badges">${badgesHTML}</div></td>
+      <td>${formatTime(a.created_at)}</td>
       <td>
         <div class="action-cell">
-          <button type="button" class="btn-mini" data-edit="${a.email}">Edit akses</button>
-          <button type="button" class="btn-danger-ghost" data-del="${a.email}">Hapus</button>
+          <button type="button" class="btn-mini" data-edit-id="${a.email}">Edit akses</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${a.email}">Hapus</button>
         </div>
       </td>
     `;
-    tr.querySelector("[data-edit]").addEventListener("click", () => toggleEditAccessRow(tr, a));
-    tr.querySelector("[data-del]").addEventListener("click", async () => {
-      if (confirm(`Hapus akses ${a.email} dari daftar? (Akun Firebase Auth-nya tidak ikut terhapus)`)) {
-        const list = (await fetchAccountsConfig()).filter(x => x.email !== a.email);
-        await saveAccountsConfig(list);
+
+    const pwValueEl = tr.querySelector(".pw-value");
+    const pwToggleEl = tr.querySelector(".pw-toggle");
+    pwToggleEl.addEventListener("click", () => {
+      const visible = pwValueEl.dataset.visible === "true";
+      pwValueEl.textContent = visible ? "••••••••" : a.password;
+      pwValueEl.dataset.visible = String(!visible);
+      pwToggleEl.textContent = visible ? "lihat" : "sembunyikan";
+    });
+
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+      if (confirm(`Hapus akun ${a.email}?`)) {
+        await deleteAccount(a.email);
         renderAccounts();
       }
     });
+
+    tr.querySelector("[data-edit-id]").addEventListener("click", () => {
+      toggleEditAccessRow(tr, a);
+    });
+
     tbody.appendChild(tr);
   });
 }
 
-async function toggleEditAccessRow(rowEl, account) {
+function toggleEditAccessRow(rowEl, account) {
   const tbody = rowEl.parentElement;
   const existing = tbody.querySelector(".edit-access-row");
+  const alreadyOpenForThis = existing && existing.dataset.forId === account.email;
   if (existing) existing.remove();
+  if (alreadyOpenForThis) return;
 
   const editRow = document.createElement("tr");
   editRow.className = "edit-access-row";
+  editRow.dataset.forId = account.email;
   editRow.innerHTML = `
-    <td colspan="3">
+    <td colspan="5">
       <div class="access-group-label">Atur menu untuk <strong>${account.email}</strong>:</div>
-      <div class="access-checks">
-        ${MENU_CONFIG.map(m => `
-          <label class="access-check">
-            <input type="checkbox" value="${m.key}" ${(account.access || []).includes(m.key) ? "checked" : ""} />
-            <span>${m.label}</span>
-          </label>
-        `).join("")}
-      </div>
+      <div class="access-checks">${accessCheckboxesHTML(account.access || [])}</div>
       <div class="edit-access-actions">
         <button type="button" class="btn-mini" data-save>Simpan</button>
         <button type="button" class="btn-ghost" data-cancel>Batal</button>
@@ -304,27 +390,19 @@ async function toggleEditAccessRow(rowEl, account) {
   editRow.querySelector("[data-save]").addEventListener("click", async () => {
     const checked = Array.from(editRow.querySelectorAll('input:checked')).map(i => i.value);
     if (checked.length === 0) { alert("Pilih minimal satu menu."); return; }
-    const list = await fetchAccountsConfig();
-    const entry = list.find(x => x.email === account.email);
-    if (entry) entry.access = checked;
-    await saveAccountsConfig(list);
+    await updateAccountAccess(account.email, checked);
     renderAccounts();
   });
   editRow.querySelector("[data-cancel]").addEventListener("click", () => editRow.remove());
 }
 
-async function renderAddAccessChecks() {
+function renderAddAccessChecks() {
   const container = document.getElementById("newAccessChecks");
   if (!container) return;
-  container.innerHTML = MENU_CONFIG.map(m => `
-    <label class="access-check">
-      <input type="checkbox" value="${m.key}" ${m.key === "home" ? "checked" : ""} />
-      <span>${m.label}</span>
-    </label>
-  `).join("");
+  container.innerHTML = accessCheckboxesHTML(["home"]);
 }
 
-// ---------- Cek Rekening (Google Sheet) ----------
+// ---------- Rekening sync & search ----------
 const SHEET_CONFIG = {
   sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE",
   gid: "2056151193",
@@ -366,7 +444,7 @@ async function syncRekeningFromSheet() {
     const text = await res.text();
     const list = parseSheetCsvToRekening(text);
     await saveRekeningCache(list);
-    renderSyncStatus();
+    await renderSyncStatus();
   } catch (err) {
     if (statusEl) { statusEl.textContent = "Gagal sinkron: " + err.message; statusEl.className = "rek-sync-status error"; }
   }
@@ -439,6 +517,7 @@ function formatRupiahInputValue(raw) {
   if (!digits) return "";
   return "Rp " + Number(digits).toLocaleString("id-ID");
 }
+
 function generateReportText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`, ``,
@@ -447,6 +526,7 @@ function generateReportText(f) {
     `Keterangan :`, `${f.keterangan}`,
   ].join("\n");
 }
+
 function getReportFieldsFromForm() {
   return {
     info: document.getElementById("repInfo").value,
@@ -459,6 +539,7 @@ function getReportFieldsFromForm() {
     keterangan: document.getElementById("repKeterangan").value,
   };
 }
+
 function updateReportPreview() {
   const preview = document.getElementById("reportPreview");
   if (!preview) return;
@@ -467,7 +548,7 @@ function updateReportPreview() {
 
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; }
-  catch { 
+  catch {
     const tmp = document.createElement("textarea");
     tmp.value = text; tmp.style.position = "fixed"; tmp.style.opacity = "0";
     document.body.appendChild(tmp); tmp.focus(); tmp.select();
@@ -475,6 +556,7 @@ async function copyText(text) {
     document.body.removeChild(tmp); return ok;
   }
 }
+
 function flashButton(btn, tempLabel) {
   const original = btn.textContent;
   btn.textContent = tempLabel;
@@ -495,19 +577,20 @@ async function renderReportHistory() {
     tr.innerHTML = `
       <td>${r.perihal || "—"}</td>
       <td>${r.bank || "—"}</td>
-      <td>${r.namaRek || "—"}</td>
-      <td>${formatTime(r.createdAt)}</td>
+      <td>${r.nama_rek || "—"}</td>
+      <td>${formatTime(r.created_at)}</td>
       <td>
         <div class="action-cell">
-          <button type="button" class="btn-mini" data-copy="${r.id}">Salin</button>
-          <button type="button" class="btn-danger-ghost" data-del="${r.id}">Hapus</button>
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
         </div>
       </td>
     `;
-    tr.querySelector("[data-copy]").addEventListener("click", async (e) => {
-      await copyText(r.text); flashButton(e.target, "Tersalin!");
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text || "");
+      flashButton(e.target, "Tersalin!");
     });
-    tr.querySelector("[data-del]").addEventListener("click", async () => {
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
       if (confirm("Hapus report ini?")) { await deleteReport(r.id); renderReportHistory(); }
     });
     tbody.appendChild(tr);
@@ -520,6 +603,7 @@ function formatNumberInputValue(raw) {
   if (!digits) return "";
   return Number(digits).toLocaleString("id-ID");
 }
+
 function generateKesalahanText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`,
@@ -530,6 +614,7 @@ function generateKesalahanText(f) {
     `Keterangan :`, `${f.keterangan}`,
   ].join("\n");
 }
+
 function getKesalahanFieldsFromForm() {
   return {
     info: document.getElementById("rkInfo").value,
@@ -546,6 +631,7 @@ function getKesalahanFieldsFromForm() {
     keterangan: document.getElementById("rkKeterangan").value,
   };
 }
+
 function updateKesalahanPreview() {
   const preview = document.getElementById("rkPreview");
   if (!preview) return;
@@ -565,53 +651,38 @@ async function renderKesalahanHistory() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${r.perihal || "—"}</td>
-      <td>${r.userId || "—"}</td>
-      <td>${r.namaRek || "—"}</td>
-      <td>${formatTime(r.createdAt)}</td>
+      <td>${r.user_id || "—"}</td>
+      <td>${r.nama_rek || "—"}</td>
+      <td>${formatTime(r.created_at)}</td>
       <td>
         <div class="action-cell">
-          <button type="button" class="btn-mini" data-copy="${r.id}">Salin</button>
-          <button type="button" class="btn-danger-ghost" data-del="${r.id}">Hapus</button>
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
         </div>
       </td>
     `;
-    tr.querySelector("[data-copy]").addEventListener("click", async (e) => {
-      await copyText(r.text); flashButton(e.target, "Tersalin!");
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text || "");
+      flashButton(e.target, "Tersalin!");
     });
-    tr.querySelector("[data-del]").addEventListener("click", async () => {
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
       if (confirm("Hapus report ini?")) { await deleteKesalahanReport(r.id); renderKesalahanHistory(); }
     });
     tbody.appendChild(tr);
   });
 }
-// ---------- Export untuk dipakai di dashboard.html ----------
+
+// ---------- Export untuk dashboard.html ----------
 export {
-  requireLogin,
-  logout,
-  renderDashboard,
-  renderAccounts,
-  renderAddAccessChecks,
-  applyAccessControl,
-  renderSyncStatus,
-  syncRekeningFromSheet,
-  searchRekening,
-  fetchRekeningCache,
-  fetchAccountsConfig,
-  saveAccountsConfig,
-  clearLoginRecords,
-  renderReportHistory,
-  updateReportPreview,
-  formatRupiahInputValue,
-  getReportFieldsFromForm,
-  generateReportText,
-  saveReport,
-  copyText,
-  flashButton,
-  renderKesalahanHistory,
-  updateKesalahanPreview,
-  formatNumberInputValue,
-  getKesalahanFieldsFromForm,
-  generateKesalahanText,
-  saveKesalahanReport,
-  menuLabel,
+  requireLogin, logout, getSession, applyAccessControl, menuLabel,
+  renderDashboard, renderAccounts, renderAddAccessChecks,
+  fetchAccountsConfig, addAccount, deleteAccount, updateAccountAccess,
+  fetchRecords, clearLoginRecords,
+  fetchRekeningCache, saveRekeningCache, renderSyncStatus,
+  syncRekeningFromSheet, searchRekening,
+  renderReportHistory, updateReportPreview, formatRupiahInputValue,
+  getReportFieldsFromForm, generateReportText, saveReport,
+  copyText, flashButton,
+  renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
+  getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
 };
