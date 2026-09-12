@@ -2,6 +2,7 @@
    NOVAPRISM — Supabase Version
    + Auto-save Draft
    + Reportan Kurang/Lebih Kasih
+   + Reportan Salah Sorong
    ============================================ */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -20,6 +21,7 @@ const DRAFT_KEYS = {
   report: "novaprism_draft_report",
   kesalahan: "novaprism_draft_kesalahan",
   kasih: "novaprism_draft_kasih",
+  salahsorong: "novaprism_draft_salahsorong",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -32,6 +34,7 @@ const MENU_CONFIG = [
   { key: "report", label: "Reportan Bank" },
   { key: "reportkesalahan", label: "Reportan Kesalahan" },
   { key: "reportkasih", label: "Reportan Kurang/Lebih Kasih" },
+  { key: "reportsalahsorong", label: "Reportan Salah Sorong" },
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
 ];
 
@@ -323,12 +326,46 @@ async function deleteKasihReport(id) {
   await supabase.from("reports_kasih").delete().eq("id", id);
 }
 
+// ---------- Reports (salah sorong) ----------
+async function fetchSalahSorongReports() {
+  const { data } = await supabase
+    .from("reports_salahsorong")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function saveSalahSorongReport(fields, text) {
+  await supabase.from("reports_salahsorong").insert({
+    info: fields.info,
+    perihal: fields.perihal,
+    staff_nama: fields.staffNama,
+    staff_kode: fields.staffKode,
+    agen_nama: fields.agenNama,
+    pemilik_user_id: fields.pemilikUserId,
+    pemilik_nama_rek: fields.pemilikNamaRek,
+    pemilik_nomor_rek: fields.pemilikNomorRek,
+    pemilik_jenis_bank: fields.pemilikJenisBank,
+    tujuan_user_id: fields.tujuanUserId,
+    tujuan_nama_rek: fields.tujuanNamaRek,
+    tujuan_nomor_rek: fields.tujuanNomorRek,
+    tujuan_jenis_bank: fields.tujuanJenisBank,
+    nominal: fields.nominal,
+    lampiran: fields.lampiran,
+    keterangan: fields.keterangan,
+    text,
+  });
+}
+
+async function deleteSalahSorongReport(id) {
+  await supabase.from("reports_salahsorong").delete().eq("id", id);
+}
+
 // ---------- Pengembalian HP & Simcard ----------
 let _pengembalianItems = [];
 
-function getPengembalianItems() {
-  return [..._pengembalianItems];
-}
+function getPengembalianItems() { return [..._pengembalianItems]; }
 
 function addPengembalianItem(data) {
   _pengembalianItems.push({
@@ -340,13 +377,8 @@ function addPengembalianItem(data) {
   });
 }
 
-function removePengembalianItem(index) {
-  _pengembalianItems.splice(index, 1);
-}
-
-function resetPengembalianItems() {
-  _pengembalianItems = [];
-}
+function removePengembalianItem(index) { _pengembalianItems.splice(index, 1); }
+function resetPengembalianItems() { _pengembalianItems = []; }
 
 function generatePengembalianText(items) {
   if (!items || items.length === 0) return "";
@@ -481,11 +513,12 @@ async function renderPengembalianHistory() {
   });
 }
 
-// ---------- Draft: field list per form ----------
+// ---------- Draft field list ----------
 const DRAFT_FIELDS = {
   report: ["repInfo", "repPerihal", "repBank", "repNamaRek", "repNomorRek", "repSaldo", "repLampiran", "repKeterangan"],
   kesalahan: ["rkInfo", "rkPerihal", "rkStaffNama", "rkStaffKode", "rkAgenNama", "rkUserId", "rkNamaRek", "rkNomorRek", "rkJenisBank", "rkNominal", "rkLampiran", "rkKeterangan"],
   kasih: ["rkkInfo", "rkkPerihal", "rkkStaffNama", "rkkStaffKode", "rkkAgenNama", "rkkUserId", "rkkNamaRek", "rkkNomorRek", "rkkJenisBank", "rkkNominal", "rkkNominalTerproses", "rkkSelisihTipe", "rkkSelisihNominal", "rkkLampiran", "rkkKeterangan"],
+  salahsorong: ["rssInfo", "rssPerihal", "rssStaffNama", "rssStaffKode", "rssAgenNama", "rssPemilikUserId", "rssPemilikNamaRek", "rssPemilikNomorRek", "rssPemilikJenisBank", "rssTujuanUserId", "rssTujuanNamaRek", "rssTujuanNomorRek", "rssTujuanJenisBank", "rssNominal", "rssLampiran", "rssKeterangan"],
   pengembalianForm: ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"],
 };
 
@@ -506,22 +539,22 @@ function applyDraftFields(data) {
   });
 }
 
-// ---------- Draft: Reportan Bank ----------
 function saveReportDraft() { saveDraft(DRAFT_KEYS.report, collectDraftFields(DRAFT_FIELDS.report)); }
 function restoreReportDraft() { const data = loadDraft(DRAFT_KEYS.report); if (data) applyDraftFields(data); }
 function clearReportDraft() { clearDraft(DRAFT_KEYS.report); }
 
-// ---------- Draft: Reportan Kesalahan ----------
 function saveKesalahanDraft() { saveDraft(DRAFT_KEYS.kesalahan, collectDraftFields(DRAFT_FIELDS.kesalahan)); }
 function restoreKesalahanDraft() { const data = loadDraft(DRAFT_KEYS.kesalahan); if (data) applyDraftFields(data); }
 function clearKesalahanDraft() { clearDraft(DRAFT_KEYS.kesalahan); }
 
-// ---------- Draft: Reportan Kasih ----------
 function saveKasihDraft() { saveDraft(DRAFT_KEYS.kasih, collectDraftFields(DRAFT_FIELDS.kasih)); }
 function restoreKasihDraft() { const data = loadDraft(DRAFT_KEYS.kasih); if (data) applyDraftFields(data); }
 function clearKasihDraft() { clearDraft(DRAFT_KEYS.kasih); }
 
-// ---------- Draft: Pengembalian ----------
+function saveSalahSorongDraft() { saveDraft(DRAFT_KEYS.salahsorong, collectDraftFields(DRAFT_FIELDS.salahsorong)); }
+function restoreSalahSorongDraft() { const data = loadDraft(DRAFT_KEYS.salahsorong); if (data) applyDraftFields(data); }
+function clearSalahSorongDraft() { clearDraft(DRAFT_KEYS.salahsorong); }
+
 function savePengembalianDraft() {
   saveDraft(DRAFT_KEYS.pengembalianForm, collectDraftFields(DRAFT_FIELDS.pengembalianForm));
   saveDraft(DRAFT_KEYS.pengembalianItems, _pengembalianItems);
@@ -1029,6 +1062,91 @@ async function renderKasihHistory() {
   });
 }
 
+// ---------- Reportan Salah Sorong ----------
+function generateSalahSorongText(f) {
+  return [
+    `Info : ${f.info}`,
+    `Perihal : ${f.perihal}`,
+    `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`,
+    ``,
+    `Pemilik Dana`,
+    `UserID : ${f.pemilikUserId}`,
+    `Nama Rekening : ${f.pemilikNamaRek}`,
+    `Nomor Rekening : ${f.pemilikNomorRek} (${f.pemilikJenisBank})`,
+    ``,
+    `Terproses ke`,
+    `UserID : ${f.tujuanUserId}`,
+    `Nama Rekening : ${f.tujuanNamaRek}`,
+    `Nomor Rekening : ${f.tujuanNomorRek} (${f.tujuanJenisBank})`,
+    `Nominal : Rp. ${f.nominal}`,
+    `Lampiran : ${f.lampiran}`,
+    ``,
+    `Keterangan :`,
+    `${f.keterangan}`,
+  ].join("\n");
+}
+
+function getSalahSorongFieldsFromForm() {
+  return {
+    info: document.getElementById("rssInfo").value,
+    perihal: document.getElementById("rssPerihal").value,
+    staffNama: document.getElementById("rssStaffNama").value,
+    staffKode: document.getElementById("rssStaffKode").value,
+    agenNama: document.getElementById("rssAgenNama").value,
+    pemilikUserId: document.getElementById("rssPemilikUserId").value,
+    pemilikNamaRek: document.getElementById("rssPemilikNamaRek").value,
+    pemilikNomorRek: document.getElementById("rssPemilikNomorRek").value,
+    pemilikJenisBank: document.getElementById("rssPemilikJenisBank").value,
+    tujuanUserId: document.getElementById("rssTujuanUserId").value,
+    tujuanNamaRek: document.getElementById("rssTujuanNamaRek").value,
+    tujuanNomorRek: document.getElementById("rssTujuanNomorRek").value,
+    tujuanJenisBank: document.getElementById("rssTujuanJenisBank").value,
+    nominal: document.getElementById("rssNominal").value,
+    lampiran: document.getElementById("rssLampiran").value,
+    keterangan: document.getElementById("rssKeterangan").value,
+  };
+}
+
+function updateSalahSorongPreview() {
+  const preview = document.getElementById("rssPreview");
+  if (!preview) return;
+  preview.textContent = generateSalahSorongText(getSalahSorongFieldsFromForm());
+}
+
+async function renderSalahSorongHistory() {
+  const tbody = document.getElementById("rssHistoryBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("rssEmptyState");
+  const reports = await fetchSalahSorongReports();
+  tbody.innerHTML = "";
+  if (reports.length === 0) { emptyState.style.display = "block"; return; }
+  emptyState.style.display = "none";
+
+  reports.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.perihal || "—"}</td>
+      <td>${r.pemilik_user_id || "—"}</td>
+      <td>${r.tujuan_user_id || "—"}</td>
+      <td>${formatTime(r.created_at)}</td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+        </div>
+      </td>
+    `;
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text || "");
+      flashButton(e.target, "Tersalin!");
+    });
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+      if (confirm("Hapus report ini?")) { await deleteSalahSorongReport(r.id); renderSalahSorongHistory(); }
+    });
+    tbody.appendChild(tr);
+  });
+}
+
 // ---------- Export untuk dashboard.html ----------
 export {
   requireLogin, logout, getSession, applyAccessControl, menuLabel,
@@ -1044,6 +1162,8 @@ export {
   getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
   renderKasihHistory, updateKasihPreview,
   getKasihFieldsFromForm, generateKasihText, saveKasihReport,
+  renderSalahSorongHistory, updateSalahSorongPreview,
+  getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
@@ -1052,5 +1172,6 @@ export {
   saveReportDraft, restoreReportDraft, clearReportDraft,
   saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
   saveKasihDraft, restoreKasihDraft, clearKasihDraft,
+  saveSalahSorongDraft, restoreSalahSorongDraft, clearSalahSorongDraft,
   savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
 };
