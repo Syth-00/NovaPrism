@@ -59,6 +59,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3z"/><path d="M10 8 14 12M14 8l-4 4"/></svg>
             <span>Reportan Salah Sorong</span>
           </div>
+          <div class="nav-item nav-item-sub" data-view="reportsalahbuang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+            <span>Reportan Salah Buang Dana</span>
+          </div>
         </div>
       </div>
     </div>
@@ -86,13 +90,9 @@
         <div class="glass stat-card"><div class="label">Login gagal</div><div class="value" id="statFailed">0</div></div>
         <div class="glass stat-card"><div class="label">Login terakhir</div><div class="value" id="statLast" style="font-size:16px;">—</div></div>
       </div>
-
       <div class="glass panel">
         <div class="panel-head">
-          <div>
-            <h2>Riwayat login</h2>
-            <p>Data ini tersimpan di Supabase (shared ke semua device).</p>
-          </div>
+          <div><h2>Riwayat login</h2><p>Data ini tersimpan di Supabase (shared).</p></div>
           <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
         </div>
         <table>
@@ -107,29 +107,17 @@
     <div class="view" id="view-datalogin">
       <div class="glass panel">
         <div class="panel-head">
-          <div>
-            <h2>Data Login</h2>
-            <p>Kelola akun & akses. Akun yang ditambah di sini <strong>langsung bisa login</strong>.</p>
-          </div>
+          <div><h2>Data Login</h2><p>Kelola akun & akses. Akun master (★) otomatis dapat semua menu.</p></div>
         </div>
-
         <form class="add-account-form" id="addAccountForm">
-          <div class="field">
-            <label for="newEmail">Email / ID</label>
-            <input type="text" id="newEmail" placeholder="nama@email.com" required />
-          </div>
-          <div class="field">
-            <label for="newPassword">Password</label>
-            <input type="text" id="newPassword" placeholder="Password login" required />
-          </div>
+          <div class="field"><label for="newEmail">Email / ID</label><input type="text" id="newEmail" placeholder="nama@email.com" required /></div>
+          <div class="field"><label for="newPassword">Password</label><input type="text" id="newPassword" placeholder="Password login" required /></div>
           <button type="submit" class="btn-primary" style="margin-top:0; width:auto; padding:12px 20px;">Tambah</button>
         </form>
-
         <div style="margin-bottom:22px;">
           <div class="access-group-label">Akses menu untuk akun baru:</div>
           <div class="access-checks" id="newAccessChecks"></div>
         </div>
-
         <table>
           <thead><tr><th>Email / ID</th><th>Password</th><th>Akses</th><th>Dibuat</th><th></th></tr></thead>
           <tbody id="accountTableBody"></tbody>
@@ -142,10 +130,7 @@
     <div class="view" id="view-rekening">
       <div class="glass panel">
         <div class="panel-head">
-          <div>
-            <h2>Cek Rekening</h2>
-            <p>Data dari Google Sheet — kolom A = nama, B = nomor rekening.</p>
-          </div>
+          <div><h2>Cek Rekening</h2><p>Data dari Google Sheet — kolom A = nama, B = nomor rekening.</p></div>
           <button class="btn-ghost" id="syncSheetBtn">Sinkron ulang</button>
         </div>
         <div class="rek-sync-status" id="rekSyncStatus">Belum pernah disinkron.</div>
@@ -158,9 +143,7 @@
           </div>
           <div class="rek-search-col glass" style="padding:18px;">
             <label>Hasil pencarian</label>
-            <div class="rek-result-list" id="rekResultList">
-              <div class="empty-state">Belum ada pencarian.</div>
-            </div>
+            <div class="rek-result-list" id="rekResultList"><div class="empty-state">Belum ada pencarian.</div></div>
           </div>
         </div>
       </div>
@@ -170,17 +153,13 @@
     <div class="view" id="view-pengembalian">
       <div class="glass panel">
         <div class="panel-head">
-          <div>
-            <h2>Pengembalian HP & Simcard</h2>
-            <p>Tambah item sebanyak yang kamu mau, preview otomatis kebentuk di bawah.</p>
-          </div>
+          <div><h2>Pengembalian HP & Simcard</h2><p>Tambah item sebanyak yang kamu mau.</p></div>
         </div>
-
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <div class="field"><label for="pbgBank">BANK</label><input type="text" id="pbgBank" placeholder="BCA" /></div>
             <div class="field"><label for="pbgTypeBank">TYPE BANK</label><input type="text" id="pbgTypeBank" placeholder="Tabungan" /></div>
-            <div class="field"><label for="pbgNamaRek">NAMA REKENING</label><input type="text" id="pbgNamaRek" placeholder="Nama pemilik rekening" /></div>
+            <div class="field"><label for="pbgNamaRek">NAMA REKENING</label><input type="text" id="pbgNamaRek" placeholder="Nama pemilik" /></div>
             <div class="field"><label for="pbgNomorRek">NOMOR REKENING</label><input type="text" id="pbgNomorRek" placeholder="1234567890" /></div>
             <div class="field"><label for="pbgKelengkapan">KELENGKAPAN</label><input type="text" id="pbgKelengkapan" placeholder="HP, SIM Card" /></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
@@ -191,11 +170,10 @@
           <div class="rek-search-col glass" style="padding:18px;">
             <label>Item yang sudah ditambahkan (<span id="pbgCount">0</span>)</label>
             <div class="rek-result-list" id="pengembalianList" style="max-height:400px;">
-              <div class="empty-state">Belum ada item. Tambah lewat form di kiri.</div>
+              <div class="empty-state">Belum ada item.</div>
             </div>
           </div>
         </div>
-
         <div style="margin-top:20px;">
           <label style="display:block; margin-bottom:8px;">Preview</label>
           <pre class="report-preview" id="pengembalianPreview"></pre>
@@ -206,17 +184,9 @@
           </div>
         </div>
       </div>
-
       <div class="glass panel" style="margin-top:20px;">
-        <div class="panel-head">
-          <div><h2>Riwayat Pengembalian</h2><p>Report yang pernah disimpan.</p></div>
-        </div>
-        <table>
-          <thead>
-            <tr><th>Bank</th><th>Jumlah</th><th>Waktu</th><th></th></tr>
-          </thead>
-          <tbody id="pengembalianHistoryBody"></tbody>
-        </table>
+        <div class="panel-head"><div><h2>Riwayat Pengembalian</h2><p>Report yang pernah disimpan.</p></div></div>
+        <table><thead><tr><th>Bank</th><th>Jumlah</th><th>Waktu</th><th></th></tr></thead><tbody id="pengembalianHistoryBody"></tbody></table>
         <div class="empty-state" id="pengembalianEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
@@ -224,12 +194,7 @@
     <!-- Reportan Bank -->
     <div class="view" id="view-report">
       <div class="glass panel">
-        <div class="panel-head">
-          <div>
-            <h2>Reportan Bank</h2>
-            <p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p>
-          </div>
-        </div>
+        <div class="panel-head"><div><h2>Reportan Bank</h2><p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p></div></div>
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <div class="field"><label for="repInfo">Info</label><input type="text" id="repInfo" /></div>
@@ -246,21 +211,12 @@
               <button type="button" class="btn-ghost" id="repResetBtn">Reset</button>
             </div>
           </div>
-          <div class="rek-search-col glass" style="padding:18px;">
-            <label>Preview</label>
-            <pre class="report-preview" id="reportPreview"></pre>
-          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="reportPreview"></pre></div>
         </div>
       </div>
-
       <div class="glass panel" style="margin-top:20px;">
-        <div class="panel-head">
-          <div><h2>Riwayat Report</h2><p>Report yang pernah disimpan.</p></div>
-        </div>
-        <table>
-          <thead><tr><th>Perihal</th><th>Bank</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead>
-          <tbody id="reportHistoryBody"></tbody>
-        </table>
+        <div class="panel-head"><div><h2>Riwayat Report</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Bank</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead><tbody id="reportHistoryBody"></tbody></table>
         <div class="empty-state" id="reportEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
@@ -268,12 +224,7 @@
     <!-- Reportan Kesalahan -->
     <div class="view" id="view-reportkesalahan">
       <div class="glass panel">
-        <div class="panel-head">
-          <div>
-            <h2>Reportan Kesalahan</h2>
-            <p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p>
-          </div>
-        </div>
+        <div class="panel-head"><div><h2>Reportan Kesalahan</h2><p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p></div></div>
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <div class="field"><label for="rkInfo">Info</label><input type="text" id="rkInfo" /></div>
@@ -298,21 +249,12 @@
               <button type="button" class="btn-ghost" id="rkResetBtn">Reset</button>
             </div>
           </div>
-          <div class="rek-search-col glass" style="padding:18px;">
-            <label>Preview</label>
-            <pre class="report-preview" id="rkPreview"></pre>
-          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rkPreview"></pre></div>
         </div>
       </div>
-
       <div class="glass panel" style="margin-top:20px;">
-        <div class="panel-head">
-          <div><h2>Riwayat Reportan Kesalahan</h2><p>Report yang pernah disimpan.</p></div>
-        </div>
-        <table>
-          <thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead>
-          <tbody id="rkHistoryBody"></tbody>
-        </table>
+        <div class="panel-head"><div><h2>Riwayat Reportan Kesalahan</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead><tbody id="rkHistoryBody"></tbody></table>
         <div class="empty-state" id="rkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
@@ -320,12 +262,7 @@
     <!-- Reportan Kurang/Lebih Kasih -->
     <div class="view" id="view-reportkasih">
       <div class="glass panel">
-        <div class="panel-head">
-          <div>
-            <h2>Reportan Kurang/Lebih Kasih</h2>
-            <p>Isi kolom di kiri, pilih tipe Kurang atau Lebih, preview otomatis kebentuk.</p>
-          </div>
-        </div>
+        <div class="panel-head"><div><h2>Reportan Kurang/Lebih Kasih</h2></div></div>
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <div class="field"><label for="rkkInfo">Info</label><input type="text" id="rkkInfo" /></div>
@@ -343,21 +280,15 @@
             </div>
             <div class="field"><label for="rkkNominal">Nominal</label><input type="text" id="rkkNominal" inputmode="numeric" /></div>
             <div class="field"><label for="rkkNominalTerproses">Nominal Terproses</label><input type="text" id="rkkNominalTerproses" inputmode="numeric" /></div>
-
             <div class="field" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div>
-                <label for="rkkSelisihTipe">Kekurangan / Kelebihan</label>
+              <div><label for="rkkSelisihTipe">Kekurangan / Kelebihan</label>
                 <select id="rkkSelisihTipe" style="width:100%; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#f2f1fb; font-size:14px;">
                   <option value="kurang">Kurang Kasih</option>
                   <option value="lebih">Lebih Kasih</option>
                 </select>
               </div>
-              <div>
-                <label for="rkkSelisihNominal">Nominal Selisih</label>
-                <input type="text" id="rkkSelisihNominal" inputmode="numeric" />
-              </div>
+              <div><label for="rkkSelisihNominal">Nominal Selisih</label><input type="text" id="rkkSelisihNominal" inputmode="numeric" /></div>
             </div>
-
             <div class="field"><label for="rkkLampiran">Lampiran</label><input type="text" id="rkkLampiran" /></div>
             <div class="field"><label for="rkkKeterangan">Keterangan</label><textarea id="rkkKeterangan" rows="4"></textarea></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
@@ -366,21 +297,12 @@
               <button type="button" class="btn-ghost" id="rkkResetBtn">Reset</button>
             </div>
           </div>
-          <div class="rek-search-col glass" style="padding:18px;">
-            <label>Preview</label>
-            <pre class="report-preview" id="rkkPreview"></pre>
-          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rkkPreview"></pre></div>
         </div>
       </div>
-
       <div class="glass panel" style="margin-top:20px;">
-        <div class="panel-head">
-          <div><h2>Riwayat Reportan Kasih</h2><p>Report yang pernah disimpan.</p></div>
-        </div>
-        <table>
-          <thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Tipe</th><th>Waktu</th><th></th></tr></thead>
-          <tbody id="rkkHistoryBody"></tbody>
-        </table>
+        <div class="panel-head"><div><h2>Riwayat Reportan Kasih</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Tipe</th><th>Waktu</th><th></th></tr></thead><tbody id="rkkHistoryBody"></tbody></table>
         <div class="empty-state" id="rkkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
@@ -388,12 +310,7 @@
     <!-- Reportan Salah Sorong -->
     <div class="view" id="view-reportsalahsorong">
       <div class="glass panel">
-        <div class="panel-head">
-          <div>
-            <h2>Reportan Salah Sorong</h2>
-            <p>Isi kolom di kiri, preview otomatis kebentuk di kanan.</p>
-          </div>
-        </div>
+        <div class="panel-head"><div><h2>Reportan Salah Sorong</h2></div></div>
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <div class="field"><label for="rssInfo">Info</label><input type="text" id="rssInfo" /></div>
@@ -403,7 +320,6 @@
               <div><label for="rssStaffKode">Kode</label><input type="text" id="rssStaffKode" /></div>
               <div><label for="rssAgenNama">Nama Agen</label><input type="text" id="rssAgenNama" /></div>
             </div>
-
             <div class="access-group-label" style="margin-top:16px;">Pemilik Dana</div>
             <div class="field"><label for="rssPemilikUserId">UserID</label><input type="text" id="rssPemilikUserId" /></div>
             <div class="field"><label for="rssPemilikNamaRek">Nama Rekening</label><input type="text" id="rssPemilikNamaRek" /></div>
@@ -411,7 +327,6 @@
               <div><label for="rssPemilikNomorRek">Nomor Rekening</label><input type="text" id="rssPemilikNomorRek" /></div>
               <div><label for="rssPemilikJenisBank">Jenis Bank</label><input type="text" id="rssPemilikJenisBank" /></div>
             </div>
-
             <div class="access-group-label" style="margin-top:16px;">Terproses ke</div>
             <div class="field"><label for="rssTujuanUserId">UserID</label><input type="text" id="rssTujuanUserId" /></div>
             <div class="field"><label for="rssTujuanNamaRek">Nama Rekening</label><input type="text" id="rssTujuanNamaRek" /></div>
@@ -419,33 +334,70 @@
               <div><label for="rssTujuanNomorRek">Nomor Rekening</label><input type="text" id="rssTujuanNomorRek" /></div>
               <div><label for="rssTujuanJenisBank">Jenis Bank</label><input type="text" id="rssTujuanJenisBank" /></div>
             </div>
-
             <div class="field"><label for="rssNominal">Nominal</label><input type="text" id="rssNominal" inputmode="numeric" /></div>
             <div class="field"><label for="rssLampiran">Lampiran</label><input type="text" id="rssLampiran" /></div>
             <div class="field"><label for="rssKeterangan">Keterangan</label><textarea id="rssKeterangan" rows="4"></textarea></div>
-
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
               <button type="button" class="btn-primary" id="rssCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
               <button type="button" class="btn-ghost" id="rssSaveBtn">Simpan ke riwayat</button>
               <button type="button" class="btn-ghost" id="rssResetBtn">Reset</button>
             </div>
           </div>
-          <div class="rek-search-col glass" style="padding:18px;">
-            <label>Preview</label>
-            <pre class="report-preview" id="rssPreview"></pre>
-          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rssPreview"></pre></div>
         </div>
       </div>
-
       <div class="glass panel" style="margin-top:20px;">
-        <div class="panel-head">
-          <div><h2>Riwayat Reportan Salah Sorong</h2><p>Report yang pernah disimpan.</p></div>
-        </div>
-        <table>
-          <thead><tr><th>Perihal</th><th>Pemilik</th><th>Terproses ke</th><th>Waktu</th><th></th></tr></thead>
-          <tbody id="rssHistoryBody"></tbody>
-        </table>
+        <div class="panel-head"><div><h2>Riwayat Reportan Salah Sorong</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Pemilik</th><th>Terproses ke</th><th>Waktu</th><th></th></tr></thead><tbody id="rssHistoryBody"></tbody></table>
         <div class="empty-state" id="rssEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Salah Buang Dana -->
+    <div class="view" id="view-reportsalahbuang">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Salah Buang Dana</h2></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rsbInfo">Info</label><input type="text" id="rsbInfo" /></div>
+            <div class="field"><label for="rsbPerihal">Perihal</label><input type="text" id="rsbPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rsbStaffNama">Staff</label><input type="text" id="rsbStaffNama" /></div>
+              <div><label for="rsbStaffKode">Kode</label><input type="text" id="rsbStaffKode" /></div>
+              <div><label for="rsbAgenNama">Nama Agen</label><input type="text" id="rsbAgenNama" /></div>
+            </div>
+
+            <div class="access-group-label" style="margin-top:16px;">Dari (pengirim)</div>
+            <div class="field"><label for="rsbDariNamaRek">Nama rekening pengirim</label><input type="text" id="rsbDariNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rsbDariNomorRek">Nomor rekening pengirim</label><input type="text" id="rsbDariNomorRek" /></div>
+              <div><label for="rsbDariJenisBank">Jenis Bank</label><input type="text" id="rsbDariJenisBank" /></div>
+            </div>
+
+            <div class="access-group-label" style="margin-top:16px;">Tujuan (penerima)</div>
+            <div class="field"><label for="rsbTujuanNamaRek">Nama rekening penerima</label><input type="text" id="rsbTujuanNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rsbTujuanNomorRek">Nomor rekening penerima</label><input type="text" id="rsbTujuanNomorRek" /></div>
+              <div><label for="rsbTujuanJenisBank">Jenis Bank</label><input type="text" id="rsbTujuanJenisBank" /></div>
+            </div>
+
+            <div class="field"><label for="rsbNominal">Nominal</label><input type="text" id="rsbNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rsbBukti">Bukti pemindahan dana</label><input type="text" id="rsbBukti" placeholder="Link/nama file bukti" /></div>
+            <div class="field"><label for="rsbKeterangan">Keterangan</label><textarea id="rsbKeterangan" rows="4"></textarea></div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rsbCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rsbSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rsbResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rsbPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Reportan Salah Buang Dana</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Dari</th><th>Tujuan</th><th>Waktu</th><th></th></tr></thead><tbody id="rsbHistoryBody"></tbody></table>
+        <div class="empty-state" id="rsbEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
 
@@ -468,6 +420,8 @@
     getKasihFieldsFromForm, generateKasihText, saveKasihReport,
     renderSalahSorongHistory, updateSalahSorongPreview,
     getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
+    renderSalahBuangHistory, updateSalahBuangPreview,
+    getSalahBuangFieldsFromForm, generateSalahBuangText, saveSalahBuangReport,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -477,6 +431,7 @@
     saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
     saveKasihDraft, restoreKasihDraft, clearKasihDraft,
     saveSalahSorongDraft, restoreSalahSorongDraft, clearSalahSorongDraft,
+    saveSalahBuangDraft, restoreSalahBuangDraft, clearSalahBuangDraft,
     savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
   } from "./script.js";
 
@@ -523,29 +478,20 @@
         const email = document.getElementById("newEmail").value.trim();
         const password = document.getElementById("newPassword").value;
         if (!email || !password) return;
-
-        const access = Array.from(
-          document.querySelectorAll("#newAccessChecks input:checked")
-        ).map(i => i.value);
+        const access = Array.from(document.querySelectorAll("#newAccessChecks input:checked")).map(i => i.value);
         if (access.length === 0) { alert("Pilih minimal satu menu."); return; }
-
         const accounts = await fetchAccountsConfig();
         if (accounts.find(x => x.email === email)) { alert("Email sudah terdaftar."); return; }
-
         const ok = await addAccount(email, password, access);
         if (!ok) { alert("Gagal menambah akun."); return; }
-
         document.getElementById("newEmail").value = "";
         document.getElementById("newPassword").value = "";
         renderAddAccessChecks();
         await renderAccounts();
       });
 
-      // Cek Rekening
       document.getElementById("syncSheetBtn").addEventListener("click", () => syncRekeningFromSheet());
-      document.getElementById("rekSearchBtn").addEventListener("click", () =>
-        searchRekening(document.getElementById("rekSearchInput").value)
-      );
+      document.getElementById("rekSearchBtn").addEventListener("click", () => searchRekening(document.getElementById("rekSearchInput").value));
       const cache = await fetchRekeningCache();
       if (!cache) syncRekeningFromSheet();
 
@@ -553,7 +499,6 @@
       await renderReportHistory();
       restoreReportDraft();
       updateReportPreview();
-
       document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
         el.addEventListener("input", () => {
           if (el.id === "repSaldo") el.value = formatRupiahInputValue(el.value);
@@ -561,13 +506,11 @@
           saveReportDraft();
         });
       });
-
       document.getElementById("repCopyBtn").addEventListener("click", async (e) => {
         updateReportPreview();
         await copyText(document.getElementById("reportPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
-
       document.getElementById("repSaveBtn").addEventListener("click", async () => {
         const fields = getReportFieldsFromForm();
         await saveReport(fields, generateReportText(fields));
@@ -576,7 +519,6 @@
         clearReportDraft();
         updateReportPreview();
       });
-
       document.getElementById("repResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
         clearReportDraft();
@@ -587,7 +529,6 @@
       await renderKesalahanHistory();
       restoreKesalahanDraft();
       updateKesalahanPreview();
-
       document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
         el.addEventListener("input", () => {
           if (el.id === "rkNominal") el.value = formatNumberInputValue(el.value);
@@ -595,13 +536,11 @@
           saveKesalahanDraft();
         });
       });
-
       document.getElementById("rkCopyBtn").addEventListener("click", async (e) => {
         updateKesalahanPreview();
         await copyText(document.getElementById("rkPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
-
       document.getElementById("rkSaveBtn").addEventListener("click", async () => {
         const fields = getKesalahanFieldsFromForm();
         await saveKesalahanReport(fields, generateKesalahanText(fields));
@@ -610,7 +549,6 @@
         clearKesalahanDraft();
         updateKesalahanPreview();
       });
-
       document.getElementById("rkResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
         clearKesalahanDraft();
@@ -621,42 +559,33 @@
       await renderKasihHistory();
       restoreKasihDraft();
       updateKasihPreview();
-
       document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea, #view-reportkasih select").forEach(el => {
         el.addEventListener("input", () => {
-          if (el.id === "rkkNominal" || el.id === "rkkNominalTerproses" || el.id === "rkkSelisihNominal") {
+          if (["rkkNominal","rkkNominalTerproses","rkkSelisihNominal"].includes(el.id)) {
             el.value = formatNumberInputValue(el.value);
           }
           updateKasihPreview();
           saveKasihDraft();
         });
-        el.addEventListener("change", () => {
-          updateKasihPreview();
-          saveKasihDraft();
-        });
+        el.addEventListener("change", () => { updateKasihPreview(); saveKasihDraft(); });
       });
-
       document.getElementById("rkkCopyBtn").addEventListener("click", async (e) => {
         updateKasihPreview();
         await copyText(document.getElementById("rkkPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
-
       document.getElementById("rkkSaveBtn").addEventListener("click", async () => {
         const fields = getKasihFieldsFromForm();
         await saveKasihReport(fields, generateKasihText(fields));
         await renderKasihHistory();
         document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
-        const sel = document.getElementById("rkkSelisihTipe");
-        if (sel) sel.value = "kurang";
+        const sel = document.getElementById("rkkSelisihTipe"); if (sel) sel.value = "kurang";
         clearKasihDraft();
         updateKasihPreview();
       });
-
       document.getElementById("rkkResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
-        const sel = document.getElementById("rkkSelisihTipe");
-        if (sel) sel.value = "kurang";
+        const sel = document.getElementById("rkkSelisihTipe"); if (sel) sel.value = "kurang";
         clearKasihDraft();
         updateKasihPreview();
       });
@@ -665,7 +594,6 @@
       await renderSalahSorongHistory();
       restoreSalahSorongDraft();
       updateSalahSorongPreview();
-
       document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => {
         el.addEventListener("input", () => {
           if (el.id === "rssNominal") el.value = formatNumberInputValue(el.value);
@@ -673,13 +601,11 @@
           saveSalahSorongDraft();
         });
       });
-
       document.getElementById("rssCopyBtn").addEventListener("click", async (e) => {
         updateSalahSorongPreview();
         await copyText(document.getElementById("rssPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
-
       document.getElementById("rssSaveBtn").addEventListener("click", async () => {
         const fields = getSalahSorongFieldsFromForm();
         await saveSalahSorongReport(fields, generateSalahSorongText(fields));
@@ -688,11 +614,40 @@
         clearSalahSorongDraft();
         updateSalahSorongPreview();
       });
-
       document.getElementById("rssResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => el.value = "");
         clearSalahSorongDraft();
         updateSalahSorongPreview();
+      });
+
+      // Reportan Salah Buang Dana
+      await renderSalahBuangHistory();
+      restoreSalahBuangDraft();
+      updateSalahBuangPreview();
+      document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rsbNominal") el.value = formatNumberInputValue(el.value);
+          updateSalahBuangPreview();
+          saveSalahBuangDraft();
+        });
+      });
+      document.getElementById("rsbCopyBtn").addEventListener("click", async (e) => {
+        updateSalahBuangPreview();
+        await copyText(document.getElementById("rsbPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("rsbSaveBtn").addEventListener("click", async () => {
+        const fields = getSalahBuangFieldsFromForm();
+        await saveSalahBuangReport(fields, generateSalahBuangText(fields));
+        await renderSalahBuangHistory();
+        document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => el.value = "");
+        clearSalahBuangDraft();
+        updateSalahBuangPreview();
+      });
+      document.getElementById("rsbResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => el.value = "");
+        clearSalahBuangDraft();
+        updateSalahBuangPreview();
       });
 
       // Pengembalian HP & Simcard
@@ -700,42 +655,31 @@
       restorePengembalianDraft();
       renderPengembalianItems();
       updatePengembalianPreview();
-
-      ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"].forEach(id => {
+      ["pbgBank","pbgTypeBank","pbgNamaRek","pbgNomorRek","pbgKelengkapan"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("input", () => savePengembalianDraft());
       });
-
       document.getElementById("pbgAddBtn").addEventListener("click", () => {
         const fields = getPengembalianFormFields();
-        if (!fields.bank && !fields.namaRek && !fields.nomorRek) {
-          alert("Isi minimal BANK atau NAMA REKENING.");
-          return;
-        }
+        if (!fields.bank && !fields.namaRek && !fields.nomorRek) { alert("Isi minimal BANK atau NAMA REKENING."); return; }
         addPengembalianItem(fields);
         clearPengembalianForm();
         renderPengembalianItems();
         updatePengembalianPreview();
         savePengembalianDraft();
       });
-
-      document.getElementById("pbgClearFormBtn").addEventListener("click", () => {
-        clearPengembalianForm();
-        savePengembalianDraft();
-      });
-
+      document.getElementById("pbgClearFormBtn").addEventListener("click", () => { clearPengembalianForm(); savePengembalianDraft(); });
       document.getElementById("pbgCopyBtn").addEventListener("click", async (e) => {
-        const previewText = document.getElementById("pengembalianPreview").textContent;
-        if (!previewText.trim()) { alert("Belum ada item."); return; }
-        await copyText(previewText);
+        const text = document.getElementById("pengembalianPreview").textContent;
+        if (!text.trim()) { alert("Belum ada item."); return; }
+        await copyText(text);
         flashButton(e.target, "Tersalin!");
       });
-
       document.getElementById("pbgSaveBtn").addEventListener("click", async () => {
-        const previewText = document.getElementById("pengembalianPreview").textContent;
-        if (!previewText.trim()) { alert("Belum ada item."); return; }
+        const text = document.getElementById("pengembalianPreview").textContent;
+        if (!text.trim()) { alert("Belum ada item."); return; }
         const items = getPengembalianItems();
-        await savePengembalianReport(items, previewText);
+        await savePengembalianReport(items, text);
         await renderPengembalianHistory();
         resetPengembalianItems();
         clearPengembalianForm();
@@ -743,7 +687,6 @@
         renderPengembalianItems();
         updatePengembalianPreview();
       });
-
       document.getElementById("pbgResetAllBtn").addEventListener("click", () => {
         if (confirm("Hapus semua item?")) {
           resetPengembalianItems();
