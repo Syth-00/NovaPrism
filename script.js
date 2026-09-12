@@ -6,8 +6,8 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 // ============ GANTI DENGAN URL & KEY DARI SUPABASE ============
-const SUPABASE_URL = "https://xxxxx.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs...";
+const SUPABASE_URL = "https://lvltgxwlsvmyqiwhnmej.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2bHRneHdsc3ZteXFpd2hubWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTgwNTksImV4cCI6MjEwNDczNDA1OX0.fo4WEgv2mq29GP1mroeDIyCjo9Vokvq2NIRXVFf8j2M";
 // ===============================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
