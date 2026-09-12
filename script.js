@@ -46,7 +46,7 @@ const MENU_CONFIG = [
 // Akun di sini otomatis dapat SEMUA menu, tanpa perlu centang di Data Login.
 // Kalau Anda tambah menu baru di MENU_CONFIG, akun master langsung dapat juga.
 const MASTER_EMAILS = [
-  "syth@novaprism.io",   // ← GANTI dengan email Anda yang sebenarnya
+  "syth",   // ← GANTI dengan email Anda yang sebenarnya
 ];
 // =============================================
 
