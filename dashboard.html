@@ -32,6 +32,11 @@
         <span>Cek Rekening</span>
       </div>
 
+      <div class="nav-item" data-view="pengembalian">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        <span>Pengembalian HP & Simcard</span>
+      </div>
+
       <div class="nav-group">
         <div class="nav-group-header" data-group="reportan">
           <span>Reportan</span>
@@ -65,6 +70,7 @@
       <span class="hint" style="margin:0; padding:6px 12px;" id="pageLabel">Beranda</span>
     </div>
 
+    <!-- Beranda -->
     <div class="view active" id="view-home">
       <div class="stat-row">
         <div class="glass stat-card"><div class="label">Total percobaan login</div><div class="value" id="statTotal">0</div></div>
@@ -89,6 +95,7 @@
       </div>
     </div>
 
+    <!-- Data Login -->
     <div class="view" id="view-datalogin">
       <div class="glass panel">
         <div class="panel-head">
@@ -123,6 +130,7 @@
       </div>
     </div>
 
+    <!-- Cek Rekening -->
     <div class="view" id="view-rekening">
       <div class="glass panel">
         <div class="panel-head">
@@ -150,6 +158,62 @@
       </div>
     </div>
 
+    <!-- Pengembalian HP & Simcard -->
+    <div class="view" id="view-pengembalian">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Pengembalian HP & Simcard</h2>
+            <p>Tambah item sebanyak yang kamu mau, preview otomatis kebentuk di bawah.</p>
+          </div>
+        </div>
+
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="pbgBank">BANK</label><input type="text" id="pbgBank" placeholder="BCA" /></div>
+            <div class="field"><label for="pbgTypeBank">TYPE BANK</label><input type="text" id="pbgTypeBank" placeholder="Tabungan" /></div>
+            <div class="field"><label for="pbgNamaRek">NAMA REKENING</label><input type="text" id="pbgNamaRek" placeholder="Nama pemilik rekening" /></div>
+            <div class="field"><label for="pbgNomorRek">NOMOR REKENING</label><input type="text" id="pbgNomorRek" placeholder="1234567890" /></div>
+            <div class="field"><label for="pbgKelengkapan">KELENGKAPAN</label><input type="text" id="pbgKelengkapan" placeholder="HP, SIM Card" /></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="pbgAddBtn" style="width:auto; padding:12px 20px;">+ Tambah Item</button>
+              <button type="button" class="btn-ghost" id="pbgClearFormBtn">Bersihkan Form</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Item yang sudah ditambahkan (<span id="pbgCount">0</span>)</label>
+            <div class="rek-result-list" id="pengembalianList" style="max-height:400px;">
+              <div class="empty-state">Belum ada item. Tambah lewat form di kiri.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <label style="display:block; margin-bottom:8px;">Preview</label>
+          <pre class="report-preview" id="pengembalianPreview"></pre>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+            <button type="button" class="btn-primary" id="pbgCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+            <button type="button" class="btn-ghost" id="pbgSaveBtn">Simpan ke riwayat</button>
+            <button type="button" class="btn-ghost" id="pbgResetAllBtn">Reset Semua</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head">
+          <div><h2>Riwayat Pengembalian</h2><p>Report yang pernah disimpan.</p></div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Bank</th><th>Jumlah</th><th>Waktu</th><th></th></tr>
+          </thead>
+          <tbody id="pengembalianHistoryBody"></tbody>
+        </table>
+        <div class="empty-state" id="pengembalianEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Bank -->
     <div class="view" id="view-report">
       <div class="glass panel">
         <div class="panel-head">
@@ -193,6 +257,7 @@
       </div>
     </div>
 
+    <!-- Reportan Kesalahan -->
     <div class="view" id="view-reportkesalahan">
       <div class="glass panel">
         <div class="panel-head">
@@ -252,13 +317,18 @@
     requireLogin, logout, getSession, applyAccessControl, menuLabel,
     renderDashboard, renderAccounts, renderAddAccessChecks,
     fetchAccountsConfig, addAccount,
-    fetchRecords, clearLoginRecords,
+    clearLoginRecords,
     fetchRekeningCache, renderSyncStatus, syncRekeningFromSheet, searchRekening,
     renderReportHistory, updateReportPreview, formatRupiahInputValue,
     getReportFieldsFromForm, generateReportText, saveReport,
     copyText, flashButton,
     renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
     getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
+    renderPengembalianItems, updatePengembalianPreview,
+    getPengembalianFormFields, clearPengembalianForm,
+    addPengembalianItem, resetPengembalianItems,
+    generatePengembalianText, savePengembalianReport,
+    renderPengembalianHistory, getPengembalianItems,
   } from "./script.js";
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -271,6 +341,7 @@
       renderAddAccessChecks();
       await renderSyncStatus();
 
+      // Sidebar navigation
       document.querySelectorAll(".nav-item").forEach(item => {
         item.addEventListener("click", () => {
           document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
@@ -299,6 +370,7 @@
         }
       });
 
+      // Form tambah akun
       document.getElementById("addAccountForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("newEmail").value.trim();
@@ -322,14 +394,15 @@
         await renderAccounts();
       });
 
+      // Cek Rekening
       document.getElementById("syncSheetBtn").addEventListener("click", () => syncRekeningFromSheet());
       document.getElementById("rekSearchBtn").addEventListener("click", () =>
         searchRekening(document.getElementById("rekSearchInput").value)
       );
-
       const cache = await fetchRekeningCache();
       if (!cache) syncRekeningFromSheet();
 
+      // Reportan Bank
       await renderReportHistory();
       updateReportPreview();
       document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
@@ -355,6 +428,7 @@
         updateReportPreview();
       });
 
+      // Reportan Kesalahan
       await renderKesalahanHistory();
       updateKesalahanPreview();
       document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
@@ -378,6 +452,50 @@
       document.getElementById("rkResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
         updateKesalahanPreview();
+      });
+
+      // Pengembalian HP & Simcard
+      await renderPengembalianHistory();
+      renderPengembalianItems();
+      updatePengembalianPreview();
+
+      document.getElementById("pbgAddBtn").addEventListener("click", () => {
+        const fields = getPengembalianFormFields();
+        if (!fields.bank && !fields.namaRek && !fields.nomorRek) {
+          alert("Isi minimal BANK atau NAMA REKENING.");
+          return;
+        }
+        addPengembalianItem(fields);
+        clearPengembalianForm();
+        renderPengembalianItems();
+        updatePengembalianPreview();
+      });
+
+      document.getElementById("pbgClearFormBtn").addEventListener("click", () => {
+        clearPengembalianForm();
+      });
+
+      document.getElementById("pbgCopyBtn").addEventListener("click", async (e) => {
+        const previewText = document.getElementById("pengembalianPreview").textContent;
+        if (!previewText.trim()) { alert("Belum ada item."); return; }
+        await copyText(previewText);
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("pbgSaveBtn").addEventListener("click", async () => {
+        const previewText = document.getElementById("pengembalianPreview").textContent;
+        if (!previewText.trim()) { alert("Belum ada item."); return; }
+        const items = getPengembalianItems();
+        await savePengembalianReport(items, previewText);
+        await renderPengembalianHistory();
+      });
+
+      document.getElementById("pbgResetAllBtn").addEventListener("click", () => {
+        if (confirm("Hapus semua item?")) {
+          resetPengembalianItems();
+          renderPengembalianItems();
+          updatePengembalianPreview();
+        }
       });
 
     } catch (err) {
