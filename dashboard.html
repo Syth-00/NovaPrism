@@ -51,6 +51,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
             <span>Reportan Kesalahan</span>
           </div>
+          <div class="nav-item nav-item-sub" data-view="reportkasih">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Reportan Kurang/Lebih Kasih</span>
+          </div>
         </div>
       </div>
     </div>
@@ -309,6 +313,74 @@
       </div>
     </div>
 
+    <!-- Reportan Kurang/Lebih Kasih -->
+    <div class="view" id="view-reportkasih">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Reportan Kurang/Lebih Kasih</h2>
+            <p>Isi kolom di kiri, pilih tipe Kurang atau Lebih, preview otomatis kebentuk.</p>
+          </div>
+        </div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rkkInfo">Info</label><input type="text" id="rkkInfo" /></div>
+            <div class="field"><label for="rkkPerihal">Perihal</label><input type="text" id="rkkPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rkkStaffNama">Staff</label><input type="text" id="rkkStaffNama" /></div>
+              <div><label for="rkkStaffKode">Kode</label><input type="text" id="rkkStaffKode" /></div>
+              <div><label for="rkkAgenNama">Nama Agen</label><input type="text" id="rkkAgenNama" /></div>
+            </div>
+            <div class="field"><label for="rkkUserId">UserID</label><input type="text" id="rkkUserId" /></div>
+            <div class="field"><label for="rkkNamaRek">Nama Rekening</label><input type="text" id="rkkNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rkkNomorRek">Nomor Rekening</label><input type="text" id="rkkNomorRek" /></div>
+              <div><label for="rkkJenisBank">Jenis Bank</label><input type="text" id="rkkJenisBank" /></div>
+            </div>
+            <div class="field"><label for="rkkNominal">Nominal</label><input type="text" id="rkkNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rkkNominalTerproses">Nominal Terproses</label><input type="text" id="rkkNominalTerproses" inputmode="numeric" /></div>
+
+            <div class="field" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div>
+                <label for="rkkSelisihTipe">Kekurangan / Kelebihan</label>
+                <select id="rkkSelisihTipe" style="width:100%; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#f2f1fb; font-size:14px;">
+                  <option value="kurang">Kurang Kasih</option>
+                  <option value="lebih">Lebih Kasih</option>
+                </select>
+              </div>
+              <div>
+                <label for="rkkSelisihNominal">Nominal Selisih</label>
+                <input type="text" id="rkkSelisihNominal" inputmode="numeric" />
+              </div>
+            </div>
+
+            <div class="field"><label for="rkkLampiran">Lampiran</label><input type="text" id="rkkLampiran" /></div>
+            <div class="field"><label for="rkkKeterangan">Keterangan</label><textarea id="rkkKeterangan" rows="4"></textarea></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rkkCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rkkSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rkkResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Preview</label>
+            <pre class="report-preview" id="rkkPreview"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head">
+          <div><h2>Riwayat Reportan Kasih</h2><p>Report yang pernah disimpan.</p></div>
+        </div>
+        <table>
+          <thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Tipe</th><th>Waktu</th><th></th></tr></thead>
+          <tbody id="rkkHistoryBody"></tbody>
+        </table>
+        <div class="empty-state" id="rkkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -324,6 +396,8 @@
     copyText, flashButton,
     renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
     getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
+    renderKasihHistory, updateKasihPreview,
+    getKasihFieldsFromForm, generateKasihText, saveKasihReport,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -331,6 +405,7 @@
     renderPengembalianHistory, getPengembalianItems,
     saveReportDraft, restoreReportDraft, clearReportDraft,
     saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
+    saveKasihDraft, restoreKasihDraft, clearKasihDraft,
     savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
   } from "./script.js";
 
@@ -475,6 +550,51 @@
         document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
         clearKesalahanDraft();
         updateKesalahanPreview();
+      });
+
+      // Reportan Kurang/Lebih Kasih + auto-save draft
+      await renderKasihHistory();
+      restoreKasihDraft();
+      updateKasihPreview();
+
+      document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea, #view-reportkasih select").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rkkNominal" || el.id === "rkkNominalTerproses" || el.id === "rkkSelisihNominal") {
+            el.value = formatNumberInputValue(el.value);
+          }
+          updateKasihPreview();
+          saveKasihDraft();
+        });
+        el.addEventListener("change", () => {
+          updateKasihPreview();
+          saveKasihDraft();
+        });
+      });
+
+      document.getElementById("rkkCopyBtn").addEventListener("click", async (e) => {
+        updateKasihPreview();
+        await copyText(document.getElementById("rkkPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("rkkSaveBtn").addEventListener("click", async () => {
+        const fields = getKasihFieldsFromForm();
+        await saveKasihReport(fields, generateKasihText(fields));
+        await renderKasihHistory();
+        document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
+        // Reset select ke default
+        const sel = document.getElementById("rkkSelisihTipe");
+        if (sel) sel.value = "kurang";
+        clearKasihDraft();
+        updateKasihPreview();
+      });
+
+      document.getElementById("rkkResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
+        const sel = document.getElementById("rkkSelisihTipe");
+        if (sel) sel.value = "kurang";
+        clearKasihDraft();
+        updateKasihPreview();
       });
 
       // Pengembalian HP & Simcard + auto-save draft
