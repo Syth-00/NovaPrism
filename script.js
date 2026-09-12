@@ -1,5 +1,5 @@
 /* ============================================
-   NOVAPRISM — Supabase Version
+   NOVAPRISM — Supabase Version + Auto-save Draft
    Multi-user, data shared, single admin panel.
    ============================================ */
 
@@ -15,6 +15,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SESSION_KEY = "novaprism_session";
 const BG_KEY = "novaprism_bg_image";
 
+const DRAFT_KEYS = {
+  report: "novaprism_draft_report",
+  kesalahan: "novaprism_draft_kesalahan",
+  pengembalianForm: "novaprism_draft_pbg_form",
+  pengembalianItems: "novaprism_draft_pbg_items",
+};
+
 // ---------- Menu config ----------
 const MENU_CONFIG = [
   { key: "home", label: "Beranda" },
@@ -28,6 +35,20 @@ const MENU_CONFIG = [
 function menuLabel(key) {
   const found = MENU_CONFIG.find(m => m.key === key);
   return found ? found.label : key;
+}
+
+// ---------- Draft helpers ----------
+function saveDraft(key, data) {
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
+}
+function loadDraft(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function clearDraft(key) {
+  try { localStorage.removeItem(key); } catch (e) {}
 }
 
 // ---------- Session ----------
@@ -96,7 +117,6 @@ if (loginForm) {
 
     const matched = !error && data;
 
-    // Fire-and-forget: catat riwayat di background
     supabase.from("records").insert({
       username: email || "(kosong)",
       device: detectDevice(),
@@ -332,6 +352,7 @@ function renderPengembalianItems() {
       removePengembalianItem(idx);
       renderPengembalianItems();
       updatePengembalianPreview();
+      savePengembalianDraft();
     });
   });
 }
@@ -420,6 +441,70 @@ async function renderPengembalianHistory() {
     });
     tbody.appendChild(tr);
   });
+}
+
+// ---------- Draft: field list per form ----------
+const DRAFT_FIELDS = {
+  report: ["repInfo", "repPerihal", "repBank", "repNamaRek", "repNomorRek", "repSaldo", "repLampiran", "repKeterangan"],
+  kesalahan: ["rkInfo", "rkPerihal", "rkStaffNama", "rkStaffKode", "rkAgenNama", "rkUserId", "rkNamaRek", "rkNomorRek", "rkJenisBank", "rkNominal", "rkLampiran", "rkKeterangan"],
+  pengembalianForm: ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"],
+};
+
+function collectDraftFields(ids) {
+  const result = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) result[id] = el.value;
+  });
+  return result;
+}
+
+function applyDraftFields(data) {
+  if (!data) return;
+  Object.entries(data).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined) el.value = value;
+  });
+}
+
+// ---------- Draft: Reportan Bank ----------
+function saveReportDraft() {
+  saveDraft(DRAFT_KEYS.report, collectDraftFields(DRAFT_FIELDS.report));
+}
+function restoreReportDraft() {
+  const data = loadDraft(DRAFT_KEYS.report);
+  if (data) applyDraftFields(data);
+}
+function clearReportDraft() {
+  clearDraft(DRAFT_KEYS.report);
+}
+
+// ---------- Draft: Reportan Kesalahan ----------
+function saveKesalahanDraft() {
+  saveDraft(DRAFT_KEYS.kesalahan, collectDraftFields(DRAFT_FIELDS.kesalahan));
+}
+function restoreKesalahanDraft() {
+  const data = loadDraft(DRAFT_KEYS.kesalahan);
+  if (data) applyDraftFields(data);
+}
+function clearKesalahanDraft() {
+  clearDraft(DRAFT_KEYS.kesalahan);
+}
+
+// ---------- Draft: Pengembalian ----------
+function savePengembalianDraft() {
+  saveDraft(DRAFT_KEYS.pengembalianForm, collectDraftFields(DRAFT_FIELDS.pengembalianForm));
+  saveDraft(DRAFT_KEYS.pengembalianItems, _pengembalianItems);
+}
+function restorePengembalianDraft() {
+  const form = loadDraft(DRAFT_KEYS.pengembalianForm);
+  if (form) applyDraftFields(form);
+  const items = loadDraft(DRAFT_KEYS.pengembalianItems);
+  if (Array.isArray(items)) _pengembalianItems = items;
+}
+function clearPengembalianDraft() {
+  clearDraft(DRAFT_KEYS.pengembalianForm);
+  clearDraft(DRAFT_KEYS.pengembalianItems);
 }
 
 // ---------- Render: Dashboard ----------
@@ -849,6 +934,9 @@ export {
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
-  renderPengembalianHistory,
-  getPengembalianItems,
+  renderPengembalianHistory, getPengembalianItems,
+  // Draft
+  saveReportDraft, restoreReportDraft, clearReportDraft,
+  saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
+  savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
 };
