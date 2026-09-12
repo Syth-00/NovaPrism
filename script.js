@@ -1,6 +1,7 @@
 /* ============================================
-   NOVAPRISM — Supabase Version + Auto-save Draft
-   Multi-user, data shared, single admin panel.
+   NOVAPRISM — Supabase Version
+   + Auto-save Draft
+   + Reportan Kurang/Lebih Kasih
    ============================================ */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -18,6 +19,7 @@ const BG_KEY = "novaprism_bg_image";
 const DRAFT_KEYS = {
   report: "novaprism_draft_report",
   kesalahan: "novaprism_draft_kesalahan",
+  kasih: "novaprism_draft_kasih",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -29,6 +31,7 @@ const MENU_CONFIG = [
   { key: "rekening", label: "Cek Rekening" },
   { key: "report", label: "Reportan Bank" },
   { key: "reportkesalahan", label: "Reportan Kesalahan" },
+  { key: "reportkasih", label: "Reportan Kurang/Lebih Kasih" },
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
 ];
 
@@ -95,7 +98,7 @@ if (bgInputEl) {
   });
 }
 
-// ---------- Login form (index.html) ----------
+// ---------- Login form ----------
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
@@ -285,6 +288,41 @@ async function deleteKesalahanReport(id) {
   await supabase.from("reports_kesalahan").delete().eq("id", id);
 }
 
+// ---------- Reports (kurang/lebih kasih) ----------
+async function fetchKasihReports() {
+  const { data } = await supabase
+    .from("reports_kasih")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function saveKasihReport(fields, text) {
+  await supabase.from("reports_kasih").insert({
+    info: fields.info,
+    perihal: fields.perihal,
+    staff_nama: fields.staffNama,
+    staff_kode: fields.staffKode,
+    agen_nama: fields.agenNama,
+    user_id: fields.userId,
+    nama_rek: fields.namaRek,
+    nomor_rek: fields.nomorRek,
+    jenis_bank: fields.jenisBank,
+    nominal: fields.nominal,
+    nominal_terproses: fields.nominalTerproses,
+    selisih_tipe: fields.selisihTipe,
+    selisih_nominal: fields.selisihNominal,
+    lampiran: fields.lampiran,
+    keterangan: fields.keterangan,
+    text,
+  });
+}
+
+async function deleteKasihReport(id) {
+  await supabase.from("reports_kasih").delete().eq("id", id);
+}
+
 // ---------- Pengembalian HP & Simcard ----------
 let _pengembalianItems = [];
 
@@ -447,6 +485,7 @@ async function renderPengembalianHistory() {
 const DRAFT_FIELDS = {
   report: ["repInfo", "repPerihal", "repBank", "repNamaRek", "repNomorRek", "repSaldo", "repLampiran", "repKeterangan"],
   kesalahan: ["rkInfo", "rkPerihal", "rkStaffNama", "rkStaffKode", "rkAgenNama", "rkUserId", "rkNamaRek", "rkNomorRek", "rkJenisBank", "rkNominal", "rkLampiran", "rkKeterangan"],
+  kasih: ["rkkInfo", "rkkPerihal", "rkkStaffNama", "rkkStaffKode", "rkkAgenNama", "rkkUserId", "rkkNamaRek", "rkkNomorRek", "rkkJenisBank", "rkkNominal", "rkkNominalTerproses", "rkkSelisihTipe", "rkkSelisihNominal", "rkkLampiran", "rkkKeterangan"],
   pengembalianForm: ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"],
 };
 
@@ -468,28 +507,19 @@ function applyDraftFields(data) {
 }
 
 // ---------- Draft: Reportan Bank ----------
-function saveReportDraft() {
-  saveDraft(DRAFT_KEYS.report, collectDraftFields(DRAFT_FIELDS.report));
-}
-function restoreReportDraft() {
-  const data = loadDraft(DRAFT_KEYS.report);
-  if (data) applyDraftFields(data);
-}
-function clearReportDraft() {
-  clearDraft(DRAFT_KEYS.report);
-}
+function saveReportDraft() { saveDraft(DRAFT_KEYS.report, collectDraftFields(DRAFT_FIELDS.report)); }
+function restoreReportDraft() { const data = loadDraft(DRAFT_KEYS.report); if (data) applyDraftFields(data); }
+function clearReportDraft() { clearDraft(DRAFT_KEYS.report); }
 
 // ---------- Draft: Reportan Kesalahan ----------
-function saveKesalahanDraft() {
-  saveDraft(DRAFT_KEYS.kesalahan, collectDraftFields(DRAFT_FIELDS.kesalahan));
-}
-function restoreKesalahanDraft() {
-  const data = loadDraft(DRAFT_KEYS.kesalahan);
-  if (data) applyDraftFields(data);
-}
-function clearKesalahanDraft() {
-  clearDraft(DRAFT_KEYS.kesalahan);
-}
+function saveKesalahanDraft() { saveDraft(DRAFT_KEYS.kesalahan, collectDraftFields(DRAFT_FIELDS.kesalahan)); }
+function restoreKesalahanDraft() { const data = loadDraft(DRAFT_KEYS.kesalahan); if (data) applyDraftFields(data); }
+function clearKesalahanDraft() { clearDraft(DRAFT_KEYS.kesalahan); }
+
+// ---------- Draft: Reportan Kasih ----------
+function saveKasihDraft() { saveDraft(DRAFT_KEYS.kasih, collectDraftFields(DRAFT_FIELDS.kasih)); }
+function restoreKasihDraft() { const data = loadDraft(DRAFT_KEYS.kasih); if (data) applyDraftFields(data); }
+function clearKasihDraft() { clearDraft(DRAFT_KEYS.kasih); }
 
 // ---------- Draft: Pengembalian ----------
 function savePengembalianDraft() {
@@ -916,6 +946,89 @@ async function renderKesalahanHistory() {
   });
 }
 
+// ---------- Reportan Kurang/Lebih Kasih ----------
+function generateKasihText(f) {
+  const tipeLabel = f.selisihTipe === "kurang" ? "Kurang Kasih" : "Lebih Kasih";
+  return [
+    `Info : ${f.info}`,
+    `Perihal : ${f.perihal}`,
+    `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`,
+    ``,
+    `UserID : ${f.userId}`,
+    `Nama Rekening : ${f.namaRek}`,
+    `Nomor Rekening : ${f.nomorRek} (${f.jenisBank})`,
+    `Nominal : Rp. ${f.nominal}`,
+    `Nominal Terproses : Rp. ${f.nominalTerproses}`,
+    `${tipeLabel} : Rp. ${f.selisihNominal}`,
+    `Lampiran : ${f.lampiran}`,
+    ``,
+    `Keterangan :`,
+    `${f.keterangan}`,
+  ].join("\n");
+}
+
+function getKasihFieldsFromForm() {
+  return {
+    info: document.getElementById("rkkInfo").value,
+    perihal: document.getElementById("rkkPerihal").value,
+    staffNama: document.getElementById("rkkStaffNama").value,
+    staffKode: document.getElementById("rkkStaffKode").value,
+    agenNama: document.getElementById("rkkAgenNama").value,
+    userId: document.getElementById("rkkUserId").value,
+    namaRek: document.getElementById("rkkNamaRek").value,
+    nomorRek: document.getElementById("rkkNomorRek").value,
+    jenisBank: document.getElementById("rkkJenisBank").value,
+    nominal: document.getElementById("rkkNominal").value,
+    nominalTerproses: document.getElementById("rkkNominalTerproses").value,
+    selisihTipe: document.getElementById("rkkSelisihTipe").value,
+    selisihNominal: document.getElementById("rkkSelisihNominal").value,
+    lampiran: document.getElementById("rkkLampiran").value,
+    keterangan: document.getElementById("rkkKeterangan").value,
+  };
+}
+
+function updateKasihPreview() {
+  const preview = document.getElementById("rkkPreview");
+  if (!preview) return;
+  preview.textContent = generateKasihText(getKasihFieldsFromForm());
+}
+
+async function renderKasihHistory() {
+  const tbody = document.getElementById("rkkHistoryBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("rkkEmptyState");
+  const reports = await fetchKasihReports();
+  tbody.innerHTML = "";
+  if (reports.length === 0) { emptyState.style.display = "block"; return; }
+  emptyState.style.display = "none";
+
+  reports.forEach(r => {
+    const tipeLabel = r.selisih_tipe === "kurang" ? "Kurang" : "Lebih";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.perihal || "—"}</td>
+      <td>${r.user_id || "—"}</td>
+      <td>${r.nama_rek || "—"}</td>
+      <td><span class="status-pill ${r.selisih_tipe === "kurang" ? "failed" : "success"}"><span class="dot"></span>${tipeLabel}</span></td>
+      <td>${formatTime(r.created_at)}</td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+        </div>
+      </td>
+    `;
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text || "");
+      flashButton(e.target, "Tersalin!");
+    });
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+      if (confirm("Hapus report ini?")) { await deleteKasihReport(r.id); renderKasihHistory(); }
+    });
+    tbody.appendChild(tr);
+  });
+}
+
 // ---------- Export untuk dashboard.html ----------
 export {
   requireLogin, logout, getSession, applyAccessControl, menuLabel,
@@ -929,14 +1042,15 @@ export {
   copyText, flashButton,
   renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
   getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
-  // Pengembalian
+  renderKasihHistory, updateKasihPreview,
+  getKasihFieldsFromForm, generateKasihText, saveKasihReport,
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory, getPengembalianItems,
-  // Draft
   saveReportDraft, restoreReportDraft, clearReportDraft,
   saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
+  saveKasihDraft, restoreKasihDraft, clearKasihDraft,
   savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
 };
