@@ -3,11 +3,11 @@
    Multi-user, data shared, single admin panel.
    ============================================ */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 // ============ GANTI DENGAN URL & KEY DARI SUPABASE ============
-const SUPABASE_URL = "https://lvltgxwlsvmyqiwhnmej.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2bHRneHdsc3ZteXFpd2hubWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTgwNTksImV4cCI6MjEwNDczNDA1OX0.fo4WEgv2mq29GP1mroeDIyCjo9Vokvq2NIRXVFf8j2M";
+const SUPABASE_URL = "https://xxxxx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs...";
 // ===============================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -96,7 +96,8 @@ if (loginForm) {
 
     const matched = !error && data;
 
-    await supabase.from("records").insert({
+    // Fire-and-forget: catat riwayat di background
+    supabase.from("records").insert({
       username: email || "(kosong)",
       device: detectDevice(),
       status: matched ? "success" : "failed",
@@ -114,7 +115,7 @@ if (loginForm) {
   });
 }
 
-// ---------- Auth guard & logout (dashboard.html) ----------
+// ---------- Auth guard & logout ----------
 function requireLogin() {
   const session = getSession();
   if (!session) {
@@ -175,7 +176,7 @@ async function deleteAccount(email) {
   await supabase.from("accounts").delete().eq("email", email);
 }
 
-// ---------- Records (riwayat login) ----------
+// ---------- Records ----------
 async function fetchRecords() {
   const { data } = await supabase
     .from("records")
@@ -262,6 +263,163 @@ async function saveKesalahanReport(fields, text) {
 
 async function deleteKesalahanReport(id) {
   await supabase.from("reports_kesalahan").delete().eq("id", id);
+}
+
+// ---------- Pengembalian HP & Simcard ----------
+let _pengembalianItems = [];
+
+function getPengembalianItems() {
+  return [..._pengembalianItems];
+}
+
+function addPengembalianItem(data) {
+  _pengembalianItems.push({
+    bank: data.bank || "",
+    typeBank: data.typeBank || "",
+    namaRek: data.namaRek || "",
+    nomorRek: data.nomorRek || "",
+    kelengkapan: data.kelengkapan || "",
+  });
+}
+
+function removePengembalianItem(index) {
+  _pengembalianItems.splice(index, 1);
+}
+
+function resetPengembalianItems() {
+  _pengembalianItems = [];
+}
+
+function generatePengembalianText(items) {
+  if (!items || items.length === 0) return "";
+  return items.map(item => [
+    `BANK : ${item.bank}`,
+    `TYPE BANK : ${item.typeBank}`,
+    `NAMA REKENING : ${item.namaRek}`,
+    `NOMOR REKENING : ${item.nomorRek}`,
+    `KELENGKAPAN : ${item.kelengkapan}`,
+  ].join("\n")).join("\n\n");
+}
+
+function renderPengembalianItems() {
+  const container = document.getElementById("pengembalianList");
+  const countEl = document.getElementById("pbgCount");
+  if (!container) return;
+
+  if (countEl) countEl.textContent = String(_pengembalianItems.length);
+
+  if (_pengembalianItems.length === 0) {
+    container.innerHTML = `<div class="empty-state">Belum ada item. Tambah lewat form di kiri.</div>`;
+    return;
+  }
+
+  container.innerHTML = _pengembalianItems.map((item, i) => `
+    <div class="rek-result-item" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600; margin-bottom:4px;">${item.bank || "(Bank kosong)"}</div>
+        <div style="font-size:12px; color:var(--text-muted); line-height:1.6; word-break:break-word;">
+          ${item.typeBank} · ${item.namaRek} · ${item.nomorRek}<br/>
+          Kelengkapan: ${item.kelengkapan}
+        </div>
+      </div>
+      <button type="button" class="btn-danger-ghost" data-remove-idx="${i}" style="flex-shrink:0;">Hapus</button>
+    </div>
+  `).join("");
+
+  container.querySelectorAll("[data-remove-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.removeIdx);
+      removePengembalianItem(idx);
+      renderPengembalianItems();
+      updatePengembalianPreview();
+    });
+  });
+}
+
+function updatePengembalianPreview() {
+  const preview = document.getElementById("pengembalianPreview");
+  if (!preview) return;
+  preview.textContent = generatePengembalianText(_pengembalianItems);
+}
+
+function getPengembalianFormFields() {
+  return {
+    bank: (document.getElementById("pbgBank") || {}).value || "",
+    typeBank: (document.getElementById("pbgTypeBank") || {}).value || "",
+    namaRek: (document.getElementById("pbgNamaRek") || {}).value || "",
+    nomorRek: (document.getElementById("pbgNomorRek") || {}).value || "",
+    kelengkapan: (document.getElementById("pbgKelengkapan") || {}).value || "",
+  };
+}
+
+function clearPengembalianForm() {
+  ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+}
+
+async function fetchPengembalianReports() {
+  const { data } = await supabase
+    .from("pengembalian")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return data || [];
+}
+
+async function savePengembalianReport(items, text) {
+  await supabase.from("pengembalian").insert({
+    items: items || [],
+    text: text || "",
+  });
+}
+
+async function deletePengembalianReport(id) {
+  await supabase.from("pengembalian").delete().eq("id", id);
+}
+
+async function renderPengembalianHistory() {
+  const tbody = document.getElementById("pengembalianHistoryBody");
+  if (!tbody) return;
+  const emptyState = document.getElementById("pengembalianEmptyState");
+  const reports = await fetchPengembalianReports();
+
+  tbody.innerHTML = "";
+  if (reports.length === 0) {
+    if (emptyState) emptyState.style.display = "block";
+    return;
+  }
+  if (emptyState) emptyState.style.display = "none";
+
+  reports.forEach(r => {
+    const items = r.items || [];
+    const summary = items.length === 0
+      ? "—"
+      : `${items[0].bank || "?"}${items.length > 1 ? ` +${items.length - 1} lainnya` : ""}`;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${summary}</td>
+      <td>${items.length} item</td>
+      <td>${formatTime(r.created_at)}</td>
+      <td>
+        <div class="action-cell">
+          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+        </div>
+      </td>
+    `;
+    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
+      await copyText(r.text || "");
+      flashButton(e.target, "Tersalin!");
+    });
+    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
+      if (confirm("Hapus report ini?")) {
+        await deletePengembalianReport(r.id);
+        renderPengembalianHistory();
+      }
+    });
+    tbody.appendChild(tr);
+  });
 }
 
 // ---------- Render: Dashboard ----------
@@ -672,155 +830,7 @@ async function renderKesalahanHistory() {
     tbody.appendChild(tr);
   });
 }
-// ---------- Pengembalian HP & Simcard ----------
 
-// State: array item yang sedang di-edit
-let _pengembalianItems = [];
-
-function addPengembalianItem(data) {
-  _pengembalianItems.push({
-    bank: data.bank || "",
-    typeBank: data.typeBank || "",
-    namaRek: data.namaRek || "",
-    nomorRek: data.nomorRek || "",
-    kelengkapan: data.kelengkapan || "",
-  });
-}
-
-function removePengembalianItem(index) {
-  _pengembalianItems.splice(index, 1);
-}
-
-function resetPengembalianItems() {
-  _pengembalianItems = [];
-}
-
-function generatePengembalianText(items) {
-  if (!items || items.length === 0) return "";
-  return items.map(item => [
-    `BANK : ${item.bank}`,
-    `TYPE BANK : ${item.typeBank}`,
-    `NAMA REKENING : ${item.namaRek}`,
-    `NOMOR REKENING : ${item.nomorRek}`,
-    `KELENGKAPAN : ${item.kelengkapan}`,
-  ].join("\n")).join("\n\n");
-}
-
-function renderPengembalianItems() {
-  const container = document.getElementById("pengembalianList");
-  if (!container) return;
-
-  if (_pengembalianItems.length === 0) {
-    container.innerHTML = `<div class="empty-state">Belum ada item. Tambah lewat form di atas.</div>`;
-    return;
-  }
-
-  container.innerHTML = _pengembalianItems.map((item, i) => `
-    <div class="rek-result-item" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-      <div style="flex:1;">
-        <div style="font-weight:600; margin-bottom:4px;">${item.bank || "(Bank kosong)"}</div>
-        <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
-          ${item.typeBank} · ${item.namaRek} · ${item.nomorRek}<br/>
-          Kelengkapan: ${item.kelengkapan}
-        </div>
-      </div>
-      <button type="button" class="btn-danger-ghost" data-remove-idx="${i}">Hapus</button>
-    </div>
-  `).join("");
-
-  container.querySelectorAll("[data-remove-idx]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.dataset.removeIdx);
-      removePengembalianItem(idx);
-      renderPengembalianItems();
-      updatePengembalianPreview();
-    });
-  });
-}
-
-function updatePengembalianPreview() {
-  const preview = document.getElementById("pengembalianPreview");
-  if (!preview) return;
-  preview.textContent = generatePengembalianText(_pengembalianItems);
-}
-
-function getPengembalianFormFields() {
-  return {
-    bank: document.getElementById("pbgBank").value.trim(),
-    typeBank: document.getElementById("pbgTypeBank").value.trim(),
-    namaRek: document.getElementById("pbgNamaRek").value.trim(),
-    nomorRek: document.getElementById("pbgNomorRek").value.trim(),
-    kelengkapan: document.getElementById("pbgKelengkapan").value.trim(),
-  };
-}
-
-function clearPengembalianForm() {
-  ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"]
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-}
-
-// ---------- Fetch & Save Pengembalian (Supabase) ----------
-async function fetchPengembalianReports() {
-  const { data } = await supabase
-    .from("pengembalian")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
-  return data || [];
-}
-
-async function savePengembalianReport(items, text) {
-  await supabase.from("pengembalian").insert({
-    items,
-    text,
-  });
-}
-
-async function deletePengembalianReport(id) {
-  await supabase.from("pengembalian").delete().eq("id", id);
-}
-
-async function renderPengembalianHistory() {
-  const tbody = document.getElementById("pengembalianHistoryBody");
-  if (!tbody) return;
-  const emptyState = document.getElementById("pengembalianEmptyState");
-  const reports = await fetchPengembalianReports();
-
-  tbody.innerHTML = "";
-  if (reports.length === 0) { emptyState.style.display = "block"; return; }
-  emptyState.style.display = "none";
-
-  reports.forEach(r => {
-    const items = r.items || [];
-    const summary = items.length === 0
-      ? "—"
-      : `${items[0].bank || "?"}${items.length > 1 ? ` +${items.length - 1} lainnya` : ""}`;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${summary}</td>
-      <td>${items.length} item</td>
-      <td>${formatTime(r.created_at)}</td>
-      <td>
-        <div class="action-cell">
-          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
-          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
-        </div>
-      </td>
-    `;
-    tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
-      await copyText(r.text || "");
-      flashButton(e.target, "Tersalin!");
-    });
-    tr.querySelector("[data-del-id]").addEventListener("click", async () => {
-      if (confirm("Hapus report ini?")) {
-        await deletePengembalianReport(r.id);
-        renderPengembalianHistory();
-      }
-    });
-    tbody.appendChild(tr);
-  });
-}
 // ---------- Export untuk dashboard.html ----------
 export {
   requireLogin, logout, getSession, applyAccessControl, menuLabel,
@@ -834,9 +844,11 @@ export {
   copyText, flashButton,
   renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
   getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
+  // Pengembalian
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory,
+  getPengembalianItems,
 };
