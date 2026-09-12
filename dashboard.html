@@ -329,6 +329,9 @@
     addPengembalianItem, resetPengembalianItems,
     generatePengembalianText, savePengembalianReport,
     renderPengembalianHistory, getPengembalianItems,
+    saveReportDraft, restoreReportDraft, clearReportDraft,
+    saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
+    savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
   } from "./script.js";
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -402,62 +405,88 @@
       const cache = await fetchRekeningCache();
       if (!cache) syncRekeningFromSheet();
 
-      // Reportan Bank
+      // Reportan Bank + auto-save draft
       await renderReportHistory();
+      restoreReportDraft();
       updateReportPreview();
+
       document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
-        if (el.id === "repSaldo") return;
-        el.addEventListener("input", updateReportPreview);
+        el.addEventListener("input", () => {
+          if (el.id === "repSaldo") {
+            el.value = formatRupiahInputValue(el.value);
+          }
+          updateReportPreview();
+          saveReportDraft();
+        });
       });
-      document.getElementById("repSaldo").addEventListener("input", (e) => {
-        e.target.value = formatRupiahInputValue(e.target.value);
-        updateReportPreview();
-      });
+
       document.getElementById("repCopyBtn").addEventListener("click", async (e) => {
         updateReportPreview();
         await copyText(document.getElementById("reportPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
+
       document.getElementById("repSaveBtn").addEventListener("click", async () => {
         const fields = getReportFieldsFromForm();
         await saveReport(fields, generateReportText(fields));
         await renderReportHistory();
-      });
-      document.getElementById("repResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
+        clearReportDraft();
         updateReportPreview();
       });
 
-      // Reportan Kesalahan
+      document.getElementById("repResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
+        clearReportDraft();
+        updateReportPreview();
+      });
+
+      // Reportan Kesalahan + auto-save draft
       await renderKesalahanHistory();
+      restoreKesalahanDraft();
       updateKesalahanPreview();
+
       document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
-        if (el.id === "rkNominal") return;
-        el.addEventListener("input", updateKesalahanPreview);
+        el.addEventListener("input", () => {
+          if (el.id === "rkNominal") {
+            el.value = formatNumberInputValue(el.value);
+          }
+          updateKesalahanPreview();
+          saveKesalahanDraft();
+        });
       });
-      document.getElementById("rkNominal").addEventListener("input", (e) => {
-        e.target.value = formatNumberInputValue(e.target.value);
-        updateKesalahanPreview();
-      });
+
       document.getElementById("rkCopyBtn").addEventListener("click", async (e) => {
         updateKesalahanPreview();
         await copyText(document.getElementById("rkPreview").textContent);
         flashButton(e.target, "Tersalin!");
       });
+
       document.getElementById("rkSaveBtn").addEventListener("click", async () => {
         const fields = getKesalahanFieldsFromForm();
         await saveKesalahanReport(fields, generateKesalahanText(fields));
         await renderKesalahanHistory();
-      });
-      document.getElementById("rkResetBtn").addEventListener("click", () => {
         document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
+        clearKesalahanDraft();
         updateKesalahanPreview();
       });
 
-      // Pengembalian HP & Simcard
+      document.getElementById("rkResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
+        clearKesalahanDraft();
+        updateKesalahanPreview();
+      });
+
+      // Pengembalian HP & Simcard + auto-save draft
       await renderPengembalianHistory();
+      restorePengembalianDraft();
       renderPengembalianItems();
       updatePengembalianPreview();
+
+      ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", () => savePengembalianDraft());
+      });
 
       document.getElementById("pbgAddBtn").addEventListener("click", () => {
         const fields = getPengembalianFormFields();
@@ -469,10 +498,12 @@
         clearPengembalianForm();
         renderPengembalianItems();
         updatePengembalianPreview();
+        savePengembalianDraft();
       });
 
       document.getElementById("pbgClearFormBtn").addEventListener("click", () => {
         clearPengembalianForm();
+        savePengembalianDraft();
       });
 
       document.getElementById("pbgCopyBtn").addEventListener("click", async (e) => {
@@ -488,11 +519,18 @@
         const items = getPengembalianItems();
         await savePengembalianReport(items, previewText);
         await renderPengembalianHistory();
+        resetPengembalianItems();
+        clearPengembalianForm();
+        clearPengembalianDraft();
+        renderPengembalianItems();
+        updatePengembalianPreview();
       });
 
       document.getElementById("pbgResetAllBtn").addEventListener("click", () => {
         if (confirm("Hapus semua item?")) {
           resetPengembalianItems();
+          clearPengembalianForm();
+          clearPengembalianDraft();
           renderPengembalianItems();
           updatePengembalianPreview();
         }
