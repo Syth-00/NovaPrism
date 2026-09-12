@@ -157,7 +157,14 @@ function logout() {
 }
 
 function applyAccessControl(session) {
-  const access = (session && session.access) || ["home"];
+  // Kalau master → pakai semua menu
+  let access;
+  if (isMasterEmail(session && session.email)) {
+    access = allMenuKeys();
+  } else {
+    access = (session && session.access) || ["home"];
+  }
+
   let activeIsVisible = false;
   let firstVisibleItem = null;
 
@@ -1174,4 +1181,5 @@ export {
   saveKasihDraft, restoreKasihDraft, clearKasihDraft,
   saveSalahSorongDraft, restoreSalahSorongDraft, clearSalahSorongDraft,
   savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
+  isMasterEmail, allMenuKeys,
 };
