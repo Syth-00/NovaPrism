@@ -55,6 +55,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span>Reportan Kurang/Lebih Kasih</span>
           </div>
+          <div class="nav-item nav-item-sub" data-view="reportsalahsorong">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3z"/><path d="M10 8 14 12M14 8l-4 4"/></svg>
+            <span>Reportan Salah Sorong</span>
+          </div>
         </div>
       </div>
     </div>
@@ -381,6 +385,70 @@
       </div>
     </div>
 
+    <!-- Reportan Salah Sorong -->
+    <div class="view" id="view-reportsalahsorong">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Reportan Salah Sorong</h2>
+            <p>Isi kolom di kiri, preview otomatis kebentuk di kanan.</p>
+          </div>
+        </div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rssInfo">Info</label><input type="text" id="rssInfo" /></div>
+            <div class="field"><label for="rssPerihal">Perihal</label><input type="text" id="rssPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rssStaffNama">Staff</label><input type="text" id="rssStaffNama" /></div>
+              <div><label for="rssStaffKode">Kode</label><input type="text" id="rssStaffKode" /></div>
+              <div><label for="rssAgenNama">Nama Agen</label><input type="text" id="rssAgenNama" /></div>
+            </div>
+
+            <div class="access-group-label" style="margin-top:16px;">Pemilik Dana</div>
+            <div class="field"><label for="rssPemilikUserId">UserID</label><input type="text" id="rssPemilikUserId" /></div>
+            <div class="field"><label for="rssPemilikNamaRek">Nama Rekening</label><input type="text" id="rssPemilikNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rssPemilikNomorRek">Nomor Rekening</label><input type="text" id="rssPemilikNomorRek" /></div>
+              <div><label for="rssPemilikJenisBank">Jenis Bank</label><input type="text" id="rssPemilikJenisBank" /></div>
+            </div>
+
+            <div class="access-group-label" style="margin-top:16px;">Terproses ke</div>
+            <div class="field"><label for="rssTujuanUserId">UserID</label><input type="text" id="rssTujuanUserId" /></div>
+            <div class="field"><label for="rssTujuanNamaRek">Nama Rekening</label><input type="text" id="rssTujuanNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rssTujuanNomorRek">Nomor Rekening</label><input type="text" id="rssTujuanNomorRek" /></div>
+              <div><label for="rssTujuanJenisBank">Jenis Bank</label><input type="text" id="rssTujuanJenisBank" /></div>
+            </div>
+
+            <div class="field"><label for="rssNominal">Nominal</label><input type="text" id="rssNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rssLampiran">Lampiran</label><input type="text" id="rssLampiran" /></div>
+            <div class="field"><label for="rssKeterangan">Keterangan</label><textarea id="rssKeterangan" rows="4"></textarea></div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rssCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rssSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rssResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Preview</label>
+            <pre class="report-preview" id="rssPreview"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head">
+          <div><h2>Riwayat Reportan Salah Sorong</h2><p>Report yang pernah disimpan.</p></div>
+        </div>
+        <table>
+          <thead><tr><th>Perihal</th><th>Pemilik</th><th>Terproses ke</th><th>Waktu</th><th></th></tr></thead>
+          <tbody id="rssHistoryBody"></tbody>
+        </table>
+        <div class="empty-state" id="rssEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -398,6 +466,8 @@
     getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
     renderKasihHistory, updateKasihPreview,
     getKasihFieldsFromForm, generateKasihText, saveKasihReport,
+    renderSalahSorongHistory, updateSalahSorongPreview,
+    getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -406,6 +476,7 @@
     saveReportDraft, restoreReportDraft, clearReportDraft,
     saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
     saveKasihDraft, restoreKasihDraft, clearKasihDraft,
+    saveSalahSorongDraft, restoreSalahSorongDraft, clearSalahSorongDraft,
     savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
   } from "./script.js";
 
@@ -419,7 +490,6 @@
       renderAddAccessChecks();
       await renderSyncStatus();
 
-      // Sidebar navigation
       document.querySelectorAll(".nav-item").forEach(item => {
         item.addEventListener("click", () => {
           document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
@@ -448,7 +518,6 @@
         }
       });
 
-      // Form tambah akun
       document.getElementById("addAccountForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("newEmail").value.trim();
@@ -480,16 +549,14 @@
       const cache = await fetchRekeningCache();
       if (!cache) syncRekeningFromSheet();
 
-      // Reportan Bank + auto-save draft
+      // Reportan Bank
       await renderReportHistory();
       restoreReportDraft();
       updateReportPreview();
 
       document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
         el.addEventListener("input", () => {
-          if (el.id === "repSaldo") {
-            el.value = formatRupiahInputValue(el.value);
-          }
+          if (el.id === "repSaldo") el.value = formatRupiahInputValue(el.value);
           updateReportPreview();
           saveReportDraft();
         });
@@ -516,16 +583,14 @@
         updateReportPreview();
       });
 
-      // Reportan Kesalahan + auto-save draft
+      // Reportan Kesalahan
       await renderKesalahanHistory();
       restoreKesalahanDraft();
       updateKesalahanPreview();
 
       document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
         el.addEventListener("input", () => {
-          if (el.id === "rkNominal") {
-            el.value = formatNumberInputValue(el.value);
-          }
+          if (el.id === "rkNominal") el.value = formatNumberInputValue(el.value);
           updateKesalahanPreview();
           saveKesalahanDraft();
         });
@@ -552,7 +617,7 @@
         updateKesalahanPreview();
       });
 
-      // Reportan Kurang/Lebih Kasih + auto-save draft
+      // Reportan Kurang/Lebih Kasih
       await renderKasihHistory();
       restoreKasihDraft();
       updateKasihPreview();
@@ -582,7 +647,6 @@
         await saveKasihReport(fields, generateKasihText(fields));
         await renderKasihHistory();
         document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
-        // Reset select ke default
         const sel = document.getElementById("rkkSelisihTipe");
         if (sel) sel.value = "kurang";
         clearKasihDraft();
@@ -597,7 +661,41 @@
         updateKasihPreview();
       });
 
-      // Pengembalian HP & Simcard + auto-save draft
+      // Reportan Salah Sorong
+      await renderSalahSorongHistory();
+      restoreSalahSorongDraft();
+      updateSalahSorongPreview();
+
+      document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rssNominal") el.value = formatNumberInputValue(el.value);
+          updateSalahSorongPreview();
+          saveSalahSorongDraft();
+        });
+      });
+
+      document.getElementById("rssCopyBtn").addEventListener("click", async (e) => {
+        updateSalahSorongPreview();
+        await copyText(document.getElementById("rssPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("rssSaveBtn").addEventListener("click", async () => {
+        const fields = getSalahSorongFieldsFromForm();
+        await saveSalahSorongReport(fields, generateSalahSorongText(fields));
+        await renderSalahSorongHistory();
+        document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => el.value = "");
+        clearSalahSorongDraft();
+        updateSalahSorongPreview();
+      });
+
+      document.getElementById("rssResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => el.value = "");
+        clearSalahSorongDraft();
+        updateSalahSorongPreview();
+      });
+
+      // Pengembalian HP & Simcard
       await renderPengembalianHistory();
       restorePengembalianDraft();
       renderPengembalianItems();
