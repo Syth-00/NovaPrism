@@ -1,7 +1,7 @@
 /* ============================================
    NOVAPRISM — Supabase Version
    + Auto-save Draft
-   + Master Account
+   + Master Account (username: syth)
    + Reportan Kurang/Lebih Kasih
    + Reportan Salah Sorong
    + Reportan Salah Buang Dana
@@ -42,13 +42,13 @@ const MENU_CONFIG = [
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
 ];
 
-// ============ DAFTAR EMAIL MASTER ============
-// Akun di sini otomatis dapat SEMUA menu, tanpa perlu centang di Data Login.
-// Kalau Anda tambah menu baru di MENU_CONFIG, akun master langsung dapat juga.
-const MASTER_EMAILS = [
-  "syth",   // ← GANTI dengan email Anda yang sebenarnya
+// ============ DAFTAR USERNAME MASTER ============
+// Akun dengan email yang mengandung username di sini → otomatis semua menu.
+// Contoh master "syth" → email "syth@novaprism.io", "syth@apa.com", atau "syth" semua dapat full.
+const MASTER_USERNAMES = [
+  "syth",
 ];
-// =============================================
+// =================================================
 
 function allMenuKeys() {
   return MENU_CONFIG.map(m => m.key);
@@ -56,8 +56,12 @@ function allMenuKeys() {
 
 function isMasterEmail(email) {
   if (!email) return false;
-  return MASTER_EMAILS.map(e => e.toLowerCase().trim())
-    .includes(email.toLowerCase().trim());
+  const lower = email.toLowerCase().trim();
+  return MASTER_USERNAMES.some(u => {
+    const ul = u.toLowerCase().trim();
+    if (!ul) return false;
+    return lower === ul || lower.startsWith(ul + "@");
+  });
 }
 
 function menuLabel(key) {
@@ -155,7 +159,6 @@ if (loginForm) {
     btn.textContent = originalLabel;
 
     if (matched) {
-      // Kalau master → paksa access jadi semua menu
       const finalAccess = isMasterEmail(email) ? allMenuKeys() : (data.access || ["home"]);
       setSession({ email: data.email, access: finalAccess });
       window.location.href = "dashboard.html";
@@ -181,7 +184,6 @@ function logout() {
 }
 
 function applyAccessControl(session) {
-  // Master → semua menu. Non-master → dari session.access.
   const access = isMasterEmail(session && session.email)
     ? allMenuKeys()
     : ((session && session.access) || ["home"]);
@@ -264,7 +266,6 @@ async function fetchReports() {
   const { data } = await supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function saveReport(fields, text) {
   await supabase.from("reports").insert({
     info: fields.info, perihal: fields.perihal, bank: fields.bank,
@@ -272,17 +273,13 @@ async function saveReport(fields, text) {
     lampiran: fields.lampiran, keterangan: fields.keterangan, text,
   });
 }
-
-async function deleteReport(id) {
-  await supabase.from("reports").delete().eq("id", id);
-}
+async function deleteReport(id) { await supabase.from("reports").delete().eq("id", id); }
 
 // ---------- Reports (kesalahan) ----------
 async function fetchKesalahanReports() {
   const { data } = await supabase.from("reports_kesalahan").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function saveKesalahanReport(fields, text) {
   await supabase.from("reports_kesalahan").insert({
     info: fields.info, perihal: fields.perihal,
@@ -292,17 +289,13 @@ async function saveKesalahanReport(fields, text) {
     lampiran: fields.lampiran, keterangan: fields.keterangan, text,
   });
 }
-
-async function deleteKesalahanReport(id) {
-  await supabase.from("reports_kesalahan").delete().eq("id", id);
-}
+async function deleteKesalahanReport(id) { await supabase.from("reports_kesalahan").delete().eq("id", id); }
 
 // ---------- Reports (kurang/lebih kasih) ----------
 async function fetchKasihReports() {
   const { data } = await supabase.from("reports_kasih").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function saveKasihReport(fields, text) {
   await supabase.from("reports_kasih").insert({
     info: fields.info, perihal: fields.perihal,
@@ -314,17 +307,13 @@ async function saveKasihReport(fields, text) {
     lampiran: fields.lampiran, keterangan: fields.keterangan, text,
   });
 }
-
-async function deleteKasihReport(id) {
-  await supabase.from("reports_kasih").delete().eq("id", id);
-}
+async function deleteKasihReport(id) { await supabase.from("reports_kasih").delete().eq("id", id); }
 
 // ---------- Reports (salah sorong) ----------
 async function fetchSalahSorongReports() {
   const { data } = await supabase.from("reports_salahsorong").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function saveSalahSorongReport(fields, text) {
   await supabase.from("reports_salahsorong").insert({
     info: fields.info, perihal: fields.perihal,
@@ -341,24 +330,22 @@ async function saveSalahSorongReport(fields, text) {
     lampiran: fields.lampiran, keterangan: fields.keterangan, text,
   });
 }
-
-async function deleteSalahSorongReport(id) {
-  await supabase.from("reports_salahsorong").delete().eq("id", id);
-}
+async function deleteSalahSorongReport(id) { await supabase.from("reports_salahsorong").delete().eq("id", id); }
 
 // ---------- Reports (salah buang dana) ----------
 async function fetchSalahBuangReports() {
   const { data } = await supabase.from("reports_salahbuang").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function saveSalahBuangReport(fields, text) {
   await supabase.from("reports_salahbuang").insert({
     info: fields.info, perihal: fields.perihal,
     staff_nama: fields.staffNama, staff_kode: fields.staffKode, agen_nama: fields.agenNama,
+    dari_user_id: fields.dariUserId,
     dari_nama_rek: fields.dariNamaRek,
     dari_nomor_rek: fields.dariNomorRek,
     dari_jenis_bank: fields.dariJenisBank,
+    tujuan_user_id: fields.tujuanUserId,
     tujuan_nama_rek: fields.tujuanNamaRek,
     tujuan_nomor_rek: fields.tujuanNomorRek,
     tujuan_jenis_bank: fields.tujuanJenisBank,
@@ -368,40 +355,28 @@ async function saveSalahBuangReport(fields, text) {
     text,
   });
 }
-
-async function deleteSalahBuangReport(id) {
-  await supabase.from("reports_salahbuang").delete().eq("id", id);
-}
+async function deleteSalahBuangReport(id) { await supabase.from("reports_salahbuang").delete().eq("id", id); }
 
 // ---------- Pengembalian HP & Simcard ----------
 let _pengembalianItems = [];
-
 function getPengembalianItems() { return [..._pengembalianItems]; }
-
 function addPengembalianItem(data) {
   _pengembalianItems.push({
-    bank: data.bank || "",
-    typeBank: data.typeBank || "",
-    namaRek: data.namaRek || "",
-    nomorRek: data.nomorRek || "",
+    bank: data.bank || "", typeBank: data.typeBank || "",
+    namaRek: data.namaRek || "", nomorRek: data.nomorRek || "",
     kelengkapan: data.kelengkapan || "",
   });
 }
-
 function removePengembalianItem(index) { _pengembalianItems.splice(index, 1); }
 function resetPengembalianItems() { _pengembalianItems = []; }
-
 function generatePengembalianText(items) {
   if (!items || items.length === 0) return "";
   return items.map(item => [
-    `BANK : ${item.bank}`,
-    `TYPE BANK : ${item.typeBank}`,
-    `NAMA REKENING : ${item.namaRek}`,
-    `NOMOR REKENING : ${item.nomorRek}`,
+    `BANK : ${item.bank}`, `TYPE BANK : ${item.typeBank}`,
+    `NAMA REKENING : ${item.namaRek}`, `NOMOR REKENING : ${item.nomorRek}`,
     `KELENGKAPAN : ${item.kelengkapan}`,
   ].join("\n")).join("\n\n");
 }
-
 function renderPengembalianItems() {
   const container = document.getElementById("pengembalianList");
   const countEl = document.getElementById("pbgCount");
@@ -416,14 +391,12 @@ function renderPengembalianItems() {
       <div style="flex:1; min-width:0;">
         <div style="font-weight:600; margin-bottom:4px;">${item.bank || "(Bank kosong)"}</div>
         <div style="font-size:12px; color:var(--text-muted); line-height:1.6; word-break:break-word;">
-          ${item.typeBank} · ${item.namaRek} · ${item.nomorRek}<br/>
-          Kelengkapan: ${item.kelengkapan}
+          ${item.typeBank} · ${item.namaRek} · ${item.nomorRek}<br/>Kelengkapan: ${item.kelengkapan}
         </div>
       </div>
       <button type="button" class="btn-danger-ghost" data-remove-idx="${i}" style="flex-shrink:0;">Hapus</button>
     </div>
   `).join("");
-
   container.querySelectorAll("[data-remove-idx]").forEach(btn => {
     btn.addEventListener("click", () => {
       const idx = Number(btn.dataset.removeIdx);
@@ -434,13 +407,11 @@ function renderPengembalianItems() {
     });
   });
 }
-
 function updatePengembalianPreview() {
   const preview = document.getElementById("pengembalianPreview");
   if (!preview) return;
   preview.textContent = generatePengembalianText(_pengembalianItems);
 }
-
 function getPengembalianFormFields() {
   return {
     bank: (document.getElementById("pbgBank") || {}).value || "",
@@ -450,25 +421,18 @@ function getPengembalianFormFields() {
     kelengkapan: (document.getElementById("pbgKelengkapan") || {}).value || "",
   };
 }
-
 function clearPengembalianForm() {
   ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
 }
-
 async function fetchPengembalianReports() {
   const { data } = await supabase.from("pengembalian").select("*").order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function savePengembalianReport(items, text) {
   await supabase.from("pengembalian").insert({ items: items || [], text: text || "" });
 }
-
-async function deletePengembalianReport(id) {
-  await supabase.from("pengembalian").delete().eq("id", id);
-}
-
+async function deletePengembalianReport(id) { await supabase.from("pengembalian").delete().eq("id", id); }
 async function renderPengembalianHistory() {
   const tbody = document.getElementById("pengembalianHistoryBody");
   if (!tbody) return;
@@ -477,21 +441,16 @@ async function renderPengembalianHistory() {
   tbody.innerHTML = "";
   if (reports.length === 0) { if (emptyState) emptyState.style.display = "block"; return; }
   if (emptyState) emptyState.style.display = "none";
-
   reports.forEach(r => {
     const items = r.items || [];
     const summary = items.length === 0 ? "—" : `${items[0].bank || "?"}${items.length > 1 ? ` +${items.length - 1} lainnya` : ""}`;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${summary}</td>
-      <td>${items.length} item</td>
-      <td>${formatTime(r.created_at)}</td>
-      <td>
-        <div class="action-cell">
-          <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
-          <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
-        </div>
-      </td>
+      <td>${summary}</td><td>${items.length} item</td><td>${formatTime(r.created_at)}</td>
+      <td><div class="action-cell">
+        <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
+        <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
+      </div></td>
     `;
     tr.querySelector("[data-copy-id]").addEventListener("click", async (e) => {
       await copyText(r.text || ""); flashButton(e.target, "Tersalin!");
@@ -509,7 +468,7 @@ const DRAFT_FIELDS = {
   kesalahan: ["rkInfo", "rkPerihal", "rkStaffNama", "rkStaffKode", "rkAgenNama", "rkUserId", "rkNamaRek", "rkNomorRek", "rkJenisBank", "rkNominal", "rkLampiran", "rkKeterangan"],
   kasih: ["rkkInfo", "rkkPerihal", "rkkStaffNama", "rkkStaffKode", "rkkAgenNama", "rkkUserId", "rkkNamaRek", "rkkNomorRek", "rkkJenisBank", "rkkNominal", "rkkNominalTerproses", "rkkSelisihTipe", "rkkSelisihNominal", "rkkLampiran", "rkkKeterangan"],
   salahsorong: ["rssInfo", "rssPerihal", "rssStaffNama", "rssStaffKode", "rssAgenNama", "rssPemilikUserId", "rssPemilikNamaRek", "rssPemilikNomorRek", "rssPemilikJenisBank", "rssTujuanUserId", "rssTujuanNamaRek", "rssTujuanNomorRek", "rssTujuanJenisBank", "rssNominal", "rssLampiran", "rssKeterangan"],
-  salahbuang: ["rsbInfo", "rsbPerihal", "rsbStaffNama", "rsbStaffKode", "rsbAgenNama", "rsbDariNamaRek", "rsbDariNomorRek", "rsbDariJenisBank", "rsbTujuanNamaRek", "rsbTujuanNomorRek", "rsbTujuanJenisBank", "rsbNominal", "rsbBukti", "rsbKeterangan"],
+  salahbuang: ["rsbInfo", "rsbPerihal", "rsbStaffNama", "rsbStaffKode", "rsbAgenNama", "rsbDariUserId", "rsbDariNamaRek", "rsbDariNomorRek", "rsbDariJenisBank", "rsbTujuanUserId", "rsbTujuanNamaRek", "rsbTujuanNomorRek", "rsbTujuanJenisBank", "rsbNominal", "rsbBukti", "rsbKeterangan"],
   pengembalianForm: ["pbgBank", "pbgTypeBank", "pbgNamaRek", "pbgNomorRek", "pbgKelengkapan"],
 };
 
@@ -518,7 +477,6 @@ function collectDraftFields(ids) {
   ids.forEach(id => { const el = document.getElementById(id); if (el) result[id] = el.value; });
   return result;
 }
-
 function applyDraftFields(data) {
   if (!data) return;
   Object.entries(data).forEach(([id, value]) => {
@@ -575,18 +533,15 @@ async function renderDashboard(session) {
   document.getElementById("statSuccess").textContent = successCount;
   document.getElementById("statFailed").textContent = total - successCount;
   document.getElementById("statLast").textContent = records[0] ? formatTime(records[0].time) : "—";
-
   const tbody = document.getElementById("logTableBody");
   const emptyState = document.getElementById("emptyState");
   tbody.innerHTML = "";
   if (records.length === 0) { emptyState.style.display = "block"; return; }
   emptyState.style.display = "none";
-
   records.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.username || "—"}</td>
-      <td>${formatTime(r.time)}</td>
+      <td>${r.username || "—"}</td><td>${formatTime(r.time)}</td>
       <td>${r.device || "—"}</td>
       <td><span class="status-pill ${r.status}"><span class="dot"></span>${r.status === "success" ? "Berhasil" : "Gagal"}</span></td>
     `;
@@ -603,7 +558,6 @@ function accessCheckboxesHTML(selected) {
     </label>
   `).join("");
 }
-
 async function renderAccounts() {
   const tbody = document.getElementById("accountTableBody");
   if (!tbody) return;
@@ -612,7 +566,6 @@ async function renderAccounts() {
   tbody.innerHTML = "";
   if (accounts.length === 0) { emptyState.style.display = "block"; return; }
   emptyState.style.display = "none";
-
   accounts.forEach(a => {
     const isMaster = isMasterEmail(a.email);
     const access = isMaster ? allMenuKeys() : (a.access || []);
@@ -620,26 +573,20 @@ async function renderAccounts() {
       ? MENU_CONFIG.filter(m => access.includes(m.key)).map(m => `<span class="access-badge">${m.label}</span>`).join("")
       : `<span class="access-badge empty">Tidak ada akses</span>`;
     const masterBadge = isMaster ? `<span class="access-badge" style="background:rgba(236,72,153,0.2); border-color:rgba(236,72,153,0.4); color:#ec4899;">★ MASTER</span>` : "";
-
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.email}</td>
-      <td>
-        <span class="pw-cell">
-          <span class="pw-value" data-visible="false">••••••••</span>
-          <button type="button" class="pw-toggle">lihat</button>
-        </span>
-      </td>
+      <td><span class="pw-cell">
+        <span class="pw-value" data-visible="false">••••••••</span>
+        <button type="button" class="pw-toggle">lihat</button>
+      </span></td>
       <td><div class="access-badges">${masterBadge}${badgesHTML}</div></td>
       <td>${formatTime(a.created_at)}</td>
-      <td>
-        <div class="action-cell">
-          <button type="button" class="btn-mini" data-edit-id="${a.email}" ${isMaster ? "disabled title='Master auto dapat semua menu'" : ""}>Edit akses</button>
-          <button type="button" class="btn-danger-ghost" data-del-id="${a.email}">Hapus</button>
-        </div>
-      </td>
+      <td><div class="action-cell">
+        <button type="button" class="btn-mini" data-edit-id="${a.email}" ${isMaster ? "disabled title='Master auto dapat semua menu'" : ""}>Edit akses</button>
+        <button type="button" class="btn-danger-ghost" data-del-id="${a.email}">Hapus</button>
+      </div></td>
     `;
-
     const pwValueEl = tr.querySelector(".pw-value");
     const pwToggleEl = tr.querySelector(".pw-toggle");
     pwToggleEl.addEventListener("click", () => {
@@ -648,30 +595,20 @@ async function renderAccounts() {
       pwValueEl.dataset.visible = String(!visible);
       pwToggleEl.textContent = visible ? "lihat" : "sembunyikan";
     });
-
     tr.querySelector("[data-del-id]").addEventListener("click", async () => {
-      if (confirm(`Hapus akun ${a.email}?`)) {
-        await deleteAccount(a.email);
-        renderAccounts();
-      }
+      if (confirm(`Hapus akun ${a.email}?`)) { await deleteAccount(a.email); renderAccounts(); }
     });
-
     const editBtn = tr.querySelector("[data-edit-id]");
-    if (!isMaster) {
-      editBtn.addEventListener("click", () => toggleEditAccessRow(tr, a));
-    }
-
+    if (!isMaster) editBtn.addEventListener("click", () => toggleEditAccessRow(tr, a));
     tbody.appendChild(tr);
   });
 }
-
 function toggleEditAccessRow(rowEl, account) {
   const tbody = rowEl.parentElement;
   const existing = tbody.querySelector(".edit-access-row");
   const alreadyOpenForThis = existing && existing.dataset.forId === account.email;
   if (existing) existing.remove();
   if (alreadyOpenForThis) return;
-
   const editRow = document.createElement("tr");
   editRow.className = "edit-access-row";
   editRow.dataset.forId = account.email;
@@ -686,7 +623,6 @@ function toggleEditAccessRow(rowEl, account) {
     </td>
   `;
   rowEl.insertAdjacentElement("afterend", editRow);
-
   editRow.querySelector("[data-save]").addEventListener("click", async () => {
     const checked = Array.from(editRow.querySelectorAll('input:checked')).map(i => i.value);
     if (checked.length === 0) { alert("Pilih minimal satu menu."); return; }
@@ -695,7 +631,6 @@ function toggleEditAccessRow(rowEl, account) {
   });
   editRow.querySelector("[data-cancel]").addEventListener("click", () => editRow.remove());
 }
-
 function renderAddAccessChecks() {
   const container = document.getElementById("newAccessChecks");
   if (!container) return;
@@ -703,15 +638,11 @@ function renderAddAccessChecks() {
 }
 
 // ---------- Rekening sync & search ----------
-const SHEET_CONFIG = {
-  sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE",
-  gid: "2056151193",
-};
+const SHEET_CONFIG = { sheetId: "1mwc-ugOSqBFvvMupE_12Svh8uVFdShvf7thrqVXPuxE", gid: "2056151193" };
 
 function sheetCsvUrl() {
   return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/export?format=csv&gid=${SHEET_CONFIG.gid}`;
 }
-
 function parseCsvLine(line) {
   const result = []; let cur = ""; let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
@@ -723,7 +654,6 @@ function parseCsvLine(line) {
   result.push(cur.trim());
   return result;
 }
-
 function parseSheetCsvToRekening(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
   const rows = lines.map(parseCsvLine);
@@ -734,7 +664,6 @@ function parseSheetCsvToRekening(text) {
     .map(cols => ({ nama: (cols[0] || "").trim(), nomor: (cols[1] || "").trim() }))
     .filter(r => r.nama || r.nomor);
 }
-
 async function syncRekeningFromSheet() {
   const statusEl = document.getElementById("rekSyncStatus");
   if (statusEl) { statusEl.textContent = "Menyinkron..."; statusEl.className = "rek-sync-status"; }
@@ -749,7 +678,6 @@ async function syncRekeningFromSheet() {
     if (statusEl) { statusEl.textContent = "Gagal sinkron: " + err.message; statusEl.className = "rek-sync-status error"; }
   }
 }
-
 async function renderSyncStatus() {
   const statusEl = document.getElementById("rekSyncStatus");
   if (!statusEl) return;
@@ -758,7 +686,6 @@ async function renderSyncStatus() {
   statusEl.textContent = `${cache.list.length} data rekening — terakhir disinkron ${formatTime(cache.syncedAt)}.`;
   statusEl.className = "rek-sync-status success";
 }
-
 function normalizeForSearch(s) {
   return (s || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
 }
@@ -772,7 +699,6 @@ function normalizeAccountNumber(s) {
   const stripped = digitsOnly.replace(/^0+/, "");
   return stripped || digitsOnly;
 }
-
 async function searchRekening(rawInput) {
   const resultList = document.getElementById("rekResultList");
   const queries = rawInput.split("\n").map(q => q.trim()).filter(Boolean);
@@ -797,7 +723,6 @@ async function searchRekening(rawInput) {
     }
     return match ? { query: q, match } : null;
   }).filter(Boolean);
-
   if (matches.length === 0) {
     resultList.innerHTML = `<div class="empty-state">Tidak ada satu pun yang cocok.</div>`;
     return;
@@ -811,7 +736,7 @@ async function searchRekening(rawInput) {
   ).join("");
 }
 
-// ---------- Reportan Bank ----------
+// ---------- Utility ----------
 function formatRupiahInputValue(raw) {
   const digits = raw.replace(/\D/g, "");
   if (!digits) return "";
@@ -822,7 +747,23 @@ function formatNumberInputValue(raw) {
   if (!digits) return "";
   return Number(digits).toLocaleString("id-ID");
 }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    const tmp = document.createElement("textarea");
+    tmp.value = text; tmp.style.position = "fixed"; tmp.style.opacity = "0";
+    document.body.appendChild(tmp); tmp.focus(); tmp.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(tmp); return ok;
+  }
+}
+function flashButton(btn, tempLabel) {
+  const original = btn.textContent;
+  btn.textContent = tempLabel;
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
 
+// ---------- Reportan Bank ----------
 function generateReportText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`, ``,
@@ -848,23 +789,6 @@ function updateReportPreview() {
   if (!preview) return;
   preview.textContent = generateReportText(getReportFieldsFromForm());
 }
-
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); return true; }
-  catch {
-    const tmp = document.createElement("textarea");
-    tmp.value = text; tmp.style.position = "fixed"; tmp.style.opacity = "0";
-    document.body.appendChild(tmp); tmp.focus(); tmp.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(tmp); return ok;
-  }
-}
-function flashButton(btn, tempLabel) {
-  const original = btn.textContent;
-  btn.textContent = tempLabel;
-  setTimeout(() => { btn.textContent = original; }, 1500);
-}
-
 async function renderReportHistory() {
   const tbody = document.getElementById("reportHistoryBody");
   if (!tbody) return;
@@ -876,10 +800,8 @@ async function renderReportHistory() {
   reports.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.perihal || "—"}</td>
-      <td>${r.bank || "—"}</td>
-      <td>${r.nama_rek || "—"}</td>
-      <td>${formatTime(r.created_at)}</td>
+      <td>${r.perihal || "—"}</td><td>${r.bank || "—"}</td>
+      <td>${r.nama_rek || "—"}</td><td>${formatTime(r.created_at)}</td>
       <td><div class="action-cell">
         <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
         <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
@@ -938,10 +860,8 @@ async function renderKesalahanHistory() {
   reports.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.perihal || "—"}</td>
-      <td>${r.user_id || "—"}</td>
-      <td>${r.nama_rek || "—"}</td>
-      <td>${formatTime(r.created_at)}</td>
+      <td>${r.perihal || "—"}</td><td>${r.user_id || "—"}</td>
+      <td>${r.nama_rek || "—"}</td><td>${formatTime(r.created_at)}</td>
       <td><div class="action-cell">
         <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
         <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
@@ -1006,8 +926,7 @@ async function renderKasihHistory() {
     const tipeLabel = r.selisih_tipe === "kurang" ? "Kurang" : "Lebih";
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.perihal || "—"}</td>
-      <td>${r.user_id || "—"}</td>
+      <td>${r.perihal || "—"}</td><td>${r.user_id || "—"}</td>
       <td>${r.nama_rek || "—"}</td>
       <td><span class="status-pill ${r.selisih_tipe === "kurang" ? "failed" : "success"}"><span class="dot"></span>${tipeLabel}</span></td>
       <td>${formatTime(r.created_at)}</td>
@@ -1031,10 +950,12 @@ function generateSalahSorongText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`,
     `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`, ``,
-    `Pemilik Dana`, `UserID : ${f.pemilikUserId}`,
+    `Pemilik Dana`,
+    `UserID : ${f.pemilikUserId}`,
     `Nama Rekening : ${f.pemilikNamaRek}`,
     `Nomor Rekening : ${f.pemilikNomorRek} (${f.pemilikJenisBank})`, ``,
-    `Terproses ke`, `UserID : ${f.tujuanUserId}`,
+    `Terproses ke`,
+    `UserID : ${f.tujuanUserId}`,
     `Nama Rekening : ${f.tujuanNamaRek}`,
     `Nomor Rekening : ${f.tujuanNomorRek} (${f.tujuanJenisBank})`,
     `Nominal : Rp. ${f.nominal}`, `Lampiran : ${f.lampiran}`, ``,
@@ -1077,10 +998,8 @@ async function renderSalahSorongHistory() {
   reports.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.perihal || "—"}</td>
-      <td>${r.pemilik_user_id || "—"}</td>
-      <td>${r.tujuan_user_id || "—"}</td>
-      <td>${formatTime(r.created_at)}</td>
+      <td>${r.perihal || "—"}</td><td>${r.pemilik_user_id || "—"}</td>
+      <td>${r.tujuan_user_id || "—"}</td><td>${formatTime(r.created_at)}</td>
       <td><div class="action-cell">
         <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
         <button type="button" class="btn-danger-ghost" data-del-id="${r.id}">Hapus</button>
@@ -1101,10 +1020,10 @@ function generateSalahBuangText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`,
     `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`, ``,
-    `Dari :`,
+    `Dari : ${f.dariUserId}`,
     `Nama rekening pengirim : ${f.dariNamaRek}`,
     `Nomor rekening pengirim : ${f.dariNomorRek} (${f.dariJenisBank})`, ``,
-    `Tujuan :`,
+    `Tujuan : ${f.tujuanUserId}`,
     `Nama rekening penerima : ${f.tujuanNamaRek}`,
     `Nomor rekening penerima : ${f.tujuanNomorRek} (${f.tujuanJenisBank})`,
     `Nominal : Rp ${f.nominal}`, ``,
@@ -1119,9 +1038,11 @@ function getSalahBuangFieldsFromForm() {
     staffNama: document.getElementById("rsbStaffNama").value,
     staffKode: document.getElementById("rsbStaffKode").value,
     agenNama: document.getElementById("rsbAgenNama").value,
+    dariUserId: document.getElementById("rsbDariUserId").value,
     dariNamaRek: document.getElementById("rsbDariNamaRek").value,
     dariNomorRek: document.getElementById("rsbDariNomorRek").value,
     dariJenisBank: document.getElementById("rsbDariJenisBank").value,
+    tujuanUserId: document.getElementById("rsbTujuanUserId").value,
     tujuanNamaRek: document.getElementById("rsbTujuanNamaRek").value,
     tujuanNomorRek: document.getElementById("rsbTujuanNomorRek").value,
     tujuanJenisBank: document.getElementById("rsbTujuanJenisBank").value,
@@ -1147,8 +1068,8 @@ async function renderSalahBuangHistory() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${r.perihal || "—"}</td>
-      <td>${r.dari_nama_rek || "—"}</td>
-      <td>${r.tujuan_nama_rek || "—"}</td>
+      <td>${r.dari_user_id || "—"}</td>
+      <td>${r.tujuan_user_id || "—"}</td>
       <td>${formatTime(r.created_at)}</td>
       <td><div class="action-cell">
         <button type="button" class="btn-mini" data-copy-id="${r.id}">Salin</button>
@@ -1168,7 +1089,7 @@ async function renderSalahBuangHistory() {
 // ---------- Export ----------
 export {
   requireLogin, logout, getSession, applyAccessControl, menuLabel,
-  isMasterEmail, allMenuKeys, MASTER_EMAILS,
+  isMasterEmail, allMenuKeys, MASTER_USERNAMES,
   renderDashboard, renderAccounts, renderAddAccessChecks,
   fetchAccountsConfig, addAccount, deleteAccount, updateAccountAccess,
   fetchRecords, clearLoginRecords,
