@@ -42,6 +42,24 @@ function menuLabel(key) {
   const found = MENU_CONFIG.find(m => m.key === key);
   return found ? found.label : key;
 }
+// ============ DAFTAR EMAIL MASTER ============
+// Akun di sini otomatis dapat SEMUA menu, tanpa perlu centang di Data Login.
+// Kalau Anda tambah menu baru di MENU_CONFIG, akun master langsung dapat juga.
+const MASTER_EMAILS = [
+  "syth",   // ganti dengan email Anda yang sebenarnya
+  // tambah email master lain kalau perlu, satu per baris
+];
+// =============================================
+
+function allMenuKeys() {
+  return MENU_CONFIG.map(m => m.key);
+}
+
+function isMasterEmail(email) {
+  if (!email) return false;
+  return MASTER_EMAILS.map(e => e.toLowerCase().trim())
+    .includes(email.toLowerCase().trim());
+}
 
 // ---------- Draft helpers ----------
 function saveDraft(key, data) {
