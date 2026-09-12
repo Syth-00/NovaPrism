@@ -12,7 +12,6 @@
 
 <div class="app-shell">
 
-  <!-- Sidebar -->
   <div class="glass sidebar">
     <div class="brand">
       <span class="brand-dot"></span>
@@ -33,12 +32,12 @@
         <span>Cek Rekening</span>
       </div>
 
-      <div class="nav-group" id="navGroup-reportan">
+      <div class="nav-group">
         <div class="nav-group-header" data-group="reportan">
           <span>Reportan</span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </div>
-        <div class="nav-group-items" id="navGroupItems-reportan">
+        <div class="nav-group-items">
           <div class="nav-item nav-item-sub" data-view="report">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/><path d="M9.5 12.5h6M9.5 15.5h6M9.5 18h3.5"/></svg>
             <span>Reportan Bank</span>
@@ -56,7 +55,6 @@
     </div>
   </div>
 
-  <!-- Main content -->
   <div class="main-content">
 
     <div class="glass topbar">
@@ -67,60 +65,36 @@
       <span class="hint" style="margin:0; padding:6px 12px;" id="pageLabel">Beranda</span>
     </div>
 
-    <!-- View: Beranda -->
     <div class="view active" id="view-home">
       <div class="stat-row">
-        <div class="glass stat-card">
-          <div class="label">Total percobaan login</div>
-          <div class="value" id="statTotal">0</div>
-        </div>
-        <div class="glass stat-card">
-          <div class="label">Login berhasil</div>
-          <div class="value accent" id="statSuccess">0</div>
-        </div>
-        <div class="glass stat-card">
-          <div class="label">Login gagal</div>
-          <div class="value" id="statFailed">0</div>
-        </div>
-        <div class="glass stat-card">
-          <div class="label">Login terakhir</div>
-          <div class="value" id="statLast" style="font-size:16px;">—</div>
-        </div>
+        <div class="glass stat-card"><div class="label">Total percobaan login</div><div class="value" id="statTotal">0</div></div>
+        <div class="glass stat-card"><div class="label">Login berhasil</div><div class="value accent" id="statSuccess">0</div></div>
+        <div class="glass stat-card"><div class="label">Login gagal</div><div class="value" id="statFailed">0</div></div>
+        <div class="glass stat-card"><div class="label">Login terakhir</div><div class="value" id="statLast" style="font-size:16px;">—</div></div>
       </div>
 
       <div class="glass panel">
         <div class="panel-head">
           <div>
             <h2>Riwayat login</h2>
-            <p>Data ini tersimpan di Firestore (shared).</p>
+            <p>Data ini tersimpan di Supabase (shared ke semua device).</p>
           </div>
           <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
         </div>
-
         <table>
-          <thead>
-            <tr>
-              <th>Email / ID</th>
-              <th>Waktu</th>
-              <th>Perangkat</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Email / ID</th><th>Waktu</th><th>Perangkat</th><th>Status</th></tr></thead>
           <tbody id="logTableBody"></tbody>
         </table>
-        <div class="empty-state" id="emptyState" style="display:none;">
-          Belum ada data login yang tercatat.
-        </div>
+        <div class="empty-state" id="emptyState" style="display:none;">Belum ada data login.</div>
       </div>
     </div>
 
-    <!-- View: Data Login -->
     <div class="view" id="view-datalogin">
       <div class="glass panel">
         <div class="panel-head">
           <div>
             <h2>Data Login</h2>
-            <p>Atur email + akses menu. Akun Firebase Auth dibuat manual di Firebase Console.</p>
+            <p>Kelola akun & akses. Akun yang ditambah di sini <strong>langsung bisa login</strong>.</p>
           </div>
         </div>
 
@@ -131,7 +105,7 @@
           </div>
           <div class="field">
             <label for="newPassword">Password</label>
-            <input type="text" id="newPassword" placeholder="Password Firebase" required />
+            <input type="text" id="newPassword" placeholder="Password login" required />
           </div>
           <button type="submit" class="btn-primary" style="margin-top:0; width:auto; padding:12px 20px;">Tambah</button>
         </form>
@@ -142,34 +116,23 @@
         </div>
 
         <table>
-          <thead>
-            <tr>
-              <th>Email / ID</th>
-              <th>Akses</th>
-              <th></th>
-            </tr>
-          </thead>
+          <thead><tr><th>Email / ID</th><th>Password</th><th>Akses</th><th>Dibuat</th><th></th></tr></thead>
           <tbody id="accountTableBody"></tbody>
         </table>
-        <div class="empty-state" id="accountEmptyState" style="display:none;">
-          Belum ada akun terdaftar.
-        </div>
+        <div class="empty-state" id="accountEmptyState" style="display:none;">Belum ada akun.</div>
       </div>
     </div>
 
-    <!-- View: Cek Rekening -->
     <div class="view" id="view-rekening">
       <div class="glass panel">
         <div class="panel-head">
           <div>
             <h2>Cek Rekening</h2>
-            <p>Data ditarik dari Google Sheet, sheet <strong>CEK REK</strong>.</p>
+            <p>Data dari Google Sheet — kolom A = nama, B = nomor rekening.</p>
           </div>
           <button class="btn-ghost" id="syncSheetBtn">Sinkron ulang</button>
         </div>
-
         <div class="rek-sync-status" id="rekSyncStatus">Belum pernah disinkron.</div>
-
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
             <label for="rekSearchInput">Rekening yang ingin dicek</label>
@@ -187,50 +150,24 @@
       </div>
     </div>
 
-    <!-- View: Reportan Bank -->
     <div class="view" id="view-report">
       <div class="glass panel">
         <div class="panel-head">
           <div>
             <h2>Reportan Bank</h2>
-            <p>Isi kolom di kiri, hasilnya otomatis kebentuk di kanan.</p>
+            <p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p>
           </div>
         </div>
-
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
-            <div class="field">
-              <label for="repInfo">Info</label>
-              <input type="text" id="repInfo" placeholder="Contoh: Laporan rekening penerima" />
-            </div>
-            <div class="field">
-              <label for="repPerihal">Perihal</label>
-              <input type="text" id="repPerihal" placeholder="Contoh: Konfirmasi transfer" />
-            </div>
-            <div class="field">
-              <label for="repBank">Bank</label>
-              <input type="text" id="repBank" placeholder="Contoh: BCA" />
-            </div>
-            <div class="field">
-              <label for="repNamaRek">Nama Rekening</label>
-              <input type="text" id="repNamaRek" placeholder="Nama pemilik rekening" />
-            </div>
-            <div class="field">
-              <label for="repNomorRek">Nomor Rekening</label>
-              <input type="text" id="repNomorRek" placeholder="1234567890" />
-            </div>
-            <div class="field">
-              <label for="repSaldo">Saldo</label>
-              <input type="text" id="repSaldo" placeholder="Ketik angkanya aja" inputmode="numeric" />
-            </div>
-            <div class="field">
-              <label for="repLampiran">Lampiran</label>
-              <input type="text" id="repLampiran" placeholder="Link/nama file bukti" />
-            </div>
-            <div class="field">
-              <label for="repKeterangan">Keterangan</label>
-              <textarea id="repKeterangan" rows="4" placeholder="Catatan tambahan..."></textarea>
-            </div>
+            <div class="field"><label for="repInfo">Info</label><input type="text" id="repInfo" /></div>
+            <div class="field"><label for="repPerihal">Perihal</label><input type="text" id="repPerihal" /></div>
+            <div class="field"><label for="repBank">Bank</label><input type="text" id="repBank" /></div>
+            <div class="field"><label for="repNamaRek">Nama Rekening</label><input type="text" id="repNamaRek" /></div>
+            <div class="field"><label for="repNomorRek">Nomor Rekening</label><input type="text" id="repNomorRek" /></div>
+            <div class="field"><label for="repSaldo">Saldo</label><input type="text" id="repSaldo" inputmode="numeric" /></div>
+            <div class="field"><label for="repLampiran">Lampiran</label><input type="text" id="repLampiran" /></div>
+            <div class="field"><label for="repKeterangan">Keterangan</label><textarea id="repKeterangan" rows="4"></textarea></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
               <button type="button" class="btn-primary" id="repCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
               <button type="button" class="btn-ghost" id="repSaveBtn">Simpan ke riwayat</button>
@@ -246,93 +183,42 @@
 
       <div class="glass panel" style="margin-top:20px;">
         <div class="panel-head">
-          <div>
-            <h2>Riwayat Report</h2>
-            <p>Report yang pernah disimpan.</p>
-          </div>
+          <div><h2>Riwayat Report</h2><p>Report yang pernah disimpan.</p></div>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th>Perihal</th>
-              <th>Bank</th>
-              <th>Nama Rekening</th>
-              <th>Waktu</th>
-              <th></th>
-            </tr>
-          </thead>
+          <thead><tr><th>Perihal</th><th>Bank</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead>
           <tbody id="reportHistoryBody"></tbody>
         </table>
-        <div class="empty-state" id="reportEmptyState" style="display:none;">
-          Belum ada report tersimpan.
-        </div>
+        <div class="empty-state" id="reportEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
 
-    <!-- View: Reportan Kesalahan -->
     <div class="view" id="view-reportkesalahan">
       <div class="glass panel">
         <div class="panel-head">
           <div>
             <h2>Reportan Kesalahan</h2>
-            <p>Isi kolom di kiri, hasilnya otomatis kebentuk di kanan.</p>
+            <p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p>
           </div>
         </div>
-
         <div class="rek-search-grid">
           <div class="rek-search-col glass" style="padding:18px;">
-            <div class="field">
-              <label for="rkInfo">Info</label>
-              <input type="text" id="rkInfo" placeholder="Contoh: Laporan kesalahan input" />
-            </div>
-            <div class="field">
-              <label for="rkPerihal">Perihal</label>
-              <input type="text" id="rkPerihal" placeholder="Contoh: Salah input nominal" />
-            </div>
+            <div class="field"><label for="rkInfo">Info</label><input type="text" id="rkInfo" /></div>
+            <div class="field"><label for="rkPerihal">Perihal</label><input type="text" id="rkPerihal" /></div>
             <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
-              <div>
-                <label for="rkStaffNama">Staff</label>
-                <input type="text" id="rkStaffNama" placeholder="Nama staff" />
-              </div>
-              <div>
-                <label for="rkStaffKode">Kode</label>
-                <input type="text" id="rkStaffKode" placeholder="8798769" />
-              </div>
-              <div>
-                <label for="rkAgenNama">Nama Agen</label>
-                <input type="text" id="rkAgenNama" placeholder="Nama agen" />
-              </div>
+              <div><label for="rkStaffNama">Staff</label><input type="text" id="rkStaffNama" /></div>
+              <div><label for="rkStaffKode">Kode</label><input type="text" id="rkStaffKode" /></div>
+              <div><label for="rkAgenNama">Nama Agen</label><input type="text" id="rkAgenNama" /></div>
             </div>
-            <div class="field">
-              <label for="rkUserId">UserID</label>
-              <input type="text" id="rkUserId" placeholder="ID user" />
-            </div>
-            <div class="field">
-              <label for="rkNamaRek">Nama Rekening</label>
-              <input type="text" id="rkNamaRek" placeholder="Nama pemilik rekening" />
-            </div>
+            <div class="field"><label for="rkUserId">UserID</label><input type="text" id="rkUserId" /></div>
+            <div class="field"><label for="rkNamaRek">Nama Rekening</label><input type="text" id="rkNamaRek" /></div>
             <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
-              <div>
-                <label for="rkNomorRek">Nomor Rekening</label>
-                <input type="text" id="rkNomorRek" placeholder="1234567890" />
-              </div>
-              <div>
-                <label for="rkJenisBank">Jenis Bank</label>
-                <input type="text" id="rkJenisBank" placeholder="BCA" />
-              </div>
+              <div><label for="rkNomorRek">Nomor Rekening</label><input type="text" id="rkNomorRek" /></div>
+              <div><label for="rkJenisBank">Jenis Bank</label><input type="text" id="rkJenisBank" /></div>
             </div>
-            <div class="field">
-              <label for="rkNominal">Nominal</label>
-              <input type="text" id="rkNominal" placeholder="Ketik angkanya aja" inputmode="numeric" />
-            </div>
-            <div class="field">
-              <label for="rkLampiran">Lampiran</label>
-              <input type="text" id="rkLampiran" placeholder="Link/nama file bukti" />
-            </div>
-            <div class="field">
-              <label for="rkKeterangan">Keterangan</label>
-              <textarea id="rkKeterangan" rows="4" placeholder="Catatan tambahan..."></textarea>
-            </div>
+            <div class="field"><label for="rkNominal">Nominal</label><input type="text" id="rkNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rkLampiran">Lampiran</label><input type="text" id="rkLampiran" /></div>
+            <div class="field"><label for="rkKeterangan">Keterangan</label><textarea id="rkKeterangan" rows="4"></textarea></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
               <button type="button" class="btn-primary" id="rkCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
               <button type="button" class="btn-ghost" id="rkSaveBtn">Simpan ke riwayat</button>
@@ -348,50 +234,41 @@
 
       <div class="glass panel" style="margin-top:20px;">
         <div class="panel-head">
-          <div>
-            <h2>Riwayat Reportan Kesalahan</h2>
-            <p>Report yang pernah disimpan.</p>
-          </div>
+          <div><h2>Riwayat Reportan Kesalahan</h2><p>Report yang pernah disimpan.</p></div>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th>Perihal</th>
-              <th>UserID</th>
-              <th>Nama Rekening</th>
-              <th>Waktu</th>
-              <th></th>
-            </tr>
-          </thead>
+          <thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead>
           <tbody id="rkHistoryBody"></tbody>
         </table>
-        <div class="empty-state" id="rkEmptyState" style="display:none;">
-          Belum ada report tersimpan.
-        </div>
+        <div class="empty-state" id="rkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
 
   </div>
 </div>
 
-<script type="module" src="script.js"></script>
 <script type="module">
   import {
-    requireLogin, logout, renderDashboard, renderAccounts, renderAddAccessChecks,
-    applyAccessControl, renderSyncStatus, syncRekeningFromSheet, searchRekening,
-    fetchRekeningCache, fetchAccountsConfig, saveAccountsConfig, clearLoginRecords,
+    requireLogin, logout, getSession, applyAccessControl, menuLabel,
+    renderDashboard, renderAccounts, renderAddAccessChecks,
+    fetchAccountsConfig, addAccount,
+    fetchRecords, clearLoginRecords,
+    fetchRekeningCache, renderSyncStatus, syncRekeningFromSheet, searchRekening,
     renderReportHistory, updateReportPreview, formatRupiahInputValue,
-    getReportFieldsFromForm, generateReportText, saveReport, copyText, flashButton,
+    getReportFieldsFromForm, generateReportText, saveReport,
+    copyText, flashButton,
     renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
-    getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport, menuLabel,
+    getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
   } from "./script.js";
 
   document.addEventListener("DOMContentLoaded", async () => {
     try {
-      await requireLogin();
-      await renderDashboard();
+      const session = requireLogin();
+      if (!session) return;
+
+      await renderDashboard(session);
       await renderAccounts();
-      await renderAddAccessChecks();
+      renderAddAccessChecks();
       await renderSyncStatus();
 
       document.querySelectorAll(".nav-item").forEach(item => {
@@ -411,14 +288,14 @@
         });
       });
 
-      applyAccessControl();
+      applyAccessControl(session);
 
       document.getElementById("logoutBtn").addEventListener("click", () => logout());
 
       document.getElementById("clearBtn").addEventListener("click", async () => {
         if (confirm("Hapus semua riwayat login?")) {
           await clearLoginRecords();
-          await renderDashboard();
+          await renderDashboard(session);
         }
       });
 
@@ -433,16 +310,15 @@
         ).map(i => i.value);
         if (access.length === 0) { alert("Pilih minimal satu menu."); return; }
 
-        const list = await fetchAccountsConfig();
-        if (list.find(x => x.email === email)) { alert("Email sudah ada."); return; }
-        list.unshift({ email, access });
-        await saveAccountsConfig(list);
+        const accounts = await fetchAccountsConfig();
+        if (accounts.find(x => x.email === email)) { alert("Email sudah terdaftar."); return; }
 
-        alert(`Akses untuk ${email} ditambahkan.\n\nBuat akun login di Firebase Console → Authentication → Users dengan email ${email} & password ${password}`);
+        const ok = await addAccount(email, password, access);
+        if (!ok) { alert("Gagal menambah akun."); return; }
 
         document.getElementById("newEmail").value = "";
         document.getElementById("newPassword").value = "";
-        await renderAddAccessChecks();
+        renderAddAccessChecks();
         await renderAccounts();
       });
 
