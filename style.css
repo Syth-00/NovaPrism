@@ -881,3 +881,186 @@ tbody tr:last-child td {
   color: var(--text-primary);
   margin: 0;
 }
+/* ============================================
+   MOBILE IMPROVEMENTS
+   ============================================ */
+
+@media (max-width: 720px) {
+
+  /* 1. Sidebar: jadi vertical stack, tidak overflow */
+  .app-shell {
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: static;
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .sidebar .brand {
+    margin-bottom: 0;
+    justify-content: center;
+  }
+
+  /* Nav-list: horizontal scroll yang bisa digeser */
+  .nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-list::-webkit-scrollbar { display: none; }
+
+  .nav-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Grup Reportan: tetap horizontal, sub-menu scroll */
+  .nav-group {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+  .nav-group-header {
+    padding: 10px 14px;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+  .nav-group-items {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    padding-top: 6px;
+  }
+  .nav-group-items .nav-item {
+    padding-left: 14px;
+  }
+
+  /* Tombol Keluar di bawah */
+  .sidebar > div:last-child {
+    margin-top: 8px !important;
+  }
+
+  /* 2. Grid 3 kolom jadi 1 kolom di HP */
+  .field[style*="grid-template-columns:1.4fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .field[style*="grid-template-columns:2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .field[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .field[style*="grid-template-columns:80px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 3. Preview & form: sudah otomatis tumpuk karena .rek-search-grid sudah 1fr di 720px */
+
+  /* 4. Tabel: bikin scroll horizontal, kolom tidak di-hide */
+  .panel table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .panel thead,
+  .panel tbody {
+    display: table;
+    width: 100%;
+    min-width: 500px;
+  }
+
+  /* 5. Stat card: 2 kolom biar tidak terlalu tinggi */
+  .stat-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 14px 16px;
+  }
+  .stat-card .value {
+    font-size: 22px;
+  }
+
+  /* 6. Topbar: tetap horizontal, tapi user-chip di kiri label di kanan */
+  .topbar {
+    padding: 12px 16px;
+  }
+  .topbar .user-chip {
+    font-size: 13px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  /* 7. Preview report: padding lebih kecil */
+  .report-preview {
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    min-height: 180px;
+  }
+
+  /* 8. Panel padding lebih kecil */
+  .panel {
+    padding: 16px 14px;
+  }
+  .panel-head h2 {
+    font-size: 15px;
+  }
+  .panel-head p {
+    font-size: 11px;
+  }
+
+  /* 9. Tombol dan aksi */
+  .btn-primary, .btn-ghost, .btn-mini, .btn-danger-ghost {
+    font-size: 12px;
+  }
+  .action-cell {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* 10. Login card */
+  .login-card {
+    padding: 26px 20px;
+    max-width: 100%;
+  }
+  .login-card h1 {
+    font-size: 22px;
+  }
+
+  /* 11. Sidebar tombol logout width */
+  .sidebar .btn-ghost {
+    width: 100%;
+  }
+}
+
+/* Untuk layar sangat kecil (< 420px) */
+@media (max-width: 420px) {
+  .stat-row {
+    grid-template-columns: 1fr;
+  }
+  .nav-item {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  .panel {
+    padding: 14px 12px;
+  }
+  .report-preview {
+    font-size: 11px;
+  }
+}
