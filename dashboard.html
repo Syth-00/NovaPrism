@@ -36,6 +36,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
         <span>Pengembalian HP & Simcard</span>
       </div>
+            <div class="nav-item" data-view="wdqris">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z M19 19h2v2h-2z M14 19h2v2h-2z M19 14h2v2h-2z"/></svg>
+        <span>WD QRIS</span>
+      </div>
       <div class="nav-group">
         <div class="nav-group-header" data-group="reportan">
           <span>Reportan</span>
@@ -405,7 +409,46 @@
         <div class="empty-state" id="rsbEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
+        <!-- WD QRIS -->
+    <div class="view" id="view-wdqris">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>WD QRIS</h2>
+            <p id="wdqrisHelp">Pilih mode WD atau Depo, tempel data, klik Proses.</p>
+          </div>
+        </div>
 
+        <!-- Tab Mode -->
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button type="button" class="btn-primary wdqris-tab active" data-mode="wd" style="width:auto; padding:10px 22px;">WD</button>
+          <button type="button" class="btn-ghost wdqris-tab" data-mode="depo" style="padding:10px 22px;">Depo</button>
+        </div>
+
+        <div class="field">
+          <label for="wdqrisInput">Tempel data dari zona main di sini</label>
+          <textarea id="wdqrisInput" rows="10" placeholder="Tempel data WD dari zona main di sini..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="wdqrisProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="wdqrisCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="wdqrisClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <strong style="font-size:14px;">Hasil (<span id="wdqrisCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead id="wdqrisResultHead"></thead>
+            <tbody id="wdqrisResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom Navigation (khusus mobile) -->
@@ -829,7 +872,37 @@
           updatePengembalianPreview();
         }
       });
+          // WD QRIS
+      restoreWdqrisDraft();
+      renderWdqrisHeader();
+      renderWdqrisRows();
 
+      document.querySelectorAll(".wdqris-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          setWdqrisMode(tab.dataset.mode);
+          saveWdqrisDraft();
+        });
+      });
+
+      const wdqrisInput = document.getElementById("wdqrisInput");
+      if (wdqrisInput) {
+        wdqrisInput.addEventListener("input", () => saveWdqrisDraft());
+      }
+
+      document.getElementById("wdqrisProcessBtn").addEventListener("click", () => {
+        processWdqris();
+      });
+
+      document.getElementById("wdqrisCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllWdqris();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("wdqrisClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearWdqris();
+        }
+      });
     } catch (err) {
       console.error(err);
       document.body.innerHTML = `<div style="color:#fff;padding:40px;font-family:sans-serif;">Error: ${err.message}<br><br>Cek Console (F12).</div>`;
