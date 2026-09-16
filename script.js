@@ -5,6 +5,7 @@
    + Reportan Kurang/Lebih Kasih
    + Reportan Salah Sorong
    + Reportan Salah Buang Dana
+   + WD QRIS (WD & Depo)
    ============================================ */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -25,6 +26,7 @@ const DRAFT_KEYS = {
   kasih: "novaprism_draft_kasih",
   salahsorong: "novaprism_draft_salahsorong",
   salahbuang: "novaprism_draft_salahbuang",
+  wdqris: "novaprism_draft_wdqris",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -40,11 +42,10 @@ const MENU_CONFIG = [
   { key: "reportsalahsorong", label: "Reportan Salah Sorong" },
   { key: "reportsalahbuang", label: "Reportan Salah Buang Dana" },
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
+  { key: "wdqris", label: "WD QRIS" },
 ];
 
 // ============ DAFTAR USERNAME MASTER ============
-// Akun dengan email yang mengandung username di sini → otomatis semua menu.
-// Contoh master "syth" → email "syth@novaprism.io", "syth@apa.com", atau "syth" semua dapat full.
 const MASTER_USERNAMES = [
   "syth",
 ];
@@ -460,6 +461,304 @@ async function renderPengembalianHistory() {
     });
     tbody.appendChild(tr);
   });
+}
+
+// ---------- WD QRIS (WD & Depo) ----------
+let _wdqrisRows = []; // Array of parsed row objects
+let _wdqrisMode = "wd"; // "wd" atau "depo"
+
+function setWdqrisMode(mode) {
+  _wdqrisMode = mode;
+  // Update active class tab
+  const tabs = document.querySelectorAll(".wdqris-tab");
+  tabs.forEach(t => t.classList.toggle("active", t.dataset.mode === mode));
+  // Update placeholder & label sesuai mode
+  const input = document.getElementById("wdqrisInput");
+  const help = document.getElementById("wdqrisHelp");
+  if (mode === "wd") {
+    if (input) input.placeholder = "Tempel data WD dari zona main di sini...\n\nContoh:\n2026-09-16 17:25:03\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nIDN : 522552278\nWD : 25613080\nBank : SEABANK\nNama Rek : Riki\nNo Rek : 901154404396\nsetyarini\t2.300.000\t\nValidasi : Success";
+    if (help) help.textContent = "Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal";
+  } else {
+    if (input) input.placeholder = "Tempel data Depo dari zona main di sini...\n\nContoh:\n2026-09-16 17:25:13\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nBank : SEABANK\nNama Rek : Suparman\nNo Rek : 901349737693\ndenitnit\t4.000.000\t\nValidasi : Success";
+    if (help) help.textContent = "Hasil: Nominal · ID · Keterangan · Order ID";
+  }
+}
+
+// Parse inputan WD — multi blok, tiap blok dipisah oleh baris yang mengandung "Order :"
+function parseWdInput(rawText) {
+  const rows = [];
+  // Normalisasi newline
+  const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  // Split per baris
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  // Kita iterasi baris. Setiap kali ketemu "Order :", mulai blok baru.
+  let block = null;
+  const finalize = (b) => {
+    if (!b) return;
+    // Minimal harus ada bank atau no rek untuk dianggap valid
+    if (!b.bank && !b.noRek) return;
+    rows.push({
+      bank: b.bank || "",
+      noRek: b.noRek || "",
+      id: b.idPlayer || "",
+      namaRek: b.namaRek || "",
+      nominal: b.nominal || "",
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (/^Order\s*:/i.test(line)) {
+      // Mulai blok baru
+      finalize(block);
+      block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
+      continue;
+    }
+    if (!block) continue;
+
+    // Bank
+    let m = line.match(/^Bank\s*:\s*(.+)$/i);
+    if (m) { block.bank = m[1].trim(); continue; }
+
+    // Nama Rek
+    m = line.match(/^Nama Rek\s*:\s*(.+)$/i);
+    if (m) { block.namaRek = m[1].trim(); continue; }
+
+    // No Rek
+    m = line.match(/^No Rek\s*:\s*(.+)$/i);
+    if (m) { block.noRek = m[1].trim(); continue; }
+
+    // IDN (tidak dipakai untuk output, tapi tandai sudah masuk blok)
+    m = line.match(/^IDN\s*:\s*(.+)$/i);
+    if (m) { block.idn = m[1].trim(); continue; }
+
+    // WD number
+    m = line.match(/^WD\s*:\s*(.+)$/i);
+    if (m) { block.wd = m[1].trim(); continue; }
+
+    // Validasi
+    m = line.match(/^Validasi\s*:\s*(.+)$/i);
+    if (m) { block.validasi = m[1].trim(); continue; }
+
+    // Baris data player: "setyarini\t2.300.000\t" atau "setyarini    2.300.000"
+    // Biasanya format: username<spasi/tab>nominal<spasi/tab>
+    // Kita deteksi baris yang punya angka nominal (dengan titik/koma) & ada nama sebelum
+    const tabSplit = line.split("\t").map(s => s.trim()).filter(Boolean);
+    if (tabSplit.length >= 2) {
+      // Cek elemen kedua sebagai nominal
+      const maybeNominal = tabSplit[1];
+      if (/^[\d.,]+$/.test(maybeNominal.replace(/\s/g, ""))) {
+        block.idPlayer = tabSplit[0];
+        block.nominal = normalizeNominal(maybeNominal);
+        continue;
+      }
+    }
+    // Fallback: cari baris dengan pola "username   nominal"
+    const spMatch = line.match(/^(\S+)\s+([\d.,]+)\s*$/);
+    if (spMatch && !block.idPlayer) {
+      block.idPlayer = spMatch[1];
+      block.nominal = normalizeNominal(spMatch[2]);
+      continue;
+    }
+  }
+  finalize(block);
+
+  return rows;
+}
+
+// Parse inputan Depo — sama, tapi output berbeda
+function parseDepoInput(rawText) {
+  const rows = [];
+  const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  let block = null;
+  const finalize = (b) => {
+    if (!b) return;
+    if (!b.nominal && !b.order) return;
+    rows.push({
+      nominal: b.nominal || "",
+      id: b.idPlayer || "",
+      keterangan: b.validasi ? `Validasi : ${b.validasi}` : "",
+      orderId: b.order || "",
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (/^Order\s*:/i.test(line)) {
+      finalize(block);
+      block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
+      continue;
+    }
+    if (!block) continue;
+
+    let m = line.match(/^Validasi\s*:\s*(.+)$/i);
+    if (m) { block.validasi = m[1].trim(); continue; }
+
+    // Baris player: "denitnit\t4.000.000\t"
+    const tabSplit = line.split("\t").map(s => s.trim()).filter(Boolean);
+    if (tabSplit.length >= 2) {
+      const maybeNominal = tabSplit[1];
+      if (/^[\d.,]+$/.test(maybeNominal.replace(/\s/g, ""))) {
+        block.idPlayer = tabSplit[0];
+        block.nominal = normalizeNominal(maybeNominal);
+        continue;
+      }
+    }
+    const spMatch = line.match(/^(\S+)\s+([\d.,]+)\s*$/);
+    if (spMatch && !block.idPlayer) {
+      block.idPlayer = spMatch[1];
+      block.nominal = normalizeNominal(spMatch[2]);
+      continue;
+    }
+  }
+  finalize(block);
+
+  return rows;
+}
+
+// Normalisasi nominal: "2.300.000" atau "2,300,000" → "2300000"
+function normalizeNominal(s) {
+  return (s || "").replace(/[.,]/g, "").replace(/\s/g, "");
+}
+
+function generateWdqrisRowText(row, mode) {
+  if (mode === "wd") {
+    return [
+      row.bank,
+      row.noRek,
+      row.id,
+      row.namaRek,
+      row.nominal,
+    ].join("\t");
+  } else {
+    return [
+      row.nominal,
+      row.id,
+      row.keterangan,
+      row.orderId,
+    ].join("\t");
+  }
+}
+
+function renderWdqrisRows() {
+  const container = document.getElementById("wdqrisResultBody");
+  const countEl = document.getElementById("wdqrisCount");
+  if (!container) return;
+  if (countEl) countEl.textContent = String(_wdqrisRows.length);
+
+  if (_wdqrisRows.length === 0) {
+    container.innerHTML = `<tr><td colspan="6"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
+    return;
+  }
+
+  const isWd = _wdqrisMode === "wd";
+  const rows = _wdqrisRows.map((r, i) => {
+    if (isWd) {
+      return `
+        <tr>
+          <td>${r.bank || "—"}</td>
+          <td>${r.noRek || "—"}</td>
+          <td>${r.id || "—"}</td>
+          <td>${r.namaRek || "—"}</td>
+          <td>${r.nominal || "—"}</td>
+          <td><button type="button" class="btn-mini" data-copy-row="${i}">Salin</button></td>
+        </tr>
+      `;
+    } else {
+      return `
+        <tr>
+          <td>${r.nominal || "—"}</td>
+          <td>${r.id || "—"}</td>
+          <td>${r.keterangan || "—"}</td>
+          <td>${r.orderId || "—"}</td>
+          <td><button type="button" class="btn-mini" data-copy-row="${i}">Salin</button></td>
+        </tr>
+      `;
+    }
+  }).join("");
+
+  container.innerHTML = rows;
+
+  container.querySelectorAll("[data-copy-row]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const idx = Number(btn.dataset.copyRow);
+      const row = _wdqrisRows[idx];
+      if (!row) return;
+      const text = generateWdqrisRowText(row, _wdqrisMode);
+      await copyText(text);
+      flashButton(e.target, "Tersalin!");
+    });
+  });
+}
+
+function renderWdqrisHeader() {
+  const thead = document.getElementById("wdqrisResultHead");
+  if (!thead) return;
+  if (_wdqrisMode === "wd") {
+    thead.innerHTML = `<tr><th>Kode Bank</th><th>No Rekening</th><th>ID</th><th>Nama Rek</th><th>Nominal</th><th></th></tr>`;
+  } else {
+    thead.innerHTML = `<tr><th>Nominal</th><th>ID</th><th>Keterangan</th><th>Order ID</th><th></th></tr>`;
+  }
+}
+
+function processWdqris() {
+  const input = document.getElementById("wdqrisInput");
+  if (!input) return;
+  const raw = input.value;
+  if (!raw.trim()) { alert("Tempel dulu datanya."); return; }
+
+  if (_wdqrisMode === "wd") {
+    _wdqrisRows = parseWdInput(raw);
+  } else {
+    _wdqrisRows = parseDepoInput(raw);
+  }
+
+  renderWdqrisHeader();
+  renderWdqrisRows();
+  saveWdqrisDraft();
+}
+
+function clearWdqris() {
+  _wdqrisRows = [];
+  const input = document.getElementById("wdqrisInput");
+  if (input) input.value = "";
+  renderWdqrisHeader();
+  renderWdqrisRows();
+  saveWdqrisDraft();
+}
+
+async function copyAllWdqris() {
+  if (_wdqrisRows.length === 0) { alert("Belum ada data."); return; }
+  const lines = _wdqrisRows.map(r => generateWdqrisRowText(r, _wdqrisMode));
+  await copyText(lines.join("\n"));
+}
+
+function saveWdqrisDraft() {
+  saveDraft(DRAFT_KEYS.wdqris, {
+    mode: _wdqrisMode,
+    input: (document.getElementById("wdqrisInput") || {}).value || "",
+    rows: _wdqrisRows,
+  });
+}
+
+function restoreWdqrisDraft() {
+  const data = loadDraft(DRAFT_KEYS.wdqris);
+  if (!data) return;
+  if (data.mode) setWdqrisMode(data.mode);
+  if (data.input) {
+    const input = document.getElementById("wdqrisInput");
+    if (input) input.value = data.input;
+  }
+  if (Array.isArray(data.rows)) _wdqrisRows = data.rows;
+}
+
+function clearWdqrisDraft() {
+  clearDraft(DRAFT_KEYS.wdqris);
 }
 
 // ---------- Draft field list ----------
@@ -1106,11 +1405,17 @@ export {
   getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
   renderSalahBuangHistory, updateSalahBuangPreview,
   getSalahBuangFieldsFromForm, generateSalahBuangText, saveSalahBuangReport,
+  // WD QRIS
+  setWdqrisMode, processWdqris, clearWdqris, copyAllWdqris,
+  restoreWdqrisDraft, saveWdqrisDraft, clearWdqrisDraft,
+  renderWdqrisHeader, renderWdqrisRows,
+  // Pengembalian
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory, getPengembalianItems,
+  // Draft
   saveReportDraft, restoreReportDraft, clearReportDraft,
   saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
   saveKasihDraft, restoreKasihDraft, clearKasihDraft,
