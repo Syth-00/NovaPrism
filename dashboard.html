@@ -36,7 +36,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
         <span>Pengembalian HP & Simcard</span>
       </div>
-            <div class="nav-item" data-view="wdqris">
+      <div class="nav-item" data-view="wdqris">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z M19 19h2v2h-2z M14 19h2v2h-2z M19 14h2v2h-2z"/></svg>
         <span>WD QRIS</span>
       </div>
@@ -191,6 +191,46 @@
         <div class="panel-head"><div><h2>Riwayat Pengembalian</h2><p>Report yang pernah disimpan.</p></div></div>
         <table><thead><tr><th>Bank</th><th>Jumlah</th><th>Waktu</th><th></th></tr></thead><tbody id="pengembalianHistoryBody"></tbody></table>
         <div class="empty-state" id="pengembalianEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- WD QRIS -->
+    <div class="view" id="view-wdqris">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>WD QRIS</h2>
+            <p id="wdqrisHelp">Mode WD — Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button type="button" class="btn-primary wdqris-tab active" data-mode="wd" style="width:auto; padding:10px 22px;">WD</button>
+          <button type="button" class="btn-ghost wdqris-tab" data-mode="depo" style="padding:10px 22px;">Depo</button>
+        </div>
+
+        <div class="field">
+          <label for="wdqrisInput">Tempel data dari zona main di sini</label>
+          <textarea id="wdqrisInput" rows="10" placeholder="Tempel data WD dari zona main di sini..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="wdqrisProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="wdqrisCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="wdqrisClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="wdqrisCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead id="wdqrisResultHead"></thead>
+            <tbody id="wdqrisResultBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -409,46 +449,7 @@
         <div class="empty-state" id="rsbEmptyState" style="display:none;">Belum ada report tersimpan.</div>
       </div>
     </div>
-        <!-- WD QRIS -->
-    <div class="view" id="view-wdqris">
-      <div class="glass panel">
-        <div class="panel-head">
-          <div>
-            <h2>WD QRIS</h2>
-            <p id="wdqrisHelp">Pilih mode WD atau Depo, tempel data, klik Proses.</p>
-          </div>
-        </div>
 
-        <!-- Tab Mode -->
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
-          <button type="button" class="btn-primary wdqris-tab active" data-mode="wd" style="width:auto; padding:10px 22px;">WD</button>
-          <button type="button" class="btn-ghost wdqris-tab" data-mode="depo" style="padding:10px 22px;">Depo</button>
-        </div>
-
-        <div class="field">
-          <label for="wdqrisInput">Tempel data dari zona main di sini</label>
-          <textarea id="wdqrisInput" rows="10" placeholder="Tempel data WD dari zona main di sini..."></textarea>
-        </div>
-
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
-          <button type="button" class="btn-primary" id="wdqrisProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
-          <button type="button" class="btn-ghost" id="wdqrisCopyAllBtn">Salin Semua</button>
-          <button type="button" class="btn-ghost" id="wdqrisClearBtn">Bersihkan</button>
-        </div>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <strong style="font-size:14px;">Hasil (<span id="wdqrisCount">0</span> baris)</strong>
-          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
-        </div>
-
-        <div style="overflow-x:auto;">
-          <table style="min-width:600px;">
-            <thead id="wdqrisResultHead"></thead>
-            <tbody id="wdqrisResultBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Bottom Navigation (khusus mobile) -->
@@ -465,9 +466,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="9" rx="1.5"/><path d="M3 10 12 4l9 6"/><path d="M7 14v2M12 14v2M17 14v2"/></svg>
       <span>Rekening</span>
     </button>
-    <button class="bottom-nav-item" data-view="pengembalian">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
-      <span>HP</span>
+    <button class="bottom-nav-item" data-view="wdqris">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z M19 19h2v2h-2z M14 19h2v2h-2z M19 14h2v2h-2z"/></svg>
+      <span>WD QRIS</span>
     </button>
     <button class="bottom-nav-item" data-bottom-sheet="reportan">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/></svg>
@@ -523,6 +524,9 @@
     getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
     renderSalahBuangHistory, updateSalahBuangPreview,
     getSalahBuangFieldsFromForm, generateSalahBuangText, saveSalahBuangReport,
+    setWdqrisMode, processWdqris, clearWdqris, copyAllWdqris,
+    restoreWdqrisDraft, saveWdqrisDraft, clearWdqrisDraft,
+    renderWdqrisHeader, renderWdqrisRows,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -580,7 +584,7 @@
         if (labelEl) labelEl.textContent = menuLabel(viewKey);
       }
 
-      // Sidebar navigation (desktop)
+      // Sidebar navigation
       document.querySelectorAll(".nav-item").forEach(item => {
         item.addEventListener("click", () => {
           if (item.dataset.view) goToView(item.dataset.view);
@@ -628,7 +632,7 @@
 
       applyAccessControl(session);
 
-      // Sync hiding bottom nav sesuai akses (setelah applyAccessControl)
+      // Sync hiding bottom nav sesuai akses
       setTimeout(() => {
         document.querySelectorAll(".bottom-nav-item, .bottom-sheet-item").forEach(item => {
           const key = item.dataset.view;
@@ -872,7 +876,8 @@
           updatePengembalianPreview();
         }
       });
-          // WD QRIS
+
+      // ============ WD QRIS ============
       restoreWdqrisDraft();
       renderWdqrisHeader();
       renderWdqrisRows();
@@ -903,6 +908,7 @@
           clearWdqris();
         }
       });
+
     } catch (err) {
       console.error(err);
       document.body.innerHTML = `<div style="color:#fff;padding:40px;font-family:sans-serif;">Error: ${err.message}<br><br>Cek Console (F12).</div>`;
