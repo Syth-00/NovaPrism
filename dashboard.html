@@ -13,7 +13,7 @@
 
 <div class="app-shell">
 
-  <div class="glass sidebar">
+  <div class="glass sidebar" id="sidebar">
     <div class="brand">
       <span class="brand-dot"></span>
       <span class="brand-name">NovaPrism</span>
@@ -75,12 +75,19 @@
     </div>
   </div>
 
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <div class="main-content">
 
     <div class="glass topbar">
-      <div class="user-chip">
-        <div class="avatar" id="avatarInitial">?</div>
-        <span id="welcomeText">Halo</span>
+      <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="user-chip">
+          <div class="avatar" id="avatarInitial">?</div>
+          <span id="welcomeText">Halo</span>
+        </div>
       </div>
       <span class="hint" style="margin:0; padding:6px 12px;" id="pageLabel">Beranda</span>
     </div>
@@ -451,59 +458,6 @@
     </div>
 
   </div>
-
-  <!-- Bottom Navigation (khusus mobile) -->
-  <nav class="bottom-nav" id="bottomNav">
-    <button class="bottom-nav-item active" data-view="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-      <span>Beranda</span>
-    </button>
-    <button class="bottom-nav-item" data-view="datalogin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4.5"/><path d="M11.5 9 20 9m0 0v3.5M20 9h-3.2"/></svg>
-      <span>Login</span>
-    </button>
-    <button class="bottom-nav-item" data-view="rekening">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="9" rx="1.5"/><path d="M3 10 12 4l9 6"/><path d="M7 14v2M12 14v2M17 14v2"/></svg>
-      <span>Rekening</span>
-    </button>
-    <button class="bottom-nav-item" data-view="wdqris">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z M19 19h2v2h-2z M14 19h2v2h-2z M19 14h2v2h-2z"/></svg>
-      <span>WD QRIS</span>
-    </button>
-    <button class="bottom-nav-item" data-bottom-sheet="reportan">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/></svg>
-      <span>Reportan</span>
-    </button>
-  </nav>
-
-  <!-- Bottom Sheet: sub-menu Reportan -->
-  <div class="bottom-sheet-overlay" id="bottomSheetOverlay">
-    <div class="bottom-sheet" id="bottomSheet">
-      <div class="bottom-sheet-handle"></div>
-      <div class="bottom-sheet-title">Menu Reportan</div>
-
-      <button class="bottom-sheet-item" data-view="report">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/><path d="M9.5 12.5h6M9.5 15.5h6M9.5 18h3.5"/></svg>
-        <span>Reportan Bank</span>
-      </button>
-      <button class="bottom-sheet-item" data-view="reportkesalahan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-        <span>Reportan Kesalahan</span>
-      </button>
-      <button class="bottom-sheet-item" data-view="reportkasih">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        <span>Reportan Kurang/Lebih Kasih</span>
-      </button>
-      <button class="bottom-sheet-item" data-view="reportsalahsorong">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3z"/><path d="M10 8 14 12M14 8l-4 4"/></svg>
-        <span>Reportan Salah Sorong</span>
-      </button>
-      <button class="bottom-sheet-item" data-view="reportsalahbuang">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
-        <span>Reportan Salah Buang Dana</span>
-      </button>
-    </div>
-  </div>
 </div>
 
 <script type="module">
@@ -550,17 +504,26 @@
       renderAddAccessChecks();
       await renderSyncStatus();
 
-      // ============ NAVIGASI ============
-      const bottomNav = document.getElementById("bottomNav");
-      const bottomSheetOverlay = document.getElementById("bottomSheetOverlay");
+      // ============ DRAWER SIDEBAR (Mobile) ============
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+      const menuToggle = document.getElementById("menuToggle");
 
-      function closeBottomSheet() {
-        if (bottomSheetOverlay) bottomSheetOverlay.classList.remove("open");
+      function openSidebar() {
+        if (sidebar) sidebar.classList.add("open");
+        if (sidebarOverlay) sidebarOverlay.classList.add("open");
+      }
+      function closeSidebar() {
+        if (sidebar) sidebar.classList.remove("open");
+        if (sidebarOverlay) sidebarOverlay.classList.remove("open");
       }
 
+      if (menuToggle) menuToggle.addEventListener("click", openSidebar);
+      if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+
+      // ============ NAVIGASI ============
       function goToView(viewKey) {
         document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-        document.querySelectorAll(".bottom-nav-item, .bottom-sheet-item").forEach(i => i.classList.remove("active"));
         document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
 
         const viewEl = document.getElementById("view-" + viewKey);
@@ -569,79 +532,26 @@
         const sideItem = document.querySelector(`.nav-item[data-view="${viewKey}"]`);
         if (sideItem) sideItem.classList.add("active");
 
-        const bottomItem = document.querySelector(`.bottom-nav-item[data-view="${viewKey}"]`);
-        const sheetItem = document.querySelector(`.bottom-sheet-item[data-view="${viewKey}"]`);
-        if (bottomItem) bottomItem.classList.add("active");
-        if (sheetItem) sheetItem.classList.add("active");
-
-        const isReportan = ["report","reportkesalahan","reportkasih","reportsalahsorong","reportsalahbuang"].includes(viewKey);
-        if (isReportan) {
-          const reportanBtn = document.querySelector('.bottom-nav-item[data-bottom-sheet="reportan"]');
-          if (reportanBtn) reportanBtn.classList.add("active");
-        }
-
         const labelEl = document.getElementById("pageLabel");
         if (labelEl) labelEl.textContent = menuLabel(viewKey);
+
+        // Tutup drawer setelah pilih menu (mobile)
+        closeSidebar();
       }
 
-      // Sidebar navigation
       document.querySelectorAll(".nav-item").forEach(item => {
         item.addEventListener("click", () => {
           if (item.dataset.view) goToView(item.dataset.view);
         });
       });
 
-      // Collapsible nav group
       document.querySelectorAll(".nav-group-header").forEach(header => {
         header.addEventListener("click", () => {
           header.closest(".nav-group").classList.toggle("collapsed");
         });
       });
 
-      // Bottom nav
-      if (bottomNav) {
-        bottomNav.querySelectorAll(".bottom-nav-item").forEach(btn => {
-          btn.addEventListener("click", () => {
-            if (btn.dataset.bottomSheet) {
-              bottomSheetOverlay.classList.add("open");
-              return;
-            }
-            const viewKey = btn.dataset.view;
-            if (viewKey) goToView(viewKey);
-          });
-        });
-      }
-
-      // Bottom sheet items
-      document.querySelectorAll(".bottom-sheet-item").forEach(item => {
-        item.addEventListener("click", () => {
-          const viewKey = item.dataset.view;
-          if (viewKey) {
-            goToView(viewKey);
-            closeBottomSheet();
-          }
-        });
-      });
-
-      // Klik overlay untuk tutup bottom sheet
-      if (bottomSheetOverlay) {
-        bottomSheetOverlay.addEventListener("click", (e) => {
-          if (e.target === bottomSheetOverlay) closeBottomSheet();
-        });
-      }
-
       applyAccessControl(session);
-
-      // Sync hiding bottom nav sesuai akses
-      setTimeout(() => {
-        document.querySelectorAll(".bottom-nav-item, .bottom-sheet-item").forEach(item => {
-          const key = item.dataset.view;
-          if (!key) return;
-          const sideEq = document.querySelector(`.nav-item[data-view="${key}"]`);
-          const visible = !sideEq || sideEq.style.display !== "none";
-          item.style.display = visible ? "" : "none";
-        });
-      }, 100);
 
       // ============ HANDLERS ============
       document.getElementById("logoutBtn").addEventListener("click", () => logout());
