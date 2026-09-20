@@ -55,8 +55,6 @@ const MASTER_USERNAMES = [
 // =================================================
 
 // ============ PREFIX E-WALLET ============
-// Dipakai untuk WD QRIS & Tarik WD
-// Kalau bank termasuk e-wallet di bawah, nomor rekening otomatis ditambah prefix.
 const EWALLET_PREFIX = {
   "DANA": "3901",
   "DANA2": "3901",
@@ -576,13 +574,17 @@ function parseDepoInput(rawText) {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
 
   let block = null;
+
   const finalize = (b) => {
     if (!b) return;
     if (!b.nominal && !b.order) return;
     rows.push({
-      tanggal: b.tanggal || "", kosong1: "",
-      id: b.idPlayer || "", orderId: b.order || "",
-      nominal: b.nominal || "", kosong2: "",
+      tanggal: b.tanggal || "",
+      kosong1: "",
+      id: b.idPlayer || "",
+      orderId: b.order || "",
+      nominal: b.nominal || "",
+      kosong2: "",
       keterangan: (b.wdStatus || "").toUpperCase(),
     });
   };
@@ -592,6 +594,7 @@ function parseDepoInput(rawText) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
       block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
@@ -601,8 +604,15 @@ function parseDepoInput(rawText) {
     }
     if (!block) continue;
 
-    const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})/);
-    if (dateMatch && !block.tanggal) { block.tanggal = dateMatch[1]; continue; }
+    // Cari tanggal DI MANA SAJA dalam blok (bukan hanya baris pertama).
+    // Format tanggal: 2026-09-20, sering diikuti jam.
+    if (!block.tanggal) {
+      const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        block.tanggal = dateMatch[1];
+        continue;
+      }
+    }
 
     if (/^Validasi\s*:/i.test(line)) { validasiSection = true; continue; }
     if (validasiSection && /^WD\s*:\s*$/i.test(line)) { expectWdStatus = true; continue; }
@@ -779,7 +789,6 @@ function parseTarikWdInput(rawText) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Baris 1: nomor + username (mis. "8    masedi1")
     const line1Match = line.match(/^(\d+)\s+(\S+)\s*$/);
     if (line1Match) {
       if (i + 1 < lines.length && /^Withdraw\b/i.test(lines[i + 1])) {
