@@ -6,6 +6,7 @@
    + Reportan Salah Sorong
    + Reportan Salah Buang Dana
    + WD QRIS (WD & Depo)
+   + Wallpaper Server (Supabase)
    ============================================ */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -108,25 +109,66 @@ function formatTime(iso) {
   });
 }
 
-// ---------- Background ----------
+// ---------- Background / Wallpaper ----------
 function applyBackground(url) {
-  if (url) document.documentElement.style.setProperty("--user-bg-image", `url("${url}")`);
+  if (url) {
+    document.documentElement.style.setProperty("--user-bg-image", `url("${url}")`);
+    // Paksa body::before update (kadang perlu reflow)
+    document.body.style.backgroundImage = `url("${url}")`;
+  }
 }
-function loadSavedBackground() {
+
+function clearBackground() {
+  document.documentElement.style.removeProperty("--user-bg-image");
+  document.body.style.backgroundImage = "";
+}
+
+// Load dari server (Supabase)
+async function loadBackgroundFromServer() {
+  try {
+    const { data, error } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "background_url")
+      .maybeSingle();
+    if (!error && data && data.value) {
+      applyBackground(data.value);
+      // Cache lokal biar load berikutnya cepat
+      localStorage.setItem(BG_KEY, data.value);
+      return data.value;
+    }
+  } catch (e) {}
+  // Fallback ke cache lokal
   const saved = localStorage.getItem(BG_KEY);
   if (saved) applyBackground(saved);
+  return saved || null;
 }
-loadSavedBackground();
 
-const bgInputEl = document.getElementById("bgInput");
-if (bgInputEl) {
-  const saved = localStorage.getItem(BG_KEY);
-  if (saved) bgInputEl.value = saved;
-  bgInputEl.addEventListener("change", () => {
-    const url = bgInputEl.value.trim();
-    if (url) { localStorage.setItem(BG_KEY, url); applyBackground(url); }
-  });
+// Simpan ke server
+async function saveBackgroundToServer(url) {
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key: "background_url", value: url, updated_at: new Date().toISOString() });
+  if (error) {
+    console.error("Gagal simpan wallpaper:", error);
+    return false;
+  }
+  applyBackground(url);
+  localStorage.setItem(BG_KEY, url);
+  return true;
 }
+
+// Hapus dari server
+async function clearBackgroundFromServer() {
+  await supabase
+    .from("settings")
+    .upsert({ key: "background_url", value: "", updated_at: new Date().toISOString() });
+  clearBackground();
+  localStorage.removeItem(BG_KEY);
+}
+
+// Auto-load saat halaman dibuka (index & dashboard)
+loadBackgroundFromServer();
 
 // ---------- Login form ----------
 const loginForm = document.getElementById("loginForm");
@@ -478,7 +520,7 @@ function setWdqrisMode(mode) {
     if (help) help.textContent = "Mode WD — Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal";
   } else {
     if (input) input.placeholder = "Tempel data Depo dari zona main di sini...\n\nContoh:\n2026-09-20 04:22:02\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nIDN : 524231633\nWD : 26320424\nBank : BRI\nNama Rek : WAHYUDI\nNo Rek : 099801028503534\ntowek819\t1.829.000\t\nValidasi : Success\nIDN :\nSuccess\nWD :\nFailed";
-    if (help) help.textContent = "Mode Depo — Hasil: Tanggal · (kosong) · ID · Order ID · Nominal · (kosong) · Keterangan";
+    if (help) help.textContent = "Mode Depo — Hasil: Tanggal · (kosong) · ID · Order ID · Nominal · (kosong) · Keterangan (FAILED/SUCCESS)";
   }
   renderWdqrisHeader();
   renderWdqrisRows();
@@ -567,7 +609,7 @@ function parseDepoInput(rawText) {
       orderId: b.order || "",
       nominal: b.nominal || "",
       kosong2: "",
-      keterangan: b.wdStatus || "",
+      keterangan: (b.wdStatus || "").toUpperCase(),
     });
   };
 
@@ -586,37 +628,31 @@ function parseDepoInput(rawText) {
     }
     if (!block) continue;
 
-    // Baris pertama block: "2026-09-20 04:22:02	lunatogel	XPAY"
     const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})/);
     if (dateMatch && !block.tanggal) {
-      // Ambil tanggal saja (tanpa jam)
       block.tanggal = dateMatch[1];
       continue;
     }
 
-    // Masuk section validasi
     if (/^Validasi\s*:/i.test(line)) {
       validasiSection = true;
       continue;
     }
 
-    // Baris "WD :" (kosong) → tunggu status
     if (validasiSection && /^WD\s*:\s*$/i.test(line)) {
       expectWdStatus = true;
       continue;
     }
 
-    // Baris berikutnya setelah WD: → statusnya
     if (expectWdStatus) {
       const trimmed = line.trim();
       if (trimmed) {
-        block.wdStatus = trimmed.toUpperCase();
+        block.wdStatus = trimmed;
         expectWdStatus = false;
       }
       continue;
     }
 
-    // Baris player: "towek819	1.829.000"
     const tabSplit = line.split("\t").map(s => s.trim()).filter(Boolean);
     if (tabSplit.length >= 2) {
       const maybeNominal = tabSplit[1];
@@ -646,7 +682,6 @@ function generateWdqrisRowText(row, mode) {
   if (mode === "wd") {
     return [row.bank, row.noRek, row.id, row.namaRek, row.nominal].join("\t");
   } else {
-    // tanggal - kosong - id - orderId - nominal - kosong - keterangan
     return [
       row.tanggal,
       "",
@@ -654,7 +689,7 @@ function generateWdqrisRowText(row, mode) {
       row.orderId,
       row.nominal,
       "",
-      row.keterangan,
+      (row.keterangan || "").toUpperCase(),
     ].join("\t");
   }
 }
@@ -684,7 +719,8 @@ function renderWdqrisRows() {
         </tr>
       `;
     } else {
-      const statusClass = (r.keterangan || "").toLowerCase() === "success" ? "success" : "failed";
+      const status = (r.keterangan || "").toUpperCase();
+      const statusClass = status === "SUCCESS" ? "success" : "failed";
       return `
         <tr>
           <td>${r.tanggal || "—"}</td>
@@ -693,7 +729,7 @@ function renderWdqrisRows() {
           <td>${r.orderId || "—"}</td>
           <td>${r.nominal || "—"}</td>
           <td style="color:var(--text-muted); font-size:11px;">(kosong)</td>
-          <td><span class="status-pill ${statusClass}"><span class="dot"></span>${r.keterangan || "—"}</span></td>
+          <td><span class="status-pill ${statusClass}"><span class="dot"></span>${status || "—"}</span></td>
           <td><button type="button" class="btn-mini" data-copy-row="${i}">Salin</button></td>
         </tr>
       `;
@@ -1435,6 +1471,9 @@ export {
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory, getPengembalianItems,
+  // Wallpaper
+  applyBackground, clearBackground, loadBackgroundFromServer,
+  saveBackgroundToServer, clearBackgroundFromServer,
   saveReportDraft, restoreReportDraft, clearReportDraft,
   saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
   saveKasihDraft, restoreKasihDraft, clearKasihDraft,
