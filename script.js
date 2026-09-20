@@ -6,6 +6,7 @@
    + Pengembalian HP & Simcard
    + WD QRIS (WD & Depo) — dengan prefix e-wallet
    + Tarik WD
+   + Tarik WD PWR
    + Wallpaper Server (Supabase)
    ============================================ */
 
@@ -29,6 +30,7 @@ const DRAFT_KEYS = {
   salahbuang: "novaprism_draft_salahbuang",
   wdqris: "novaprism_draft_wdqris",
   tarikwd: "novaprism_draft_tarikwd",
+  tarikwdpwr: "novaprism_draft_tarikwdpwr",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -46,6 +48,7 @@ const MENU_CONFIG = [
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
   { key: "wdqris", label: "WD QRIS" },
   { key: "tarikwd", label: "Tarik WD" },
+  { key: "tarikwdpwr", label: "Tarik WD PWR" },
 ];
 
 // ============ DAFTAR USERNAME MASTER ============
@@ -574,7 +577,7 @@ function parseDepoInput(rawText) {
   const lines = text.split("\n").map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").trim()).filter(Boolean);
 
   let block = null;
-  let pendingTanggal = "";   // tanggal yang muncul SEBELUM "Order :"
+  let pendingTanggal = "";
   let validasiSection = false;
   let expectWdStatus = false;
 
@@ -582,7 +585,7 @@ function parseDepoInput(rawText) {
     if (!b) return;
     if (!b.nominal && !b.order) return;
     const tgl = b.tanggal || pendingTanggal || "";
-    if (tgl) pendingTanggal = tgl;  // simpan sebagai fallback untuk blok berikutnya
+    if (tgl) pendingTanggal = tgl;
     rows.push({
       tanggal: tgl,
       kosong1: "",
@@ -597,7 +600,6 @@ function parseDepoInput(rawText) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Baris tanggal SEBELUM Order: → simpan sebagai pendingTanggal
     if (!block) {
       const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})/);
       if (dateMatch) {
@@ -606,7 +608,6 @@ function parseDepoInput(rawText) {
       }
     }
 
-    // Baris Order → mulai blok baru, pakai pendingTanggal
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
       block = {
@@ -619,7 +620,6 @@ function parseDepoInput(rawText) {
     }
     if (!block) continue;
 
-    // Kalau masih belum punya tanggal, cari di dalam blok (fallback)
     if (!block.tanggal) {
       const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})/);
       if (dateMatch) {
@@ -915,6 +915,190 @@ function restoreTarikWdDraft() {
   if (Array.isArray(data.rows)) _tarikwdRows = data.rows;
 }
 function clearTarikWdDraft() { clearDraft(DRAFT_KEYS.tarikwd); }
+
+// ---------- TARIK WD PWR ----------
+let _tarikwdpwrRows = [];
+
+function parseTarikWdPwrInput(rawText) {
+  const rows = [];
+  const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = text.split("\n")
+    .map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").replace(/\s+$/, ""))
+    .filter(l => l.trim().length > 0);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Pisah per tab
+    const cols = line.split("\t").map(c => c.trim());
+
+    // Format: Status | Member Code | Account No | Account Name | Net Amount | Area Code | Bank Name
+    // Minimal 7 kolom
+    if (cols.length < 7) {
+      // Fallback: coba split dengan 2+ spasi
+      const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
+      if (cols2.length >= 7) {
+        rows.push(buildPwrRow(cols2));
+      } else if (cols2.length >= 3) {
+        // Coba tebak berdasarkan pola
+        const row = guessPwrRow(cols2);
+        if (row) rows.push(row);
+      }
+      continue;
+    }
+    rows.push(buildPwrRow(cols));
+  }
+
+  return rows;
+}
+
+function buildPwrRow(cols) {
+  // cols[0] = Status, cols[1] = Member Code, cols[2] = Account No,
+  // cols[3] = Account Name, cols[4] = Net Amount, cols[5] = Area Code, cols[6] = Bank Name
+  const memberCode = cols[1] || "";
+  const accountNo = cols[2] || "";
+  const accountName = cols[3] || "";
+  const netAmount = normalizeNominal((cols[4] || "").replace(/\.00$/, ""));
+  const areaCode = cols[5] || "";
+  const bankName = (cols[6] || "").toUpperCase();
+
+  return {
+    areaCode,
+    bank: bankName,
+    nomor: applyEwalletPrefix(bankName, accountNo),
+    id: memberCode,
+    namaRek: accountName,
+    nominal: netAmount,
+  };
+}
+
+function guessPwrRow(cols) {
+  // Fallback kalau kolomnya ga jelas: cari pola
+  let accountNo = "", memberCode = "", accountName = "",
+      netAmount = "", areaCode = "", bankName = "";
+
+  // Cari account no: digit panjang (>=8 digit)
+  for (const c of cols) {
+    if (!accountNo && /^\d{8,}$/.test(c)) { accountNo = c; continue; }
+  }
+  // Cari nominal: pola angka dengan koma/titik
+  for (const c of cols) {
+    if (!netAmount && /^\d{1,3}([.,]\d{3})*([.,]\d{2})?$/.test(c)) {
+      netAmount = normalizeNominal(c.replace(/\.00$/, ""));
+    }
+  }
+  // Cari area code: pola XXX_XXX_#### atau mengandung underscore
+  for (const c of cols) {
+    if (!areaCode && /_/.test(c)) { areaCode = c; }
+  }
+  // Bank name: biasanya di akhir, huruf besar
+  for (let i = cols.length - 1; i >= 0; i--) {
+    const c = cols[i];
+    if (/^[A-Z][A-Z0-9]+$/.test(c) && c !== areaCode) { bankName = c; break; }
+  }
+  // Member code: lowercase (biasanya), dan bukan bagian dari yang sudah ketemu
+  for (const c of cols) {
+    if (!memberCode && c !== accountNo && c !== netAmount && c !== areaCode && c !== bankName && /^[a-z][a-z0-9]+$/i.test(c) && c.length <= 20) {
+      memberCode = c;
+      break;
+    }
+  }
+  // Account name: sisanya
+  for (const c of cols) {
+    if (!accountName && c !== accountNo && c !== memberCode && c !== netAmount && c !== areaCode && c !== bankName && /[A-Za-z]/.test(c)) {
+      accountName = c;
+    }
+  }
+
+  if (!accountNo && !memberCode) return null;
+
+  return {
+    areaCode,
+    bank: bankName,
+    nomor: applyEwalletPrefix(bankName, accountNo),
+    id: memberCode,
+    namaRek: accountName,
+    nominal: netAmount,
+  };
+}
+
+function generateTarikWdPwrRowText(row) {
+  return [row.areaCode, row.bank, row.nomor, row.id, row.namaRek, row.nominal].join("\t");
+}
+
+function renderTarikWdPwrRows() {
+  const container = document.getElementById("tarikwdpwrResultBody");
+  const countEl = document.getElementById("tarikwdpwrCount");
+  if (!container) return;
+  if (countEl) countEl.textContent = String(_tarikwdpwrRows.length);
+
+  if (_tarikwdpwrRows.length === 0) {
+    container.innerHTML = `<tr><td colspan="7"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
+    return;
+  }
+
+  container.innerHTML = _tarikwdpwrRows.map((r, i) => `
+    <tr>
+      <td>${r.areaCode || "—"}</td>
+      <td>${r.bank || "—"}</td>
+      <td>${r.nomor || "—"}</td>
+      <td>${r.id || "—"}</td>
+      <td>${r.namaRek || "—"}</td>
+      <td>${r.nominal || "—"}</td>
+      <td><button type="button" class="btn-mini" data-copy-pwr="${i}">Salin</button></td>
+    </tr>
+  `).join("");
+
+  container.querySelectorAll("[data-copy-pwr]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const idx = Number(btn.dataset.copyPwr);
+      const row = _tarikwdpwrRows[idx];
+      if (!row) return;
+      await copyText(generateTarikWdPwrRowText(row));
+      flashButton(e.target, "Tersalin!");
+    });
+  });
+}
+
+function processTarikWdPwr() {
+  const input = document.getElementById("tarikwdpwrInput");
+  if (!input) return;
+  const raw = input.value;
+  if (!raw.trim()) { alert("Tempel dulu datanya."); return; }
+  _tarikwdpwrRows = parseTarikWdPwrInput(raw);
+  renderTarikWdPwrRows();
+  saveTarikWdPwrDraft();
+}
+
+function clearTarikWdPwr() {
+  _tarikwdpwrRows = [];
+  const input = document.getElementById("tarikwdpwrInput");
+  if (input) input.value = "";
+  renderTarikWdPwrRows();
+  clearTarikWdPwrDraft();
+}
+
+async function copyAllTarikWdPwr() {
+  if (_tarikwdpwrRows.length === 0) { alert("Belum ada data."); return; }
+  const lines = _tarikwdpwrRows.map(r => generateTarikWdPwrRowText(r));
+  await copyText(lines.join("\n"));
+}
+
+function saveTarikWdPwrDraft() {
+  saveDraft(DRAFT_KEYS.tarikwdpwr, {
+    input: (document.getElementById("tarikwdpwrInput") || {}).value || "",
+    rows: _tarikwdpwrRows,
+  });
+}
+function restoreTarikWdPwrDraft() {
+  const data = loadDraft(DRAFT_KEYS.tarikwdpwr);
+  if (!data) return;
+  if (data.input) {
+    const input = document.getElementById("tarikwdpwrInput");
+    if (input) input.value = data.input;
+  }
+  if (Array.isArray(data.rows)) _tarikwdpwrRows = data.rows;
+}
+function clearTarikWdPwrDraft() { clearDraft(DRAFT_KEYS.tarikwdpwr); }
 
 // ---------- Draft field list ----------
 const DRAFT_FIELDS = {
@@ -1564,6 +1748,9 @@ export {
   processTarikWd, clearTarikWd, copyAllTarikWd,
   restoreTarikWdDraft, saveTarikWdDraft, clearTarikWdDraft,
   renderTarikWdRows,
+  processTarikWdPwr, clearTarikWdPwr, copyAllTarikWdPwr,
+  restoreTarikWdPwrDraft, saveTarikWdPwrDraft, clearTarikWdPwrDraft,
+  renderTarikWdPwrRows,
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
