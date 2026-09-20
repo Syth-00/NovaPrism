@@ -610,7 +610,7 @@ function parseDepoInput(rawText) {
     if (expectWdStatus) {
       const trimmed = line.trim();
       if (trimmed) {
-        block.wdStatus = trimmed;
+        block.wdStatus = trimmed.toUpperCase();
         expectWdStatus = false;
       }
       continue;
