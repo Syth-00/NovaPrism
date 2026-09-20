@@ -13,8 +13,8 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 // ============ GANTI DENGAN URL & KEY DARI SUPABASE ============
-const SUPABASE_URL = "https://lvltgxwlsvmyqiwhnmej.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2bHRneHdsc3ZteXFpd2hubWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTgwNTksImV4cCI6MjEwNDczNDA1OX0.fo4WEgv2mq29GP1mroeDIyCjo9Vokvq2NIRXVFf8j2M";
+const SUPABASE_URL = "https://xxxxx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs...";
 // ===============================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -928,38 +928,46 @@ function parseTarikWdPwrInput(rawText) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    // Pisah per tab
     const cols = line.split("\t").map(c => c.trim());
 
-    // Format: Status | Member Code | Account No | Account Name | Net Amount | Area Code | Bank Name
-    // Minimal 7 kolom
-    if (cols.length < 7) {
-      // Fallback: coba split dengan 2+ spasi
-      const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
-      if (cols2.length >= 7) {
-        rows.push(buildPwrRow(cols2));
-      } else if (cols2.length >= 3) {
-        // Coba tebak berdasarkan pola
-        const row = guessPwrRow(cols2);
-        if (row) rows.push(row);
-      }
+    if (cols.length >= 6) {
+      const row = buildPwrRow(cols);
+      if (row) rows.push(row);
       continue;
     }
-    rows.push(buildPwrRow(cols));
+
+    // Fallback: coba split 2+ spasi
+    const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
+    if (cols2.length >= 6) {
+      const row = buildPwrRow(cols2);
+      if (row) rows.push(row);
+      continue;
+    }
+
+    // Fallback terakhir: tebak
+    const row = guessPwrRow(cols.length >= cols2.length ? cols : cols2);
+    if (row) rows.push(row);
   }
 
   return rows;
 }
 
 function buildPwrRow(cols) {
-  // cols[0] = Status, cols[1] = Member Code, cols[2] = Account No,
-  // cols[3] = Account Name, cols[4] = Net Amount, cols[5] = Area Code, cols[6] = Bank Name
-  const memberCode = cols[1] || "";
-  const accountNo = cols[2] || "";
-  const accountName = cols[3] || "";
-  const netAmount = normalizeNominal((cols[4] || "").replace(/\.00$/, ""));
-  const areaCode = cols[5] || "";
-  const bankName = (cols[6] || "").toUpperCase();
+  // Urutan kolom input (7 kolom, tapi bisa 6 kalau kolom 7 kosong):
+  // cols[0] = Member Code (ID player)        → heri56789
+  // cols[1] = Account No                     → 0895325131303
+  // cols[2] = Account Name                   → heri kuswanto
+  // cols[3] = Net Amount                     → 600,000.00
+  // cols[4] = Area Code                      → BCA_SUPRIYATNA_0541
+  // cols[5] = Bank Name                      → DANA2
+  // cols[6] = Member ID tambahan (diabaikan) → id_524472455
+
+  const memberCode = (cols[0] || "").trim();
+  const accountNo = (cols[1] || "").trim();
+  const accountName = (cols[2] || "").trim();
+  const netAmount = normalizeNominal((cols[3] || "").replace(/\.00$/, ""));
+  const areaCode = (cols[4] || "").trim();
+  const bankName = (cols[5] || "").trim().toUpperCase();
 
   return {
     areaCode,
@@ -972,40 +980,42 @@ function buildPwrRow(cols) {
 }
 
 function guessPwrRow(cols) {
-  // Fallback kalau kolomnya ga jelas: cari pola
-  let accountNo = "", memberCode = "", accountName = "",
+  // Kalau kolomnya tidak pas 7, tetap pakai urutan yang sama kalau memungkinkan
+  if (cols.length >= 6) return buildPwrRow(cols);
+
+  // Kalau cuma 5 kolom atau kurang, coba deteksi pola
+  let memberCode = "", accountNo = "", accountName = "",
       netAmount = "", areaCode = "", bankName = "";
 
-  // Cari account no: digit panjang (>=8 digit)
   for (const c of cols) {
-    if (!accountNo && /^\d{8,}$/.test(c)) { accountNo = c; continue; }
-  }
-  // Cari nominal: pola angka dengan koma/titik
-  for (const c of cols) {
+    if (!accountNo && /^\d{10,}$/.test(c.replace(/\D/g, "")) && c.replace(/\D/g, "").length >= 10) {
+      accountNo = c;
+      continue;
+    }
     if (!netAmount && /^\d{1,3}([.,]\d{3})*([.,]\d{2})?$/.test(c)) {
       netAmount = normalizeNominal(c.replace(/\.00$/, ""));
+      continue;
+    }
+    if (!areaCode && /_/.test(c)) {
+      areaCode = c;
+      continue;
     }
   }
-  // Cari area code: pola XXX_XXX_#### atau mengandung underscore
+
+  // Sisa: memberCode (kolom awal), accountName (ada huruf+spasi), bankName (uppercase tanpa spasi)
   for (const c of cols) {
-    if (!areaCode && /_/.test(c)) { areaCode = c; }
-  }
-  // Bank name: biasanya di akhir, huruf besar
-  for (let i = cols.length - 1; i >= 0; i--) {
-    const c = cols[i];
-    if (/^[A-Z][A-Z0-9]+$/.test(c) && c !== areaCode) { bankName = c; break; }
-  }
-  // Member code: lowercase (biasanya), dan bukan bagian dari yang sudah ketemu
-  for (const c of cols) {
-    if (!memberCode && c !== accountNo && c !== netAmount && c !== areaCode && c !== bankName && /^[a-z][a-z0-9]+$/i.test(c) && c.length <= 20) {
+    if (c === accountNo || c === netAmount || c === areaCode) continue;
+    if (!bankName && /^[A-Z][A-Z0-9]+$/.test(c) && c.length <= 15) {
+      bankName = c;
+      continue;
+    }
+    if (!memberCode && /^[a-z]/i.test(c) && !/\s/.test(c) && c.length <= 20) {
       memberCode = c;
-      break;
+      continue;
     }
-  }
-  // Account name: sisanya
-  for (const c of cols) {
-    if (!accountName && c !== accountNo && c !== memberCode && c !== netAmount && c !== areaCode && c !== bankName && /[A-Za-z]/.test(c)) {
+    if (!accountName && /\s/.test(c)) {
       accountName = c;
+      continue;
     }
   }
 
