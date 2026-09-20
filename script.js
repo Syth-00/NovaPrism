@@ -4,7 +4,7 @@
    + Master Account (username: syth)
    + Reportan (Bank / Kesalahan / Kasih / Salah Sorong / Salah Buang)
    + Pengembalian HP & Simcard
-   + WD QRIS (WD & Depo)
+   + WD QRIS (WD & Depo) — dengan prefix e-wallet
    + Tarik WD
    + Wallpaper Server (Supabase)
    ============================================ */
@@ -53,6 +53,28 @@ const MASTER_USERNAMES = [
   "syth",
 ];
 // =================================================
+
+// ============ PREFIX E-WALLET ============
+// Dipakai untuk WD QRIS & Tarik WD
+// Kalau bank termasuk e-wallet di bawah, nomor rekening otomatis ditambah prefix.
+const EWALLET_PREFIX = {
+  "DANA": "3901",
+  "DANA2": "3901",
+  "OVO": "39358",
+  "GOPAY": "70001",
+  "LINKAJA": "09110",
+};
+// =========================================
+
+function applyEwalletPrefix(bank, nomor) {
+  const bankUpper = (bank || "").toUpperCase().trim();
+  const cleanNomor = (nomor || "").trim();
+  const prefix = EWALLET_PREFIX[bankUpper];
+  if (prefix) {
+    return prefix + cleanNomor;
+  }
+  return cleanNomor;
+}
 
 function allMenuKeys() { return MENU_CONFIG.map(m => m.key); }
 
@@ -116,12 +138,10 @@ function applyBackground(url) {
     document.body.style.backgroundImage = `url("${url}")`;
   }
 }
-
 function clearBackground() {
   document.documentElement.style.removeProperty("--user-bg-image");
   document.body.style.backgroundImage = "";
 }
-
 async function loadBackgroundFromServer() {
   try {
     const { data, error } = await supabase
@@ -139,7 +159,6 @@ async function loadBackgroundFromServer() {
   if (saved) applyBackground(saved);
   return saved || null;
 }
-
 async function saveBackgroundToServer(url) {
   const { error } = await supabase
     .from("settings")
@@ -149,7 +168,6 @@ async function saveBackgroundToServer(url) {
   localStorage.setItem(BG_KEY, url);
   return true;
 }
-
 async function clearBackgroundFromServer() {
   await supabase
     .from("settings")
@@ -157,7 +175,6 @@ async function clearBackgroundFromServer() {
   clearBackground();
   localStorage.removeItem(BG_KEY);
 }
-
 loadBackgroundFromServer();
 
 // ---------- Login form ----------
@@ -207,12 +224,10 @@ function requireLogin() {
   if (!session) { window.location.href = "index.html"; return null; }
   return session;
 }
-
 function logout() {
   clearSession();
   window.location.href = "index.html";
 }
-
 function applyAccessControl(session) {
   const access = isMasterEmail(session && session.email)
     ? allMenuKeys()
@@ -505,8 +520,10 @@ function parseWdInput(rawText) {
     if (!b) return;
     if (!b.bank && !b.noRek) return;
     rows.push({
-      bank: b.bank || "", noRek: b.noRek || "",
-      id: b.idPlayer || "", namaRek: b.namaRek || "",
+      bank: (b.bank || "").toUpperCase(),
+      noRek: applyEwalletPrefix(b.bank, b.noRek),
+      id: b.idPlayer || "",
+      namaRek: b.namaRek || "",
       nominal: b.nominal || "",
     });
   };
@@ -738,26 +755,12 @@ function restoreWdqrisDraft() {
 function clearWdqrisDraft() { clearDraft(DRAFT_KEYS.wdqris); }
 
 // ---------- TARIK WD ----------
-const EWALLET_PREFIX = {
-  "DANA": "3901",
-  "DANA2": "3901",
-  "OVO": "39358",
-  "GOPAY": "70001",
-  "LINKAJA": "09110",
-};
-
 let _tarikwdRows = [];
 
 function parseTarikWdInput(rawText) {
   const rows = [];
   const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-
-  // Format per transaksi (4 baris berurutan):
-  // Baris 1: "8\t\tmasedi1"          → ID di kata terakhir
-  // Baris 2: "Withdraw\t2026-...\t510,000\t403" → nominal = kolom ke-3 (index 2)
-  // Baris 3: "G10"                    → diabaikan
-  // Baris 4: "GOPAY, 081227184373, Ryan edi saputro" → bank, nomor, nama
 
   let current = null;
 
@@ -776,13 +779,10 @@ function parseTarikWdInput(rawText) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Baris 1: nomor + tab + tab + username (mis. "8\t\tmasedi1" atau "8    masedi1")
-    // Ciri: diawali angka, lalu ada username (kata tanpa spasi di akhir)
+    // Baris 1: nomor + username (mis. "8    masedi1")
     const line1Match = line.match(/^(\d+)\s+(\S+)\s*$/);
     if (line1Match) {
-      // Cek apakah baris berikutnya "Withdraw"
       if (i + 1 < lines.length && /^Withdraw\b/i.test(lines[i + 1])) {
-        // Mulai transaksi baru
         finalize(current);
         current = { id: line1Match[2] };
         continue;
@@ -791,27 +791,20 @@ function parseTarikWdInput(rawText) {
 
     if (!current) continue;
 
-    // Baris Withdraw: "Withdraw\t2026-09-20 16:26:59\t510,000\t403"
     if (/^Withdraw\b/i.test(line)) {
       const parts = line.split("\t").map(s => s.trim());
-      // parts[0] = "Withdraw", parts[1] = datetime, parts[2] = nominal
-      if (parts.length >= 3) {
-        current.nominal = normalizeNominal(parts[2]);
-      }
+      if (parts.length >= 3) current.nominal = normalizeNominal(parts[2]);
       continue;
     }
 
-    // Baris kode G10 / G3 — diabaikan
     if (/^G\d+$/i.test(line)) continue;
 
-    // Baris bank: "GOPAY, 081227184373, Ryan edi saputro"
     if (line.includes(",")) {
       const parts = line.split(",").map(s => s.trim());
       if (parts.length >= 2) {
         current.bank = parts[0];
         current.nomor = parts[1];
         current.namaRek = parts.slice(2).join(", ").trim();
-        // Setelah lengkap, finalize
         finalize(current);
         current = null;
       }
@@ -822,24 +815,8 @@ function parseTarikWdInput(rawText) {
   return rows;
 }
 
-function applyEwalletPrefix(bank, nomor) {
-  const bankUpper = (bank || "").toUpperCase().trim();
-  const cleanNomor = (nomor || "").trim();
-  const prefix = EWALLET_PREFIX[bankUpper];
-  if (prefix) {
-    return prefix + cleanNomor;
-  }
-  return cleanNomor;
-}
-
 function generateTarikWdRowText(row) {
-  return [
-    row.bank,
-    row.nomor,
-    row.id,
-    row.namaRek,
-    row.nominal,
-  ].join("\t");
+  return [row.bank, row.nomor, row.id, row.namaRek, row.nominal].join("\t");
 }
 
 function renderTarikWdRows() {
@@ -1561,7 +1538,6 @@ export {
   setWdqrisMode, processWdqris, clearWdqris, copyAllWdqris,
   restoreWdqrisDraft, saveWdqrisDraft, clearWdqrisDraft,
   renderWdqrisHeader, renderWdqrisRows,
-  // Tarik WD
   processTarikWd, clearTarikWd, copyAllTarikWd,
   restoreTarikWdDraft, saveTarikWdDraft, clearTarikWdDraft,
   renderTarikWdRows,
@@ -1570,7 +1546,6 @@ export {
   addPengembalianItem, resetPengembalianItems,
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory, getPengembalianItems,
-  // Wallpaper
   applyBackground, clearBackground, loadBackgroundFromServer,
   saveBackgroundToServer, clearBackgroundFromServer,
   saveReportDraft, restoreReportDraft, clearReportDraft,
