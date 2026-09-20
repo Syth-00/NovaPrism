@@ -2,10 +2,10 @@
    NOVAPRISM — Supabase Version
    + Auto-save Draft
    + Master Account (username: syth)
-   + Reportan Kurang/Lebih Kasih
-   + Reportan Salah Sorong
-   + Reportan Salah Buang Dana
+   + Reportan (Bank / Kesalahan / Kasih / Salah Sorong / Salah Buang)
+   + Pengembalian HP & Simcard
    + WD QRIS (WD & Depo)
+   + Tarik WD
    + Wallpaper Server (Supabase)
    ============================================ */
 
@@ -28,6 +28,7 @@ const DRAFT_KEYS = {
   salahsorong: "novaprism_draft_salahsorong",
   salahbuang: "novaprism_draft_salahbuang",
   wdqris: "novaprism_draft_wdqris",
+  tarikwd: "novaprism_draft_tarikwd",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -44,6 +45,7 @@ const MENU_CONFIG = [
   { key: "reportsalahbuang", label: "Reportan Salah Buang Dana" },
   { key: "pengembalian", label: "Pengembalian HP & Simcard" },
   { key: "wdqris", label: "WD QRIS" },
+  { key: "tarikwd", label: "Tarik WD" },
 ];
 
 // ============ DAFTAR USERNAME MASTER ============
@@ -52,9 +54,7 @@ const MASTER_USERNAMES = [
 ];
 // =================================================
 
-function allMenuKeys() {
-  return MENU_CONFIG.map(m => m.key);
-}
+function allMenuKeys() { return MENU_CONFIG.map(m => m.key); }
 
 function isMasterEmail(email) {
   if (!email) return false;
@@ -113,7 +113,6 @@ function formatTime(iso) {
 function applyBackground(url) {
   if (url) {
     document.documentElement.style.setProperty("--user-bg-image", `url("${url}")`);
-    // Paksa body::before update (kadang perlu reflow)
     document.body.style.backgroundImage = `url("${url}")`;
   }
 }
@@ -123,7 +122,6 @@ function clearBackground() {
   document.body.style.backgroundImage = "";
 }
 
-// Load dari server (Supabase)
 async function loadBackgroundFromServer() {
   try {
     const { data, error } = await supabase
@@ -133,32 +131,25 @@ async function loadBackgroundFromServer() {
       .maybeSingle();
     if (!error && data && data.value) {
       applyBackground(data.value);
-      // Cache lokal biar load berikutnya cepat
       localStorage.setItem(BG_KEY, data.value);
       return data.value;
     }
   } catch (e) {}
-  // Fallback ke cache lokal
   const saved = localStorage.getItem(BG_KEY);
   if (saved) applyBackground(saved);
   return saved || null;
 }
 
-// Simpan ke server
 async function saveBackgroundToServer(url) {
   const { error } = await supabase
     .from("settings")
     .upsert({ key: "background_url", value: url, updated_at: new Date().toISOString() });
-  if (error) {
-    console.error("Gagal simpan wallpaper:", error);
-    return false;
-  }
+  if (error) { console.error("Gagal simpan wallpaper:", error); return false; }
   applyBackground(url);
   localStorage.setItem(BG_KEY, url);
   return true;
 }
 
-// Hapus dari server
 async function clearBackgroundFromServer() {
   await supabase
     .from("settings")
@@ -167,7 +158,6 @@ async function clearBackgroundFromServer() {
   localStorage.removeItem(BG_KEY);
 }
 
-// Auto-load saat halaman dibuka (index & dashboard)
 loadBackgroundFromServer();
 
 // ---------- Login form ----------
@@ -214,10 +204,7 @@ if (loginForm) {
 // ---------- Auth guard & logout ----------
 function requireLogin() {
   const session = getSession();
-  if (!session) {
-    window.location.href = "index.html";
-    return null;
-  }
+  if (!session) { window.location.href = "index.html"; return null; }
   return session;
 }
 
@@ -255,36 +242,25 @@ function applyAccessControl(session) {
 
 // ---------- Accounts ----------
 async function fetchAccountsConfig() {
-  const { data } = await supabase
-    .from("accounts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const { data } = await supabase.from("accounts").select("*").order("created_at", { ascending: false });
   return data || [];
 }
-
 async function addAccount(email, password, access) {
   const { error } = await supabase.from("accounts").insert({ email, password, access });
   return !error;
 }
-
 async function updateAccountAccess(email, access) {
   await supabase.from("accounts").update({ access }).eq("email", email);
 }
-
 async function deleteAccount(email) {
   await supabase.from("accounts").delete().eq("email", email);
 }
 
 // ---------- Records ----------
 async function fetchRecords() {
-  const { data } = await supabase
-    .from("records")
-    .select("*")
-    .order("time", { ascending: false })
-    .limit(50);
+  const { data } = await supabase.from("records").select("*").order("time", { ascending: false }).limit(50);
   return data || [];
 }
-
 async function clearLoginRecords() {
   await supabase.from("records").delete().neq("status", "__never__");
 }
@@ -295,13 +271,8 @@ async function fetchRekeningCache() {
   if (!data) return null;
   return { list: data.list || [], syncedAt: data.synced_at };
 }
-
 async function saveRekeningCache(list) {
-  await supabase.from("rekening").upsert({
-    id: 1,
-    list,
-    synced_at: new Date().toISOString(),
-  });
+  await supabase.from("rekening").upsert({ id: 1, list, synced_at: new Date().toISOString() });
 }
 
 // ---------- Reports (bank) ----------
@@ -392,10 +363,8 @@ async function saveSalahBuangReport(fields, text) {
     tujuan_nama_rek: fields.tujuanNamaRek,
     tujuan_nomor_rek: fields.tujuanNomorRek,
     tujuan_jenis_bank: fields.tujuanJenisBank,
-    nominal: fields.nominal,
-    bukti: fields.bukti,
-    keterangan: fields.keterangan,
-    text,
+    nominal: fields.nominal, bukti: fields.bukti,
+    keterangan: fields.keterangan, text,
   });
 }
 async function deleteSalahBuangReport(id) { await supabase.from("reports_salahbuang").delete().eq("id", id); }
@@ -536,17 +505,14 @@ function parseWdInput(rawText) {
     if (!b) return;
     if (!b.bank && !b.noRek) return;
     rows.push({
-      bank: b.bank || "",
-      noRek: b.noRek || "",
-      id: b.idPlayer || "",
-      namaRek: b.namaRek || "",
+      bank: b.bank || "", noRek: b.noRek || "",
+      id: b.idPlayer || "", namaRek: b.namaRek || "",
       nominal: b.nominal || "",
     });
   };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
       block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
@@ -556,19 +522,14 @@ function parseWdInput(rawText) {
 
     let m = line.match(/^Bank\s*:\s*(.+)$/i);
     if (m) { block.bank = m[1].trim(); continue; }
-
     m = line.match(/^Nama Rek\s*:\s*(.+)$/i);
     if (m) { block.namaRek = m[1].trim(); continue; }
-
     m = line.match(/^No Rek\s*:\s*(.+)$/i);
     if (m) { block.noRek = m[1].trim(); continue; }
-
     m = line.match(/^IDN\s*:\s*(.+)$/i);
     if (m) { block.idn = m[1].trim(); continue; }
-
     m = line.match(/^WD\s*:\s*(.+)$/i);
     if (m) { block.wd = m[1].trim(); continue; }
-
     m = line.match(/^Validasi\s*:\s*(.+)$/i);
     if (m) { block.validasi = m[1].trim(); continue; }
 
@@ -589,7 +550,6 @@ function parseWdInput(rawText) {
     }
   }
   finalize(block);
-
   return rows;
 }
 
@@ -603,12 +563,9 @@ function parseDepoInput(rawText) {
     if (!b) return;
     if (!b.nominal && !b.order) return;
     rows.push({
-      tanggal: b.tanggal || "",
-      kosong1: "",
-      id: b.idPlayer || "",
-      orderId: b.order || "",
-      nominal: b.nominal || "",
-      kosong2: "",
+      tanggal: b.tanggal || "", kosong1: "",
+      id: b.idPlayer || "", orderId: b.order || "",
+      nominal: b.nominal || "", kosong2: "",
       keterangan: (b.wdStatus || "").toUpperCase(),
     });
   };
@@ -618,7 +575,6 @@ function parseDepoInput(rawText) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
       block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
@@ -629,27 +585,13 @@ function parseDepoInput(rawText) {
     if (!block) continue;
 
     const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})/);
-    if (dateMatch && !block.tanggal) {
-      block.tanggal = dateMatch[1];
-      continue;
-    }
+    if (dateMatch && !block.tanggal) { block.tanggal = dateMatch[1]; continue; }
 
-    if (/^Validasi\s*:/i.test(line)) {
-      validasiSection = true;
-      continue;
-    }
-
-    if (validasiSection && /^WD\s*:\s*$/i.test(line)) {
-      expectWdStatus = true;
-      continue;
-    }
-
+    if (/^Validasi\s*:/i.test(line)) { validasiSection = true; continue; }
+    if (validasiSection && /^WD\s*:\s*$/i.test(line)) { expectWdStatus = true; continue; }
     if (expectWdStatus) {
       const trimmed = line.trim();
-      if (trimmed) {
-        block.wdStatus = trimmed;
-        expectWdStatus = false;
-      }
+      if (trimmed) { block.wdStatus = trimmed; expectWdStatus = false; }
       continue;
     }
 
@@ -670,7 +612,6 @@ function parseDepoInput(rawText) {
     }
   }
   finalize(block);
-
   return rows;
 }
 
@@ -682,15 +623,7 @@ function generateWdqrisRowText(row, mode) {
   if (mode === "wd") {
     return [row.bank, row.noRek, row.id, row.namaRek, row.nominal].join("\t");
   } else {
-    return [
-      row.tanggal,
-      "",
-      row.id,
-      row.orderId,
-      row.nominal,
-      "",
-      (row.keterangan || "").toUpperCase(),
-    ].join("\t");
+    return [row.tanggal, "", row.id, row.orderId, row.nominal, "", (row.keterangan || "").toUpperCase()].join("\t");
   }
 }
 
@@ -737,14 +670,12 @@ function renderWdqrisRows() {
   }).join("");
 
   container.innerHTML = rows;
-
   container.querySelectorAll("[data-copy-row]").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const idx = Number(btn.dataset.copyRow);
       const row = _wdqrisRows[idx];
       if (!row) return;
-      const text = generateWdqrisRowText(row, _wdqrisMode);
-      await copyText(text);
+      await copyText(generateWdqrisRowText(row, _wdqrisMode));
       flashButton(e.target, "Tersalin!");
     });
   });
@@ -765,13 +696,7 @@ function processWdqris() {
   if (!input) return;
   const raw = input.value;
   if (!raw.trim()) { alert("Tempel dulu datanya."); return; }
-
-  if (_wdqrisMode === "wd") {
-    _wdqrisRows = parseWdInput(raw);
-  } else {
-    _wdqrisRows = parseDepoInput(raw);
-  }
-
+  _wdqrisRows = _wdqrisMode === "wd" ? parseWdInput(raw) : parseDepoInput(raw);
   renderWdqrisHeader();
   renderWdqrisRows();
   saveWdqrisDraft();
@@ -799,13 +724,9 @@ function saveWdqrisDraft() {
     rows: _wdqrisRows,
   });
 }
-
 function restoreWdqrisDraft() {
   const data = loadDraft(DRAFT_KEYS.wdqris);
-  if (!data) {
-    setWdqrisMode("wd");
-    return;
-  }
+  if (!data) { setWdqrisMode("wd"); return; }
   if (data.mode) _wdqrisMode = data.mode;
   if (data.input) {
     const input = document.getElementById("wdqrisInput");
@@ -814,10 +735,186 @@ function restoreWdqrisDraft() {
   if (Array.isArray(data.rows)) _wdqrisRows = data.rows;
   setWdqrisMode(_wdqrisMode);
 }
+function clearWdqrisDraft() { clearDraft(DRAFT_KEYS.wdqris); }
 
-function clearWdqrisDraft() {
-  clearDraft(DRAFT_KEYS.wdqris);
+// ---------- TARIK WD ----------
+const EWALLET_PREFIX = {
+  "DANA": "3901",
+  "DANA2": "3901",
+  "OVO": "39358",
+  "GOPAY": "70001",
+  "LINKAJA": "09110",
+};
+
+let _tarikwdRows = [];
+
+function parseTarikWdInput(rawText) {
+  const rows = [];
+  const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  // Format per transaksi (4 baris berurutan):
+  // Baris 1: "8\t\tmasedi1"          → ID di kata terakhir
+  // Baris 2: "Withdraw\t2026-...\t510,000\t403" → nominal = kolom ke-3 (index 2)
+  // Baris 3: "G10"                    → diabaikan
+  // Baris 4: "GOPAY, 081227184373, Ryan edi saputro" → bank, nomor, nama
+
+  let current = null;
+
+  const finalize = (c) => {
+    if (!c) return;
+    if (!c.bank && !c.nomor) return;
+    rows.push({
+      bank: (c.bank || "").toUpperCase(),
+      nomor: applyEwalletPrefix(c.bank, c.nomor),
+      id: c.id || "",
+      namaRek: c.namaRek || "",
+      nominal: c.nominal || "",
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Baris 1: nomor + tab + tab + username (mis. "8\t\tmasedi1" atau "8    masedi1")
+    // Ciri: diawali angka, lalu ada username (kata tanpa spasi di akhir)
+    const line1Match = line.match(/^(\d+)\s+(\S+)\s*$/);
+    if (line1Match) {
+      // Cek apakah baris berikutnya "Withdraw"
+      if (i + 1 < lines.length && /^Withdraw\b/i.test(lines[i + 1])) {
+        // Mulai transaksi baru
+        finalize(current);
+        current = { id: line1Match[2] };
+        continue;
+      }
+    }
+
+    if (!current) continue;
+
+    // Baris Withdraw: "Withdraw\t2026-09-20 16:26:59\t510,000\t403"
+    if (/^Withdraw\b/i.test(line)) {
+      const parts = line.split("\t").map(s => s.trim());
+      // parts[0] = "Withdraw", parts[1] = datetime, parts[2] = nominal
+      if (parts.length >= 3) {
+        current.nominal = normalizeNominal(parts[2]);
+      }
+      continue;
+    }
+
+    // Baris kode G10 / G3 — diabaikan
+    if (/^G\d+$/i.test(line)) continue;
+
+    // Baris bank: "GOPAY, 081227184373, Ryan edi saputro"
+    if (line.includes(",")) {
+      const parts = line.split(",").map(s => s.trim());
+      if (parts.length >= 2) {
+        current.bank = parts[0];
+        current.nomor = parts[1];
+        current.namaRek = parts.slice(2).join(", ").trim();
+        // Setelah lengkap, finalize
+        finalize(current);
+        current = null;
+      }
+    }
+  }
+
+  finalize(current);
+  return rows;
 }
+
+function applyEwalletPrefix(bank, nomor) {
+  const bankUpper = (bank || "").toUpperCase().trim();
+  const cleanNomor = (nomor || "").trim();
+  const prefix = EWALLET_PREFIX[bankUpper];
+  if (prefix) {
+    return prefix + cleanNomor;
+  }
+  return cleanNomor;
+}
+
+function generateTarikWdRowText(row) {
+  return [
+    row.bank,
+    row.nomor,
+    row.id,
+    row.namaRek,
+    row.nominal,
+  ].join("\t");
+}
+
+function renderTarikWdRows() {
+  const container = document.getElementById("tarikwdResultBody");
+  const countEl = document.getElementById("tarikwdCount");
+  if (!container) return;
+  if (countEl) countEl.textContent = String(_tarikwdRows.length);
+
+  if (_tarikwdRows.length === 0) {
+    container.innerHTML = `<tr><td colspan="6"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
+    return;
+  }
+
+  container.innerHTML = _tarikwdRows.map((r, i) => `
+    <tr>
+      <td>${r.bank || "—"}</td>
+      <td>${r.nomor || "—"}</td>
+      <td>${r.id || "—"}</td>
+      <td>${r.namaRek || "—"}</td>
+      <td>${r.nominal || "—"}</td>
+      <td><button type="button" class="btn-mini" data-copy-twd="${i}">Salin</button></td>
+    </tr>
+  `).join("");
+
+  container.querySelectorAll("[data-copy-twd]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const idx = Number(btn.dataset.copyTwd);
+      const row = _tarikwdRows[idx];
+      if (!row) return;
+      await copyText(generateTarikWdRowText(row));
+      flashButton(e.target, "Tersalin!");
+    });
+  });
+}
+
+function processTarikWd() {
+  const input = document.getElementById("tarikwdInput");
+  if (!input) return;
+  const raw = input.value;
+  if (!raw.trim()) { alert("Tempel dulu datanya."); return; }
+  _tarikwdRows = parseTarikWdInput(raw);
+  renderTarikWdRows();
+  saveTarikWdDraft();
+}
+
+function clearTarikWd() {
+  _tarikwdRows = [];
+  const input = document.getElementById("tarikwdInput");
+  if (input) input.value = "";
+  renderTarikWdRows();
+  clearTarikWdDraft();
+}
+
+async function copyAllTarikWd() {
+  if (_tarikwdRows.length === 0) { alert("Belum ada data."); return; }
+  const lines = _tarikwdRows.map(r => generateTarikWdRowText(r));
+  await copyText(lines.join("\n"));
+}
+
+function saveTarikWdDraft() {
+  saveDraft(DRAFT_KEYS.tarikwd, {
+    input: (document.getElementById("tarikwdInput") || {}).value || "",
+    rows: _tarikwdRows,
+  });
+}
+function restoreTarikWdDraft() {
+  const data = loadDraft(DRAFT_KEYS.tarikwd);
+  if (!data) return;
+  if (data.input) {
+    const input = document.getElementById("tarikwdInput");
+    if (input) input.value = data.input;
+  }
+  if (Array.isArray(data.rows)) _tarikwdRows = data.rows;
+}
+function clearTarikWdDraft() { clearDraft(DRAFT_KEYS.tarikwd); }
 
 // ---------- Draft field list ----------
 const DRAFT_FIELDS = {
@@ -1307,12 +1404,10 @@ function generateSalahSorongText(f) {
   return [
     `Info : ${f.info}`, `Perihal : ${f.perihal}`,
     `Staff : ${f.staffNama} - ${f.staffKode} (${f.agenNama})`, ``,
-    `Pemilik Dana`,
-    `UserID : ${f.pemilikUserId}`,
+    `Pemilik Dana`, `UserID : ${f.pemilikUserId}`,
     `Nama Rekening : ${f.pemilikNamaRek}`,
     `Nomor Rekening : ${f.pemilikNomorRek} (${f.pemilikJenisBank})`, ``,
-    `Terproses ke`,
-    `UserID : ${f.tujuanUserId}`,
+    `Terproses ke`, `UserID : ${f.tujuanUserId}`,
     `Nama Rekening : ${f.tujuanNamaRek}`,
     `Nomor Rekening : ${f.tujuanNomorRek} (${f.tujuanJenisBank})`,
     `Nominal : Rp. ${f.nominal}`, `Lampiran : ${f.lampiran}`, ``,
@@ -1466,6 +1561,10 @@ export {
   setWdqrisMode, processWdqris, clearWdqris, copyAllWdqris,
   restoreWdqrisDraft, saveWdqrisDraft, clearWdqrisDraft,
   renderWdqrisHeader, renderWdqrisRows,
+  // Tarik WD
+  processTarikWd, clearTarikWd, copyAllTarikWd,
+  restoreTarikWdDraft, saveTarikWdDraft, clearTarikWdDraft,
+  renderTarikWdRows,
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
