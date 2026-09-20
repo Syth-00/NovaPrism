@@ -477,8 +477,8 @@ function setWdqrisMode(mode) {
     if (input) input.placeholder = "Tempel data WD dari zona main di sini...\n\nContoh:\n2026-09-16 17:25:03\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nIDN : 522552278\nWD : 25613080\nBank : SEABANK\nNama Rek : Riki\nNo Rek : 901154404396\nsetyarini\t2.300.000\t\nValidasi : Success";
     if (help) help.textContent = "Mode WD — Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal";
   } else {
-    if (input) input.placeholder = "Tempel data Depo dari zona main di sini...\n\nContoh:\n2026-09-16 17:25:13\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nBank : SEABANK\nNama Rek : Suparman\nNo Rek : 901349737693\ndenitnit\t4.000.000\t\nValidasi : Success";
-    if (help) help.textContent = "Mode Depo — Hasil: Nominal · ID · Keterangan · Order ID";
+    if (input) input.placeholder = "Tempel data Depo dari zona main di sini...\n\nContoh:\n2026-09-20 04:22:02\tlunatogel\tXPAY\t\nOrder : LNT-xxxx\nIDN : 524231633\nWD : 26320424\nBank : BRI\nNama Rek : WAHYUDI\nNo Rek : 099801028503534\ntowek819\t1.829.000\t\nValidasi : Success\nIDN :\nSuccess\nWD :\nFailed";
+    if (help) help.textContent = "Mode Depo — Hasil: Tanggal · (kosong) · ID · Order ID · Nominal · (kosong) · Keterangan";
   }
   renderWdqrisHeader();
   renderWdqrisRows();
@@ -561,12 +561,18 @@ function parseDepoInput(rawText) {
     if (!b) return;
     if (!b.nominal && !b.order) return;
     rows.push({
-      nominal: b.nominal || "",
+      tanggal: b.tanggal || "",
+      kosong1: "",
       id: b.idPlayer || "",
-      keterangan: b.validasi ? `Validasi : ${b.validasi}` : "",
       orderId: b.order || "",
+      nominal: b.nominal || "",
+      kosong2: "",
+      keterangan: b.wdStatus || "",
     });
   };
+
+  let validasiSection = false;
+  let expectWdStatus = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -574,13 +580,43 @@ function parseDepoInput(rawText) {
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
       block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
+      validasiSection = false;
+      expectWdStatus = false;
       continue;
     }
     if (!block) continue;
 
-    let m = line.match(/^Validasi\s*:\s*(.+)$/i);
-    if (m) { block.validasi = m[1].trim(); continue; }
+    // Baris pertama block: "2026-09-20 04:22:02	lunatogel	XPAY"
+    const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})/);
+    if (dateMatch && !block.tanggal) {
+      // Ambil tanggal saja (tanpa jam)
+      block.tanggal = dateMatch[1];
+      continue;
+    }
 
+    // Masuk section validasi
+    if (/^Validasi\s*:/i.test(line)) {
+      validasiSection = true;
+      continue;
+    }
+
+    // Baris "WD :" (kosong) → tunggu status
+    if (validasiSection && /^WD\s*:\s*$/i.test(line)) {
+      expectWdStatus = true;
+      continue;
+    }
+
+    // Baris berikutnya setelah WD: → statusnya
+    if (expectWdStatus) {
+      const trimmed = line.trim();
+      if (trimmed) {
+        block.wdStatus = trimmed;
+        expectWdStatus = false;
+      }
+      continue;
+    }
+
+    // Baris player: "towek819	1.829.000"
     const tabSplit = line.split("\t").map(s => s.trim()).filter(Boolean);
     if (tabSplit.length >= 2) {
       const maybeNominal = tabSplit[1];
@@ -610,7 +646,16 @@ function generateWdqrisRowText(row, mode) {
   if (mode === "wd") {
     return [row.bank, row.noRek, row.id, row.namaRek, row.nominal].join("\t");
   } else {
-    return [row.nominal, row.id, row.keterangan, row.orderId].join("\t");
+    // tanggal - kosong - id - orderId - nominal - kosong - keterangan
+    return [
+      row.tanggal,
+      "",
+      row.id,
+      row.orderId,
+      row.nominal,
+      "",
+      row.keterangan,
+    ].join("\t");
   }
 }
 
@@ -621,7 +666,7 @@ function renderWdqrisRows() {
   if (countEl) countEl.textContent = String(_wdqrisRows.length);
 
   if (_wdqrisRows.length === 0) {
-    container.innerHTML = `<tr><td colspan="6"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
+    container.innerHTML = `<tr><td colspan="8"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
     return;
   }
 
@@ -639,12 +684,16 @@ function renderWdqrisRows() {
         </tr>
       `;
     } else {
+      const statusClass = (r.keterangan || "").toLowerCase() === "success" ? "success" : "failed";
       return `
         <tr>
-          <td>${r.nominal || "—"}</td>
+          <td>${r.tanggal || "—"}</td>
+          <td style="color:var(--text-muted); font-size:11px;">(kosong)</td>
           <td>${r.id || "—"}</td>
-          <td>${r.keterangan || "—"}</td>
           <td>${r.orderId || "—"}</td>
+          <td>${r.nominal || "—"}</td>
+          <td style="color:var(--text-muted); font-size:11px;">(kosong)</td>
+          <td><span class="status-pill ${statusClass}"><span class="dot"></span>${r.keterangan || "—"}</span></td>
           <td><button type="button" class="btn-mini" data-copy-row="${i}">Salin</button></td>
         </tr>
       `;
@@ -671,7 +720,7 @@ function renderWdqrisHeader() {
   if (_wdqrisMode === "wd") {
     thead.innerHTML = `<tr><th>Kode Bank</th><th>No Rekening</th><th>ID</th><th>Nama Rek</th><th>Nominal</th><th></th></tr>`;
   } else {
-    thead.innerHTML = `<tr><th>Nominal</th><th>ID</th><th>Keterangan</th><th>Order ID</th><th></th></tr>`;
+    thead.innerHTML = `<tr><th>Tanggal</th><th>(kosong)</th><th>ID</th><th>Order ID</th><th>Nominal</th><th>(kosong)</th><th>Keterangan</th><th></th></tr>`;
   }
 }
 
