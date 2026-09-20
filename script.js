@@ -930,13 +930,14 @@ function parseTarikWdPwrInput(rawText) {
     const line = lines[i];
     const cols = line.split("\t").map(c => c.trim());
 
+    // Minimal 6 kolom → proses pakai mapping standar
     if (cols.length >= 6) {
       const row = buildPwrRow(cols);
       if (row) rows.push(row);
       continue;
     }
 
-    // Fallback: coba split 2+ spasi
+    // Coba split 2+ spasi (kalau paste dari sumber yang pakai spasi bukan tab)
     const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
     if (cols2.length >= 6) {
       const row = buildPwrRow(cols2);
@@ -944,8 +945,17 @@ function parseTarikWdPwrInput(rawText) {
       continue;
     }
 
-    // Fallback terakhir: tebak
-    const row = guessPwrRow(cols.length >= cols2.length ? cols : cols2);
+    // Terakhir: coba split 1+ spasi (sambil jaga nama tetap utuh dengan heuristik)
+    const cols3 = line.split(/\s+/).map(c => c.trim()).filter(Boolean);
+    if (cols3.length >= 6) {
+      const row = buildPwrRow(cols3);
+      if (row) rows.push(row);
+      continue;
+    }
+
+    // Kalau masih kurang dari 6 → fallback deteksi pola
+    const best = cols.length >= cols2.length ? cols : (cols2.length >= cols3.length ? cols2 : cols3);
+    const row = guessPwrRow(best);
     if (row) rows.push(row);
   }
 
