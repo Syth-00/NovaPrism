@@ -44,6 +44,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
         <span>Tarik WD</span>
       </div>
+      <div class="nav-item" data-view="tarikwdpwr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4z"/><path d="M4 12h16v4H4z"/><path d="M4 20h16"/></svg>
+        <span>Tarik WD PWR</span>
+      </div>
       <div class="nav-group">
         <div class="nav-group-header" data-group="reportan">
           <span>Reportan</span>
@@ -302,6 +306,43 @@
       </div>
     </div>
 
+    <!-- Tarik WD PWR -->
+    <div class="view" id="view-tarikwdpwr">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Tarik WD PWR</h2>
+            <p>Tempel data tabel PWR. Hasil: Area Code · Jenis Bank · Nomor Rekening · ID · Nama Rekening · Nominal</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="tarikwdpwrInput">Tempel data Tarik WD PWR di sini</label>
+          <textarea id="tarikwdpwrInput" rows="10" placeholder="Tempel data dari tabel PWR di sini...&#10;&#10;Contoh (tab-separated):&#10;PENDING	sahalal	901507526805	MOH. SAHLAL	450,000.00	BRI_Yadi_6500	SEABANK"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="tarikwdpwrProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="tarikwdpwrCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="tarikwdpwrClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="tarikwdpwrCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:700px;">
+            <thead>
+              <tr><th>Area Code</th><th>Jenis Bank</th><th>Nomor Rekening</th><th>ID</th><th>Nama Rekening</th><th>Nominal</th><th></th></tr>
+            </thead>
+            <tbody id="tarikwdpwrResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Reportan Bank -->
     <div class="view" id="view-report">
       <div class="glass panel">
@@ -545,6 +586,9 @@
     processTarikWd, clearTarikWd, copyAllTarikWd,
     restoreTarikWdDraft, saveTarikWdDraft, clearTarikWdDraft,
     renderTarikWdRows,
+    processTarikWdPwr, clearTarikWdPwr, copyAllTarikWdPwr,
+    restoreTarikWdPwrDraft, saveTarikWdPwrDraft, clearTarikWdPwrDraft,
+    renderTarikWdPwrRows,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -937,6 +981,30 @@
       document.getElementById("tarikwdClearBtn").addEventListener("click", () => {
         if (confirm("Bersihkan input & hasil?")) {
           clearTarikWd();
+        }
+      });
+
+      // Tarik WD PWR
+      restoreTarikWdPwrDraft();
+      renderTarikWdPwrRows();
+
+      const tarikwdpwrInput = document.getElementById("tarikwdpwrInput");
+      if (tarikwdpwrInput) {
+        tarikwdpwrInput.addEventListener("input", () => saveTarikWdPwrDraft());
+      }
+
+      document.getElementById("tarikwdpwrProcessBtn").addEventListener("click", () => {
+        processTarikWdPwr();
+      });
+
+      document.getElementById("tarikwdpwrCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllTarikWdPwr();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("tarikwdpwrClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearTarikWdPwr();
         }
       });
 
