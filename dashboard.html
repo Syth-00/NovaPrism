@@ -100,6 +100,26 @@
         <div class="glass stat-card"><div class="label">Login gagal</div><div class="value" id="statFailed">0</div></div>
         <div class="glass stat-card"><div class="label">Login terakhir</div><div class="value" id="statLast" style="font-size:16px;">—</div></div>
       </div>
+
+      <!-- Wallpaper panel -->
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Wallpaper Dashboard</h2>
+            <p>Paste URL gambar (HD). Otomatis tersimpan ke server — muncul di semua device sampai diganti.</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:end;">
+          <div style="flex:1; min-width:200px;">
+            <label for="bgUrlInput" style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">URL Gambar (HD)</label>
+            <input type="text" id="bgUrlInput" placeholder="https://contoh.com/wallpaper-hd.jpg" style="width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:var(--text-primary); font-size:14px; outline:none;" />
+          </div>
+          <button type="button" class="btn-primary" id="bgSaveBtn" style="width:auto; padding:12px 24px; margin-top:0;">Simpan</button>
+          <button type="button" class="btn-ghost" id="bgClearBtn">Hapus</button>
+        </div>
+        <div id="bgStatus" style="margin-top:10px; font-size:12px; color:var(--text-muted); min-height:18px;"></div>
+      </div>
+
       <div class="glass panel">
         <div class="panel-head">
           <div><h2>Riwayat login</h2><p>Data ini tersimpan di Supabase (shared).</p></div>
@@ -486,6 +506,8 @@
     addPengembalianItem, resetPengembalianItems,
     generatePengembalianText, savePengembalianReport,
     renderPengembalianHistory, getPengembalianItems,
+    applyBackground, clearBackground, loadBackgroundFromServer,
+    saveBackgroundToServer, clearBackgroundFromServer,
     saveReportDraft, restoreReportDraft, clearReportDraft,
     saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
     saveKasihDraft, restoreKasihDraft, clearKasihDraft,
@@ -503,6 +525,11 @@
       await renderAccounts();
       renderAddAccessChecks();
       await renderSyncStatus();
+
+      // Load wallpaper dari server
+      const currentBg = await loadBackgroundFromServer();
+      const bgInput = document.getElementById("bgUrlInput");
+      if (bgInput && currentBg) bgInput.value = currentBg;
 
       // ============ DRAWER SIDEBAR (Mobile) ============
       const sidebar = document.getElementById("sidebar");
@@ -535,7 +562,6 @@
         const labelEl = document.getElementById("pageLabel");
         if (labelEl) labelEl.textContent = menuLabel(viewKey);
 
-        // Tutup drawer setelah pilih menu (mobile)
         closeSidebar();
       }
 
@@ -555,6 +581,33 @@
 
       // ============ HANDLERS ============
       document.getElementById("logoutBtn").addEventListener("click", () => logout());
+
+      // Wallpaper
+      document.getElementById("bgSaveBtn").addEventListener("click", async () => {
+        const url = document.getElementById("bgUrlInput").value.trim();
+        const status = document.getElementById("bgStatus");
+        if (!url) { status.textContent = "URL kosong."; status.style.color = "var(--danger)"; return; }
+        status.textContent = "Menyimpan...";
+        status.style.color = "var(--text-muted)";
+        const ok = await saveBackgroundToServer(url);
+        if (ok) {
+          status.textContent = "✓ Wallpaper tersimpan. Muncul di semua device.";
+          status.style.color = "var(--accent-2)";
+        } else {
+          status.textContent = "Gagal simpan. Cek Console.";
+          status.style.color = "var(--danger)";
+        }
+      });
+
+      document.getElementById("bgClearBtn").addEventListener("click", async () => {
+        if (confirm("Hapus wallpaper?")) {
+          await clearBackgroundFromServer();
+          document.getElementById("bgUrlInput").value = "";
+          const status = document.getElementById("bgStatus");
+          status.textContent = "Wallpaper dihapus.";
+          status.style.color = "var(--text-muted)";
+        }
+      });
 
       document.getElementById("clearBtn").addEventListener("click", async () => {
         if (confirm("Hapus semua riwayat login?")) {
