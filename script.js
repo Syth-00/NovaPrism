@@ -511,7 +511,7 @@ function setWdqrisMode(mode) {
 function parseWdInput(rawText) {
   const rows = [];
   const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const lines = text.split("\n").map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").trim()).filter(Boolean);
 
   let block = null;
   const finalize = (b) => {
@@ -571,15 +571,20 @@ function parseWdInput(rawText) {
 function parseDepoInput(rawText) {
   const rows = [];
   const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const lines = text.split("\n").map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").trim()).filter(Boolean);
 
   let block = null;
+  let pendingTanggal = "";   // tanggal yang muncul SEBELUM "Order :"
+  let validasiSection = false;
+  let expectWdStatus = false;
 
   const finalize = (b) => {
     if (!b) return;
     if (!b.nominal && !b.order) return;
+    const tgl = b.tanggal || pendingTanggal || "";
+    if (tgl) pendingTanggal = tgl;  // simpan sebagai fallback untuk blok berikutnya
     rows.push({
-      tanggal: b.tanggal || "",
+      tanggal: tgl,
       kosong1: "",
       id: b.idPlayer || "",
       orderId: b.order || "",
@@ -589,23 +594,32 @@ function parseDepoInput(rawText) {
     });
   };
 
-  let validasiSection = false;
-  let expectWdStatus = false;
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
+    // Baris tanggal SEBELUM Order: → simpan sebagai pendingTanggal
+    if (!block) {
+      const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        pendingTanggal = dateMatch[1];
+        continue;
+      }
+    }
+
+    // Baris Order → mulai blok baru, pakai pendingTanggal
     if (/^Order\s*:/i.test(line)) {
       finalize(block);
-      block = { order: line.replace(/^Order\s*:\s*/i, "").trim() };
+      block = {
+        order: line.replace(/^Order\s*:\s*/i, "").trim(),
+        tanggal: pendingTanggal || "",
+      };
       validasiSection = false;
       expectWdStatus = false;
       continue;
     }
     if (!block) continue;
 
-    // Cari tanggal DI MANA SAJA dalam blok (bukan hanya baris pertama).
-    // Format tanggal: 2026-09-20, sering diikuti jam.
+    // Kalau masih belum punya tanggal, cari di dalam blok (fallback)
     if (!block.tanggal) {
       const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})/);
       if (dateMatch) {
@@ -770,7 +784,7 @@ let _tarikwdRows = [];
 function parseTarikWdInput(rawText) {
   const rows = [];
   const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const lines = text.split("\n").map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").trim()).filter(Boolean);
 
   let current = null;
 
