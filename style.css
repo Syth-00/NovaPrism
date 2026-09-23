@@ -56,9 +56,10 @@ body::after {
     radial-gradient(ellipse 60% 50% at 10% 10%, var(--bg-glow-1) 0%, transparent 55%),
     radial-gradient(ellipse 55% 45% at 90% 30%, var(--bg-glow-2) 0%, transparent 55%),
     radial-gradient(ellipse 50% 45% at 50% 95%, var(--bg-glow-3) 0%, transparent 55%),
-    rgba(3, 4, 9, 0.72);
-  opacity: 0.4;
-  mix-blend-mode: screen;
+    /* Overlay gelap yang lebih kuat — biar tulisan tetap kelihatan */
+    linear-gradient(rgba(3, 4, 9, 0.72), rgba(3, 4, 9, 0.72));
+  opacity: 0.7;
+  mix-blend-mode: normal;
 }
 
 .glass {
