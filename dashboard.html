@@ -114,17 +114,18 @@
         <div class="panel-head">
           <div>
             <h2>Wallpaper Dashboard</h2>
-            <p>Paste URL gambar (HD). Otomatis tersimpan ke server — muncul di semua device sampai diganti.</p>
+            <p>Upload gambar (JPG/PNG, max 10 MB). Otomatis tersimpan di server — muncul di semua device.</p>
           </div>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:end;">
-          <div style="flex:1; min-width:200px;">
-            <label for="bgUrlInput" style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;">URL Gambar (HD)</label>
-            <input type="text" id="bgUrlInput" placeholder="https://contoh.com/wallpaper-hd.jpg" style="width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:var(--text-primary); font-size:14px; outline:none;" />
-          </div>
-          <button type="button" class="btn-primary" id="bgSaveBtn" style="width:auto; padding:12px 24px; margin-top:0;">Simpan</button>
-          <button type="button" class="btn-ghost" id="bgClearBtn">Hapus</button>
+
+        <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn-primary" id="bgUploadBtn" style="width:auto; padding:12px 24px;">Pilih Gambar</button>
+          <button type="button" class="btn-ghost" id="bgClearBtn">Hapus Wallpaper</button>
+          <span id="bgFileName" style="font-size:13px; color:var(--text-muted);"></span>
         </div>
+
         <div id="bgStatus" style="margin-top:10px; font-size:12px; color:var(--text-muted); min-height:18px;"></div>
       </div>
 
@@ -318,7 +319,7 @@
 
         <div class="field">
           <label for="tarikwdpwrInput">Tempel data Tarik WD PWR di sini</label>
-          <textarea id="tarikwdpwrInput" rows="10" placeholder="Tempel data dari tabel PWR di sini...&#10;&#10;Contoh (tab-separated):&#10;PENDING	sahalal	901507526805	MOH. SAHLAL	450,000.00	BRI_Yadi_6500	SEABANK"></textarea>
+          <textarea id="tarikwdpwrInput" rows="10" placeholder="Tempel data dari tabel PWR di sini...&#10;&#10;Contoh:&#10;heri56789	0895325131303	heri kuswanto	600,000.00	BCA_SUPRIYATNA_0541	DANA2	id_524472455"></textarea>
         </div>
 
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
@@ -594,8 +595,7 @@
     addPengembalianItem, resetPengembalianItems,
     generatePengembalianText, savePengembalianReport,
     renderPengembalianHistory, getPengembalianItems,
-    applyBackground, clearBackground, loadBackgroundFromServer,
-    saveBackgroundToServer, clearBackgroundFromServer,
+    loadBackgroundFromServer, uploadWallpaperFile, clearBackgroundFromServer,
     saveReportDraft, restoreReportDraft, clearReportDraft,
     saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
     saveKasihDraft, restoreKasihDraft, clearKasihDraft,
@@ -615,9 +615,7 @@
       await renderSyncStatus();
 
       // Load wallpaper dari server
-      const currentBg = await loadBackgroundFromServer();
-      const bgInput = document.getElementById("bgUrlInput");
-      if (bgInput && currentBg) bgInput.value = currentBg;
+      await loadBackgroundFromServer();
 
       // ============ DRAWER SIDEBAR (Mobile) ============
       const sidebar = document.getElementById("sidebar");
@@ -670,27 +668,38 @@
       // ============ HANDLERS ============
       document.getElementById("logoutBtn").addEventListener("click", () => logout());
 
-      // Wallpaper
-      document.getElementById("bgSaveBtn").addEventListener("click", async () => {
-        const url = document.getElementById("bgUrlInput").value.trim();
-        const status = document.getElementById("bgStatus");
-        if (!url) { status.textContent = "URL kosong."; status.style.color = "var(--danger)"; return; }
-        status.textContent = "Menyimpan...";
-        status.style.color = "var(--text-muted)";
-        const ok = await saveBackgroundToServer(url);
-        if (ok) {
-          status.textContent = "✓ Wallpaper tersimpan. Muncul di semua device.";
-          status.style.color = "var(--accent-2)";
-        } else {
-          status.textContent = "Gagal simpan. Cek Console.";
-          status.style.color = "var(--danger)";
-        }
-      });
+      // Wallpaper — upload file
+      const bgFileInput = document.getElementById("bgFileInput");
+      const bgUploadBtn = document.getElementById("bgUploadBtn");
+      const bgFileName = document.getElementById("bgFileName");
+
+      if (bgUploadBtn && bgFileInput) {
+        bgUploadBtn.addEventListener("click", () => bgFileInput.click());
+
+        bgFileInput.addEventListener("change", async () => {
+          const file = bgFileInput.files && bgFileInput.files[0];
+          if (!file) return;
+          if (bgFileName) bgFileName.textContent = file.name;
+          const status = document.getElementById("bgStatus");
+          status.textContent = "Meng-upload...";
+          status.style.color = "var(--text-muted)";
+
+          const result = await uploadWallpaperFile(file);
+          if (result.ok) {
+            status.textContent = "✓ Wallpaper tersimpan. Muncul di semua device.";
+            status.style.color = "var(--accent-2)";
+          } else {
+            status.textContent = "Gagal: " + (result.error || "unknown");
+            status.style.color = "var(--danger)";
+          }
+          bgFileInput.value = "";
+        });
+      }
 
       document.getElementById("bgClearBtn").addEventListener("click", async () => {
         if (confirm("Hapus wallpaper?")) {
           await clearBackgroundFromServer();
-          document.getElementById("bgUrlInput").value = "";
+          if (bgFileName) bgFileName.textContent = "";
           const status = document.getElementById("bgStatus");
           status.textContent = "Wallpaper dihapus.";
           status.style.color = "var(--text-muted)";
