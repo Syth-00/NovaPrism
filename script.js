@@ -7,20 +7,21 @@
    + WD QRIS (WD & Depo) — dengan prefix e-wallet
    + Tarik WD
    + Tarik WD PWR
-   + Wallpaper Server (Supabase)
+   + Wallpaper Upload (Supabase Storage)
    ============================================ */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 // ============ GANTI DENGAN URL & KEY DARI SUPABASE ============
-const SUPABASE_URL = "https://lvltgxwlsvmyqiwhnmej.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2bHRneHdsc3ZteXFpd2hubWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxNTgwNTksImV4cCI6MjEwNDczNDA1OX0.fo4WEgv2mq29GP1mroeDIyCjo9Vokvq2NIRXVFf8j2M";
+const SUPABASE_URL = "https://xxxxx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIs...";
 // ===============================================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const SESSION_KEY = "novaprism_session";
 const BG_KEY = "novaprism_bg_image";
+const WALLPAPER_BUCKET = "wallpapers";
 
 const DRAFT_KEYS = {
   report: "novaprism_draft_report",
@@ -132,17 +133,19 @@ function formatTime(iso) {
   });
 }
 
-// ---------- Background / Wallpaper ----------
+// ---------- Background / Wallpaper (Supabase Storage) ----------
 function applyBackground(url) {
   if (url) {
     document.documentElement.style.setProperty("--user-bg-image", `url("${url}")`);
     document.body.style.backgroundImage = `url("${url}")`;
   }
 }
+
 function clearBackground() {
   document.documentElement.style.removeProperty("--user-bg-image");
   document.body.style.backgroundImage = "";
 }
+
 async function loadBackgroundFromServer() {
   try {
     const { data, error } = await supabase
@@ -160,22 +163,102 @@ async function loadBackgroundFromServer() {
   if (saved) applyBackground(saved);
   return saved || null;
 }
-async function saveBackgroundToServer(url) {
-  const { error } = await supabase
-    .from("settings")
-    .upsert({ key: "background_url", value: url, updated_at: new Date().toISOString() });
-  if (error) { console.error("Gagal simpan wallpaper:", error); return false; }
-  applyBackground(url);
-  localStorage.setItem(BG_KEY, url);
-  return true;
+
+function extractPathFromUrl(url) {
+  if (!url) return null;
+  const marker = `/storage/v1/object/public/${WALLPAPER_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return url.slice(idx + marker.length);
 }
+
+async function uploadWallpaperFile(file) {
+  if (!file) return { ok: false, error: "Tidak ada file." };
+
+  if (!file.type.startsWith("image/")) {
+    return { ok: false, error: "File bukan gambar." };
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return { ok: false, error: "File terlalu besar (max 10 MB)." };
+  }
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const fileName = `wallpaper_${Date.now()}.${ext}`;
+
+  // Hapus file lama (opsional)
+  try {
+    const { data: oldData } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "background_url")
+      .maybeSingle();
+    if (oldData && oldData.value) {
+      const oldPath = extractPathFromUrl(oldData.value);
+      if (oldPath) {
+        await supabase.storage.from(WALLPAPER_BUCKET).remove([oldPath]);
+      }
+    }
+  } catch (e) { /* abaikan */ }
+
+  const { data: uploadData, error: uploadError } = await supabase
+    .storage
+    .from(WALLPAPER_BUCKET)
+    .upload(fileName, file, {
+      cacheControl: "31536000",
+      upsert: false,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    console.error("Upload error:", uploadError);
+    return { ok: false, error: uploadError.message || "Gagal upload." };
+  }
+
+  const { data: urlData } = supabase
+    .storage
+    .from(WALLPAPER_BUCKET)
+    .getPublicUrl(fileName);
+
+  const publicUrl = urlData.publicUrl;
+  if (!publicUrl) return { ok: false, error: "Tidak dapat URL publik." };
+
+  const { error: settingsError } = await supabase
+    .from("settings")
+    .upsert({ key: "background_url", value: publicUrl, updated_at: new Date().toISOString() });
+
+  if (settingsError) {
+    return { ok: false, error: "Gagal simpan URL ke settings." };
+  }
+
+  applyBackground(publicUrl);
+  localStorage.setItem(BG_KEY, publicUrl);
+  return { ok: true, url: publicUrl };
+}
+
 async function clearBackgroundFromServer() {
+  try {
+    const { data } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "background_url")
+      .maybeSingle();
+    if (data && data.value) {
+      const path = extractPathFromUrl(data.value);
+      if (path) {
+        await supabase.storage.from(WALLPAPER_BUCKET).remove([path]);
+      }
+    }
+  } catch (e) {}
+
   await supabase
     .from("settings")
     .upsert({ key: "background_url", value: "", updated_at: new Date().toISOString() });
+
   clearBackground();
   localStorage.removeItem(BG_KEY);
 }
+
 loadBackgroundFromServer();
 
 // ---------- Login form ----------
@@ -930,14 +1013,12 @@ function parseTarikWdPwrInput(rawText) {
     const line = lines[i];
     const cols = line.split("\t").map(c => c.trim());
 
-    // Minimal 6 kolom → proses pakai mapping standar
     if (cols.length >= 6) {
       const row = buildPwrRow(cols);
       if (row) rows.push(row);
       continue;
     }
 
-    // Coba split 2+ spasi (kalau paste dari sumber yang pakai spasi bukan tab)
     const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
     if (cols2.length >= 6) {
       const row = buildPwrRow(cols2);
@@ -945,7 +1026,6 @@ function parseTarikWdPwrInput(rawText) {
       continue;
     }
 
-    // Terakhir: coba split 1+ spasi (sambil jaga nama tetap utuh dengan heuristik)
     const cols3 = line.split(/\s+/).map(c => c.trim()).filter(Boolean);
     if (cols3.length >= 6) {
       const row = buildPwrRow(cols3);
@@ -953,7 +1033,6 @@ function parseTarikWdPwrInput(rawText) {
       continue;
     }
 
-    // Kalau masih kurang dari 6 → fallback deteksi pola
     const best = cols.length >= cols2.length ? cols : (cols2.length >= cols3.length ? cols2 : cols3);
     const row = guessPwrRow(best);
     if (row) rows.push(row);
@@ -963,7 +1042,7 @@ function parseTarikWdPwrInput(rawText) {
 }
 
 function buildPwrRow(cols) {
-  // Urutan kolom input (7 kolom, tapi bisa 6 kalau kolom 7 kosong):
+  // Urutan kolom input:
   // cols[0] = Member Code (ID player)        → heri56789
   // cols[1] = Account No                     → 0895325131303
   // cols[2] = Account Name                   → heri kuswanto
@@ -990,10 +1069,8 @@ function buildPwrRow(cols) {
 }
 
 function guessPwrRow(cols) {
-  // Kalau kolomnya tidak pas 7, tetap pakai urutan yang sama kalau memungkinkan
   if (cols.length >= 6) return buildPwrRow(cols);
 
-  // Kalau cuma 5 kolom atau kurang, coba deteksi pola
   let memberCode = "", accountNo = "", accountName = "",
       netAmount = "", areaCode = "", bankName = "";
 
@@ -1012,7 +1089,6 @@ function guessPwrRow(cols) {
     }
   }
 
-  // Sisa: memberCode (kolom awal), accountName (ada huruf+spasi), bankName (uppercase tanpa spasi)
   for (const c of cols) {
     if (c === accountNo || c === netAmount || c === areaCode) continue;
     if (!bankName && /^[A-Z][A-Z0-9]+$/.test(c) && c.length <= 15) {
@@ -1777,7 +1853,7 @@ export {
   generatePengembalianText, savePengembalianReport,
   renderPengembalianHistory, getPengembalianItems,
   applyBackground, clearBackground, loadBackgroundFromServer,
-  saveBackgroundToServer, clearBackgroundFromServer,
+  uploadWallpaperFile, clearBackgroundFromServer,
   saveReportDraft, restoreReportDraft, clearReportDraft,
   saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
   saveKasihDraft, restoreKasihDraft, clearKasihDraft,
