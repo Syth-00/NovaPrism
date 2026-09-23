@@ -21,7 +21,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const SESSION_KEY = "novaprism_session";
 const BG_KEY = "novaprism_bg_image";
-const WALLPAPER_BUCKET = "wallpapers";
+const WALLPAPER_BUCKET = "Wallpaper";
 
 const DRAFT_KEYS = {
   report: "novaprism_draft_report",
