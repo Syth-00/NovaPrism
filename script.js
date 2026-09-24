@@ -1457,17 +1457,57 @@ async function searchRekening(rawInput) {
     }
     return match ? { query: q, match } : null;
   }).filter(Boolean);
+
   if (matches.length === 0) {
     resultList.innerHTML = `<div class="empty-state">Tidak ada satu pun yang cocok.</div>`;
     return;
   }
-  resultList.innerHTML = matches.map(({ query, match }) => `
-    <div class="rek-result-item found">
-      <span class="status-pill success"><span class="dot"></span>Ditemukan</span>
-      <div class="rek-result-detail"><strong>${match.nama}</strong><span>${match.nomor}</span></div>
-      <div class="rek-result-query">dicari: "${query}"</div>
-    </div>`
-  ).join("");
+
+  // Simpan hasil ke variable global biar bisa di-copy semua
+  window._rekeningResults = matches.map(({ match }) => ({
+    nama: match.nama || "",
+    nomor: match.nomor || "",
+  }));
+
+  resultList.innerHTML = matches.map(({ match }) => `
+    <div class="rek-result-item found" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;">
+          <strong style="font-size:14px;">${match.nama || "—"}</strong>
+          <span style="font-family:monospace; font-size:13px; color:var(--text-muted);">${match.nomor || "—"}</span>
+        </div>
+      </div>
+      <button type="button" class="btn-mini" data-copy-rek="${match.nama}|${match.nomor}">Salin</button>
+    </div>
+  `).join("");
+
+  // Tombol "Salin Semua" muncul di atas hasil
+  const existingCopyAll = document.getElementById("rekCopyAllBtn");
+  if (existingCopyAll) existingCopyAll.remove();
+  const copyAllBtn = document.createElement("button");
+  copyAllBtn.id = "rekCopyAllBtn";
+  copyAllBtn.type = "button";
+  copyAllBtn.className = "btn-primary";
+  copyAllBtn.textContent = "Salin Semua";
+  copyAllBtn.style.cssText = "width:auto; padding:8px 18px; margin-bottom:12px;";
+  copyAllBtn.addEventListener("click", async (e) => {
+    const results = window._rekeningResults || [];
+    if (results.length === 0) { alert("Belum ada hasil."); return; }
+    const text = results.map(r => `${r.nama}\t${r.nomor}`).join("\n");
+    await copyText(text);
+    flashButton(e.target, "Tersalin!");
+  });
+  resultList.parentElement.insertBefore(copyAllBtn, resultList);
+
+  // Handler tombol "Salin" per item
+  resultList.querySelectorAll("[data-copy-rek]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const raw = btn.dataset.copyRek || "";
+      const [nama, nomor] = raw.split("|");
+      await copyText(`${nama}\t${nomor}`);
+      flashButton(e.target, "Tersalin!");
+    });
+  });
 }
 
 // ---------- Utility ----------
