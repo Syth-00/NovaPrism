@@ -2,40 +2,1094 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NovaPrism — Masuk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#05060b" />
+<title>NovaPrism — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<div class="login-wrap">
-  <div class="glass login-card">
+<div class="app-shell">
+
+  <div class="glass sidebar" id="sidebar">
     <div class="brand">
       <span class="brand-dot"></span>
       <span class="brand-name">NovaPrism</span>
     </div>
 
-    <h1>Selamat datang kembali</h1>
-    <p class="sub">Masuk untuk membuka dashboard aktivitas login kamu.</p>
-
-    <p class="error-msg" id="errorMsg">Email atau password salah.</p>
-
-    <form id="loginForm">
-      <div class="field">
-        <label for="username">Email / ID</label>
-        <input type="text" id="username" placeholder="nama@email.com" autocomplete="username" required />
+    <div class="nav-list">
+      <div class="nav-item active" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        <span>Beranda</span>
       </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password" required />
+      <div class="nav-item" data-view="datalogin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4.5"/><path d="M11.5 9 20 9m0 0v3.5M20 9h-3.2"/></svg>
+        <span>Data Login</span>
       </div>
-      <button type="submit" class="btn-primary">Masuk</button>
-    </form>
+      <div class="nav-item" data-view="rekening">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="9" rx="1.5"/><path d="M3 10 12 4l9 6"/><path d="M7 14v2M12 14v2M17 14v2"/></svg>
+        <span>Cek Rekening</span>
+      </div>
+      <div class="nav-item" data-view="pengembalian">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        <span>Pengembalian HP & Simcard</span>
+      </div>
+      <div class="nav-item" data-view="wdqris">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z M19 19h2v2h-2z M14 19h2v2h-2z M19 14h2v2h-2z"/></svg>
+        <span>WD QRIS</span>
+      </div>
+      <div class="nav-item" data-view="tarikwd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span>Tarik WD</span>
+      </div>
+      <div class="nav-item" data-view="tarikwdpwr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4z"/><path d="M4 12h16v4H4z"/><path d="M4 20h16"/></svg>
+        <span>Tarik WD PWR</span>
+      </div>
+      <div class="nav-item" data-view="ubahformatwd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h16"/><circle cx="18" cy="12" r="2"/></svg>
+        <span>Ubah Format WD</span>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-header" data-group="reportan">
+          <span>Reportan</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <div class="nav-item nav-item-sub" data-view="report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M13 3v4h4"/><path d="M9.5 12.5h6M9.5 15.5h6M9.5 18h3.5"/></svg>
+            <span>Reportan Bank</span>
+          </div>
+          <div class="nav-item nav-item-sub" data-view="reportkesalahan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+            <span>Reportan Kesalahan</span>
+          </div>
+          <div class="nav-item nav-item-sub" data-view="reportkasih">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Reportan Kurang/Lebih Kasih</span>
+          </div>
+          <div class="nav-item nav-item-sub" data-view="reportsalahsorong">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3z"/><path d="M10 8 14 12M14 8l-4 4"/></svg>
+            <span>Reportan Salah Sorong</span>
+          </div>
+          <div class="nav-item nav-item-sub" data-view="reportsalahbuang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+            <span>Reportan Salah Buang Dana</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;">
+      <button class="btn-ghost" id="logoutBtn" style="width:100%;">Keluar</button>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="main-content">
+
+    <div class="glass topbar">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="user-chip">
+          <div class="avatar" id="avatarInitial">?</div>
+          <span id="welcomeText">Halo</span>
+        </div>
+      </div>
+      <span class="hint" style="margin:0; padding:6px 12px;" id="pageLabel">Beranda</span>
+    </div>
+
+    <!-- Beranda -->
+    <div class="view active" id="view-home">
+      <div class="stat-row">
+        <div class="glass stat-card"><div class="label">Total percobaan login</div><div class="value" id="statTotal">0</div></div>
+        <div class="glass stat-card"><div class="label">Login berhasil</div><div class="value accent" id="statSuccess">0</div></div>
+        <div class="glass stat-card"><div class="label">Login gagal</div><div class="value" id="statFailed">0</div></div>
+        <div class="glass stat-card"><div class="label">Login terakhir</div><div class="value" id="statLast" style="font-size:16px;">—</div></div>
+      </div>
+
+      <!-- Wallpaper panel -->
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Wallpaper Dashboard</h2>
+            <p>Upload gambar (JPG/PNG, max 10 MB). Otomatis tersimpan di server — muncul di semua device.</p>
+          </div>
+        </div>
+
+        <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn-primary" id="bgUploadBtn" style="width:auto; padding:12px 24px;">Pilih Gambar</button>
+          <button type="button" class="btn-ghost" id="bgClearBtn">Hapus Wallpaper</button>
+          <span id="bgFileName" style="font-size:13px; color:var(--text-muted);"></span>
+        </div>
+
+        <div id="bgStatus" style="margin-top:10px; font-size:12px; color:var(--text-muted); min-height:18px;"></div>
+      </div>
+
+      <div class="glass panel">
+        <div class="panel-head">
+          <div><h2>Riwayat login</h2><p>Data ini tersimpan di Supabase (shared).</p></div>
+          <button class="btn-ghost" id="clearBtn">Bersihkan data</button>
+        </div>
+        <table>
+          <thead><tr><th>Email / ID</th><th>Waktu</th><th>Perangkat</th><th>Status</th></tr></thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">Belum ada data login.</div>
+      </div>
+    </div>
+
+    <!-- Data Login -->
+    <div class="view" id="view-datalogin">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div><h2>Data Login</h2><p>Akun dengan badge ★ MASTER otomatis dapat semua menu.</p></div>
+        </div>
+        <form class="add-account-form" id="addAccountForm">
+          <div class="field"><label for="newEmail">Email / ID</label><input type="text" id="newEmail" placeholder="nama@email.com" required /></div>
+          <div class="field"><label for="newPassword">Password</label><input type="text" id="newPassword" placeholder="Password login" required /></div>
+          <button type="submit" class="btn-primary" style="margin-top:0; width:auto; padding:12px 20px;">Tambah</button>
+        </form>
+        <div style="margin-bottom:22px;">
+          <div class="access-group-label">Akses menu untuk akun baru:</div>
+          <div class="access-checks" id="newAccessChecks"></div>
+        </div>
+        <table>
+          <thead><tr><th>Email / ID</th><th>Password</th><th>Akses</th><th>Dibuat</th><th></th></tr></thead>
+          <tbody id="accountTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="accountEmptyState" style="display:none;">Belum ada akun.</div>
+      </div>
+    </div>
+
+    <!-- Cek Rekening -->
+    <div class="view" id="view-rekening">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div><h2>Cek Rekening</h2><p>Data dari Google Sheet — kolom A = nama, B = nomor rekening.</p></div>
+          <button class="btn-ghost" id="syncSheetBtn">Sinkron ulang</button>
+        </div>
+        <div class="rek-sync-status" id="rekSyncStatus">Belum pernah disinkron.</div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label for="rekSearchInput">Rekening yang ingin dicek</label>
+            <p class="rek-search-hint">Tempel nomor rekening atau nama. Bisa lebih dari satu, satu per baris.</p>
+            <textarea id="rekSearchInput" rows="6" placeholder="1234567890&#10;Budi Santoso"></textarea>
+            <button type="button" class="btn-primary" id="rekSearchBtn" style="margin-top:12px;">Cari</button>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Hasil pencarian</label>
+            <div class="rek-result-list" id="rekResultList"><div class="empty-state">Belum ada pencarian.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pengembalian HP & Simcard -->
+    <div class="view" id="view-pengembalian">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div><h2>Pengembalian HP & Simcard</h2><p>Tambah item sebanyak yang kamu mau.</p></div>
+        </div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="pbgBank">BANK</label><input type="text" id="pbgBank" placeholder="BCA" /></div>
+            <div class="field"><label for="pbgTypeBank">TYPE BANK</label><input type="text" id="pbgTypeBank" placeholder="Tabungan" /></div>
+            <div class="field"><label for="pbgNamaRek">NAMA REKENING</label><input type="text" id="pbgNamaRek" placeholder="Nama pemilik" /></div>
+            <div class="field"><label for="pbgNomorRek">NOMOR REKENING</label><input type="text" id="pbgNomorRek" placeholder="1234567890" /></div>
+            <div class="field"><label for="pbgKelengkapan">KELENGKAPAN</label><input type="text" id="pbgKelengkapan" placeholder="HP, SIM Card" /></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="pbgAddBtn" style="width:auto; padding:12px 20px;">+ Tambah Item</button>
+              <button type="button" class="btn-ghost" id="pbgClearFormBtn">Bersihkan Form</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;">
+            <label>Item yang sudah ditambahkan (<span id="pbgCount">0</span>)</label>
+            <div class="rek-result-list" id="pengembalianList" style="max-height:400px;">
+              <div class="empty-state">Belum ada item.</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <label style="display:block; margin-bottom:8px;">Preview</label>
+          <pre class="report-preview" id="pengembalianPreview"></pre>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+            <button type="button" class="btn-primary" id="pbgCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+            <button type="button" class="btn-ghost" id="pbgSaveBtn">Simpan ke riwayat</button>
+            <button type="button" class="btn-ghost" id="pbgResetAllBtn">Reset Semua</button>
+          </div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Pengembalian</h2><p>Report yang pernah disimpan.</p></div></div>
+        <table><thead><tr><th>Bank</th><th>Jumlah</th><th>Waktu</th><th></th></tr></thead><tbody id="pengembalianHistoryBody"></tbody></table>
+        <div class="empty-state" id="pengembalianEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- WD QRIS -->
+    <div class="view" id="view-wdqris">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>WD QRIS</h2>
+            <p id="wdqrisHelp">Mode WD — Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button type="button" class="btn-primary wdqris-tab active" data-mode="wd" style="width:auto; padding:10px 22px;">WD</button>
+          <button type="button" class="btn-ghost wdqris-tab" data-mode="depo" style="padding:10px 22px;">Depo</button>
+        </div>
+
+        <div class="field">
+          <label for="wdqrisInput">Tempel data dari zona main di sini</label>
+          <textarea id="wdqrisInput" rows="10" placeholder="Tempel data WD dari zona main di sini..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="wdqrisProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="wdqrisCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="wdqrisClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="wdqrisCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead id="wdqrisResultHead"></thead>
+            <tbody id="wdqrisResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarik WD -->
+    <div class="view" id="view-tarikwd">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Tarik WD</h2>
+            <p>Tempel data Withdraw dari zona main. Hasil: Kode Bank · Nomor Rekening · ID · Nama Rek · Nominal</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="tarikwdInput">Tempel data Tarik WD di sini</label>
+          <textarea id="tarikwdInput" rows="12" placeholder="Tempel data Withdraw di sini...&#10;&#10;Contoh:&#10;8		masedi1&#10;Withdraw	2026-09-20 16:26:59	510,000 	403&#10;G10&#10;GOPAY, 081227184373, Ryan edi saputro"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="tarikwdProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="tarikwdCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="tarikwdClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="tarikwdCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead>
+              <tr><th>Kode Bank</th><th>Nomor Rekening</th><th>ID</th><th>Nama Rek</th><th>Nominal</th><th></th></tr>
+            </thead>
+            <tbody id="tarikwdResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarik WD PWR -->
+    <div class="view" id="view-tarikwdpwr">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Tarik WD PWR</h2>
+            <p>Tempel data tabel PWR. Hasil: Area Code · Jenis Bank · Nomor Rekening · ID · Nama Rekening · Nominal</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="tarikwdpwrInput">Tempel data Tarik WD PWR di sini</label>
+          <textarea id="tarikwdpwrInput" rows="10" placeholder="Tempel data dari tabel PWR di sini...&#10;&#10;Contoh:&#10;heri56789	0895325131303	heri kuswanto	600,000.00	BCA_SUPRIYATNA_0541	DANA2	id_524472455"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="tarikwdpwrProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="tarikwdpwrCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="tarikwdpwrClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="tarikwdpwrCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Tab-separated — paste ke Docs/Excel langsung jadi kolom</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:700px;">
+            <thead>
+              <tr><th>Area Code</th><th>Jenis Bank</th><th>Nomor Rekening</th><th>ID</th><th>Nama Rekening</th><th>Nominal</th><th></th></tr>
+            </thead>
+            <tbody id="tarikwdpwrResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ubah Format WD -->
+    <div class="view" id="view-ubahformatwd">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Ubah Format WD</h2>
+            <p>Ubah data WD dari doc → format: <strong>Jenis Bank, Nomor Rekening, Nama Rekening, Nominal</strong> (dipisah koma)</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ubahformatwdInput">Tempel data WD di sini</label>
+          <textarea id="ubahformatwdInput" rows="12" placeholder="Tempel data WD dari doc di sini...&#10;&#10;Contoh:&#10;2026-09-16 17:25:03	lunatogel	XPAY	&#10;Order : LNT-xxxx&#10;Bank : SEABANK&#10;Nama Rek : Riki&#10;No Rek : 901154404396&#10;setyarini	2.300.000	&#10;Validasi : Success"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="ubahformatwdProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="ubahformatwdCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="ubahformatwdClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="ubahformatwdCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Comma-separated — paste ke Docs/Excel</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead>
+              <tr><th>Jenis Bank</th><th>Nomor Rekening</th><th>Nama Rekening</th><th>Nominal</th><th></th></tr>
+            </thead>
+            <tbody id="ubahformatwdResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reportan Bank -->
+    <div class="view" id="view-report">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Bank</h2><p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="repInfo">Info</label><input type="text" id="repInfo" /></div>
+            <div class="field"><label for="repPerihal">Perihal</label><input type="text" id="repPerihal" /></div>
+            <div class="field"><label for="repBank">Bank</label><input type="text" id="repBank" /></div>
+            <div class="field"><label for="repNamaRek">Nama Rekening</label><input type="text" id="repNamaRek" /></div>
+            <div class="field"><label for="repNomorRek">Nomor Rekening</label><input type="text" id="repNomorRek" /></div>
+            <div class="field"><label for="repSaldo">Saldo</label><input type="text" id="repSaldo" inputmode="numeric" /></div>
+            <div class="field"><label for="repLampiran">Lampiran</label><input type="text" id="repLampiran" /></div>
+            <div class="field"><label for="repKeterangan">Keterangan</label><textarea id="repKeterangan" rows="4"></textarea></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="repCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="repSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="repResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="reportPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Report</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Bank</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead><tbody id="reportHistoryBody"></tbody></table>
+        <div class="empty-state" id="reportEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Kesalahan -->
+    <div class="view" id="view-reportkesalahan">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Kesalahan</h2><p>Isi kolom di kiri, hasil otomatis kebentuk di kanan.</p></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rkInfo">Info</label><input type="text" id="rkInfo" /></div>
+            <div class="field"><label for="rkPerihal">Perihal</label><input type="text" id="rkPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rkStaffNama">Staff</label><input type="text" id="rkStaffNama" /></div>
+              <div><label for="rkStaffKode">Kode</label><input type="text" id="rkStaffKode" /></div>
+              <div><label for="rkAgenNama">Nama Agen</label><input type="text" id="rkAgenNama" /></div>
+            </div>
+            <div class="field"><label for="rkUserId">UserID</label><input type="text" id="rkUserId" /></div>
+            <div class="field"><label for="rkNamaRek">Nama Rekening</label><input type="text" id="rkNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rkNomorRek">Nomor Rekening</label><input type="text" id="rkNomorRek" /></div>
+              <div><label for="rkJenisBank">Jenis Bank</label><input type="text" id="rkJenisBank" /></div>
+            </div>
+            <div class="field"><label for="rkNominal">Nominal</label><input type="text" id="rkNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rkLampiran">Lampiran</label><input type="text" id="rkLampiran" /></div>
+            <div class="field"><label for="rkKeterangan">Keterangan</label><textarea id="rkKeterangan" rows="4"></textarea></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rkCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rkSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rkResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rkPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Reportan Kesalahan</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Waktu</th><th></th></tr></thead><tbody id="rkHistoryBody"></tbody></table>
+        <div class="empty-state" id="rkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Kurang/Lebih Kasih -->
+    <div class="view" id="view-reportkasih">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Kurang/Lebih Kasih</h2></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rkkInfo">Info</label><input type="text" id="rkkInfo" /></div>
+            <div class="field"><label for="rkkPerihal">Perihal</label><input type="text" id="rkkPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rkkStaffNama">Staff</label><input type="text" id="rkkStaffNama" /></div>
+              <div><label for="rkkStaffKode">Kode</label><input type="text" id="rkkStaffKode" /></div>
+              <div><label for="rkkAgenNama">Nama Agen</label><input type="text" id="rkkAgenNama" /></div>
+            </div>
+            <div class="field"><label for="rkkUserId">UserID</label><input type="text" id="rkkUserId" /></div>
+            <div class="field"><label for="rkkNamaRek">Nama Rekening</label><input type="text" id="rkkNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rkkNomorRek">Nomor Rekening</label><input type="text" id="rkkNomorRek" /></div>
+              <div><label for="rkkJenisBank">Jenis Bank</label><input type="text" id="rkkJenisBank" /></div>
+            </div>
+            <div class="field"><label for="rkkNominal">Nominal</label><input type="text" id="rkkNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rkkNominalTerproses">Nominal Terproses</label><input type="text" id="rkkNominalTerproses" inputmode="numeric" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div><label for="rkkSelisihTipe">Kekurangan / Kelebihan</label>
+                <select id="rkkSelisihTipe" style="width:100%; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#f2f1fb; font-size:14px;">
+                  <option value="kurang">Kurang Kasih</option>
+                  <option value="lebih">Lebih Kasih</option>
+                </select>
+              </div>
+              <div><label for="rkkSelisihNominal">Nominal Selisih</label><input type="text" id="rkkSelisihNominal" inputmode="numeric" /></div>
+            </div>
+            <div class="field"><label for="rkkLampiran">Lampiran</label><input type="text" id="rkkLampiran" /></div>
+            <div class="field"><label for="rkkKeterangan">Keterangan</label><textarea id="rkkKeterangan" rows="4"></textarea></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rkkCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rkkSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rkkResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rkkPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Reportan Kasih</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>UserID</th><th>Nama Rekening</th><th>Tipe</th><th>Waktu</th><th></th></tr></thead><tbody id="rkkHistoryBody"></tbody></table>
+        <div class="empty-state" id="rkkEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Salah Sorong -->
+    <div class="view" id="view-reportsalahsorong">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Salah Sorong</h2></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rssInfo">Info</label><input type="text" id="rssInfo" /></div>
+            <div class="field"><label for="rssPerihal">Perihal</label><input type="text" id="rssPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rssStaffNama">Staff</label><input type="text" id="rssStaffNama" /></div>
+              <div><label for="rssStaffKode">Kode</label><input type="text" id="rssStaffKode" /></div>
+              <div><label for="rssAgenNama">Nama Agen</label><input type="text" id="rssAgenNama" /></div>
+            </div>
+            <div class="access-group-label" style="margin-top:16px;">Pemilik Dana</div>
+            <div class="field"><label for="rssPemilikUserId">UserID</label><input type="text" id="rssPemilikUserId" /></div>
+            <div class="field"><label for="rssPemilikNamaRek">Nama Rekening</label><input type="text" id="rssPemilikNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rssPemilikNomorRek">Nomor Rekening</label><input type="text" id="rssPemilikNomorRek" /></div>
+              <div><label for="rssPemilikJenisBank">Jenis Bank</label><input type="text" id="rssPemilikJenisBank" /></div>
+            </div>
+            <div class="access-group-label" style="margin-top:16px;">Terproses ke</div>
+            <div class="field"><label for="rssTujuanUserId">UserID</label><input type="text" id="rssTujuanUserId" /></div>
+            <div class="field"><label for="rssTujuanNamaRek">Nama Rekening</label><input type="text" id="rssTujuanNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rssTujuanNomorRek">Nomor Rekening</label><input type="text" id="rssTujuanNomorRek" /></div>
+              <div><label for="rssTujuanJenisBank">Jenis Bank</label><input type="text" id="rssTujuanJenisBank" /></div>
+            </div>
+            <div class="field"><label for="rssNominal">Nominal</label><input type="text" id="rssNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rssLampiran">Lampiran</label><input type="text" id="rssLampiran" /></div>
+            <div class="field"><label for="rssKeterangan">Keterangan</label><textarea id="rssKeterangan" rows="4"></textarea></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rssCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rssSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rssResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rssPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Reportan Salah Sorong</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Pemilik</th><th>Terproses ke</th><th>Waktu</th><th></th></tr></thead><tbody id="rssHistoryBody"></tbody></table>
+        <div class="empty-state" id="rssEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
+    <!-- Reportan Salah Buang Dana -->
+    <div class="view" id="view-reportsalahbuang">
+      <div class="glass panel">
+        <div class="panel-head"><div><h2>Reportan Salah Buang Dana</h2></div></div>
+        <div class="rek-search-grid">
+          <div class="rek-search-col glass" style="padding:18px;">
+            <div class="field"><label for="rsbInfo">Info</label><input type="text" id="rsbInfo" /></div>
+            <div class="field"><label for="rsbPerihal">Perihal</label><input type="text" id="rsbPerihal" /></div>
+            <div class="field" style="display:grid; grid-template-columns:1.4fr 1fr 1.2fr; gap:10px;">
+              <div><label for="rsbStaffNama">Staff</label><input type="text" id="rsbStaffNama" /></div>
+              <div><label for="rsbStaffKode">Kode</label><input type="text" id="rsbStaffKode" /></div>
+              <div><label for="rsbAgenNama">Nama Agen</label><input type="text" id="rsbAgenNama" /></div>
+            </div>
+
+            <div class="field" style="display:grid; grid-template-columns:80px 1fr; gap:10px; align-items:center; margin-top:16px;">
+              <label for="rsbDariUserId" style="margin:0;">Dari :</label>
+              <input type="text" id="rsbDariUserId" placeholder="Isi dari mana" />
+            </div>
+            <div class="field"><label for="rsbDariNamaRek">Nama rekening pengirim</label><input type="text" id="rsbDariNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rsbDariNomorRek">Nomor rekening pengirim</label><input type="text" id="rsbDariNomorRek" /></div>
+              <div><label for="rsbDariJenisBank">Jenis Bank</label><input type="text" id="rsbDariJenisBank" /></div>
+            </div>
+
+            <div class="field" style="display:grid; grid-template-columns:80px 1fr; gap:10px; align-items:center; margin-top:16px;">
+              <label for="rsbTujuanUserId" style="margin:0;">Tujuan :</label>
+              <input type="text" id="rsbTujuanUserId" placeholder="Isi tujuan ke mana" />
+            </div>
+            <div class="field"><label for="rsbTujuanNamaRek">Nama rekening penerima</label><input type="text" id="rsbTujuanNamaRek" /></div>
+            <div class="field" style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+              <div><label for="rsbTujuanNomorRek">Nomor rekening penerima</label><input type="text" id="rsbTujuanNomorRek" /></div>
+              <div><label for="rsbTujuanJenisBank">Jenis Bank</label><input type="text" id="rsbTujuanJenisBank" /></div>
+            </div>
+
+            <div class="field"><label for="rsbNominal">Nominal</label><input type="text" id="rsbNominal" inputmode="numeric" /></div>
+            <div class="field"><label for="rsbBukti">Bukti pemindahan dana</label><input type="text" id="rsbBukti" placeholder="Link/nama file bukti" /></div>
+            <div class="field"><label for="rsbKeterangan">Keterangan</label><textarea id="rsbKeterangan" rows="4"></textarea></div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button type="button" class="btn-primary" id="rsbCopyBtn" style="width:auto; padding:12px 20px;">Salin</button>
+              <button type="button" class="btn-ghost" id="rsbSaveBtn">Simpan ke riwayat</button>
+              <button type="button" class="btn-ghost" id="rsbResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="rek-search-col glass" style="padding:18px;"><label>Preview</label><pre class="report-preview" id="rsbPreview"></pre></div>
+        </div>
+      </div>
+      <div class="glass panel" style="margin-top:20px;">
+        <div class="panel-head"><div><h2>Riwayat Reportan Salah Buang Dana</h2></div></div>
+        <table><thead><tr><th>Perihal</th><th>Dari</th><th>Tujuan</th><th>Waktu</th><th></th></tr></thead><tbody id="rsbHistoryBody"></tbody></table>
+        <div class="empty-state" id="rsbEmptyState" style="display:none;">Belum ada report tersimpan.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<script type="module" src="script.js"></script>
+<script type="module">
+  import {
+    requireLogin, logout, getSession, applyAccessControl, menuLabel,
+    renderDashboard, renderAccounts, renderAddAccessChecks,
+    fetchAccountsConfig, addAccount,
+    clearLoginRecords,
+    fetchRekeningCache, renderSyncStatus, syncRekeningFromSheet, searchRekening,
+    renderReportHistory, updateReportPreview, formatRupiahInputValue,
+    getReportFieldsFromForm, generateReportText, saveReport,
+    copyText, flashButton,
+    renderKesalahanHistory, updateKesalahanPreview, formatNumberInputValue,
+    getKesalahanFieldsFromForm, generateKesalahanText, saveKesalahanReport,
+    renderKasihHistory, updateKasihPreview,
+    getKasihFieldsFromForm, generateKasihText, saveKasihReport,
+    renderSalahSorongHistory, updateSalahSorongPreview,
+    getSalahSorongFieldsFromForm, generateSalahSorongText, saveSalahSorongReport,
+    renderSalahBuangHistory, updateSalahBuangPreview,
+    getSalahBuangFieldsFromForm, generateSalahBuangText, saveSalahBuangReport,
+    setWdqrisMode, processWdqris, clearWdqris, copyAllWdqris,
+    restoreWdqrisDraft, saveWdqrisDraft, clearWdqrisDraft,
+    renderWdqrisHeader, renderWdqrisRows,
+    processTarikWd, clearTarikWd, copyAllTarikWd,
+    restoreTarikWdDraft, saveTarikWdDraft, clearTarikWdDraft,
+    renderTarikWdRows,
+    processTarikWdPwr, clearTarikWdPwr, copyAllTarikWdPwr,
+    restoreTarikWdPwrDraft, saveTarikWdPwrDraft, clearTarikWdPwrDraft,
+    renderTarikWdPwrRows,
+    processUbahFormatWd, clearUbahFormatWd, copyAllUbahFormatWd,
+    restoreUbahFormatWdDraft, saveUbahFormatWdDraft, clearUbahFormatWdDraft,
+    renderUbahFormatWdRows,
+    renderPengembalianItems, updatePengembalianPreview,
+    getPengembalianFormFields, clearPengembalianForm,
+    addPengembalianItem, resetPengembalianItems,
+    generatePengembalianText, savePengembalianReport,
+    renderPengembalianHistory, getPengembalianItems,
+    loadBackgroundFromServer, uploadWallpaperFile, clearBackgroundFromServer,
+    saveReportDraft, restoreReportDraft, clearReportDraft,
+    saveKesalahanDraft, restoreKesalahanDraft, clearKesalahanDraft,
+    saveKasihDraft, restoreKasihDraft, clearKasihDraft,
+    saveSalahSorongDraft, restoreSalahSorongDraft, clearSalahSorongDraft,
+    saveSalahBuangDraft, restoreSalahBuangDraft, clearSalahBuangDraft,
+    savePengembalianDraft, restorePengembalianDraft, clearPengembalianDraft,
+  } from "./script.js";
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const session = requireLogin();
+      if (!session) return;
+
+      await renderDashboard(session);
+      await renderAccounts();
+      renderAddAccessChecks();
+      await renderSyncStatus();
+
+      // Load wallpaper dari server
+      await loadBackgroundFromServer();
+
+      // ============ DRAWER SIDEBAR (Mobile) ============
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+      const menuToggle = document.getElementById("menuToggle");
+
+      function openSidebar() {
+        if (sidebar) sidebar.classList.add("open");
+        if (sidebarOverlay) sidebarOverlay.classList.add("open");
+      }
+      function closeSidebar() {
+        if (sidebar) sidebar.classList.remove("open");
+        if (sidebarOverlay) sidebarOverlay.classList.remove("open");
+      }
+
+      if (menuToggle) menuToggle.addEventListener("click", openSidebar);
+      if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+
+      // ============ NAVIGASI ============
+      function goToView(viewKey) {
+        document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+        document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+
+        const viewEl = document.getElementById("view-" + viewKey);
+        if (viewEl) viewEl.classList.add("active");
+
+        const sideItem = document.querySelector(`.nav-item[data-view="${viewKey}"]`);
+        if (sideItem) sideItem.classList.add("active");
+
+        const labelEl = document.getElementById("pageLabel");
+        if (labelEl) labelEl.textContent = menuLabel(viewKey);
+
+        closeSidebar();
+      }
+
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.addEventListener("click", () => {
+          if (item.dataset.view) goToView(item.dataset.view);
+        });
+      });
+
+      document.querySelectorAll(".nav-group-header").forEach(header => {
+        header.addEventListener("click", () => {
+          header.closest(".nav-group").classList.toggle("collapsed");
+        });
+      });
+
+      applyAccessControl(session);
+
+      // ============ HANDLERS ============
+      document.getElementById("logoutBtn").addEventListener("click", () => logout());
+
+      // Wallpaper — upload file
+      const bgFileInput = document.getElementById("bgFileInput");
+      const bgUploadBtn = document.getElementById("bgUploadBtn");
+      const bgFileName = document.getElementById("bgFileName");
+
+      if (bgUploadBtn && bgFileInput) {
+        bgUploadBtn.addEventListener("click", () => bgFileInput.click());
+
+        bgFileInput.addEventListener("change", async () => {
+          const file = bgFileInput.files && bgFileInput.files[0];
+          if (!file) return;
+          if (bgFileName) bgFileName.textContent = file.name;
+          const status = document.getElementById("bgStatus");
+          status.textContent = "Meng-upload...";
+          status.style.color = "var(--text-muted)";
+
+          const result = await uploadWallpaperFile(file);
+          if (result.ok) {
+            status.textContent = "✓ Wallpaper tersimpan. Muncul di semua device.";
+            status.style.color = "var(--accent-2)";
+          } else {
+            status.textContent = "Gagal: " + (result.error || "unknown");
+            status.style.color = "var(--danger)";
+          }
+          bgFileInput.value = "";
+        });
+      }
+
+      document.getElementById("bgClearBtn").addEventListener("click", async () => {
+        if (confirm("Hapus wallpaper?")) {
+          await clearBackgroundFromServer();
+          if (bgFileName) bgFileName.textContent = "";
+          const status = document.getElementById("bgStatus");
+          status.textContent = "Wallpaper dihapus.";
+          status.style.color = "var(--text-muted)";
+        }
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", async () => {
+        if (confirm("Hapus semua riwayat login?")) {
+          await clearLoginRecords();
+          await renderDashboard(session);
+        }
+      });
+
+      document.getElementById("addAccountForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("newEmail").value.trim();
+        const password = document.getElementById("newPassword").value;
+        if (!email || !password) return;
+        const access = Array.from(document.querySelectorAll("#newAccessChecks input:checked")).map(i => i.value);
+        if (access.length === 0) { alert("Pilih minimal satu menu."); return; }
+        const accounts = await fetchAccountsConfig();
+        if (accounts.find(x => x.email === email)) { alert("Email sudah terdaftar."); return; }
+        const ok = await addAccount(email, password, access);
+        if (!ok) { alert("Gagal menambah akun."); return; }
+        document.getElementById("newEmail").value = "";
+        document.getElementById("newPassword").value = "";
+        renderAddAccessChecks();
+        await renderAccounts();
+      });
+
+      document.getElementById("syncSheetBtn").addEventListener("click", () => syncRekeningFromSheet());
+      document.getElementById("rekSearchBtn").addEventListener("click", () => searchRekening(document.getElementById("rekSearchInput").value));
+      const cache = await fetchRekeningCache();
+      if (!cache) syncRekeningFromSheet();
+
+      // Reportan Bank
+      await renderReportHistory();
+      restoreReportDraft();
+      updateReportPreview();
+      document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "repSaldo") el.value = formatRupiahInputValue(el.value);
+          updateReportPreview();
+          saveReportDraft();
+        });
+      });
+      document.getElementById("repCopyBtn").addEventListener("click", async (e) => {
+        updateReportPreview();
+        await copyText(document.getElementById("reportPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("repSaveBtn").addEventListener("click", async () => {
+        const fields = getReportFieldsFromForm();
+        await saveReport(fields, generateReportText(fields));
+        await renderReportHistory();
+        document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
+        clearReportDraft();
+        updateReportPreview();
+      });
+      document.getElementById("repResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-report input, #view-report textarea").forEach(el => el.value = "");
+        clearReportDraft();
+        updateReportPreview();
+      });
+
+      // Reportan Kesalahan
+      await renderKesalahanHistory();
+      restoreKesalahanDraft();
+      updateKesalahanPreview();
+      document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rkNominal") el.value = formatNumberInputValue(el.value);
+          updateKesalahanPreview();
+          saveKesalahanDraft();
+        });
+      });
+      document.getElementById("rkCopyBtn").addEventListener("click", async (e) => {
+        updateKesalahanPreview();
+        await copyText(document.getElementById("rkPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("rkSaveBtn").addEventListener("click", async () => {
+        const fields = getKesalahanFieldsFromForm();
+        await saveKesalahanReport(fields, generateKesalahanText(fields));
+        await renderKesalahanHistory();
+        document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
+        clearKesalahanDraft();
+        updateKesalahanPreview();
+      });
+      document.getElementById("rkResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportkesalahan input, #view-reportkesalahan textarea").forEach(el => el.value = "");
+        clearKesalahanDraft();
+        updateKesalahanPreview();
+      });
+
+      // Reportan Kurang/Lebih Kasih
+      await renderKasihHistory();
+      restoreKasihDraft();
+      updateKasihPreview();
+      document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea, #view-reportkasih select").forEach(el => {
+        el.addEventListener("input", () => {
+          if (["rkkNominal","rkkNominalTerproses","rkkSelisihNominal"].includes(el.id)) {
+            el.value = formatNumberInputValue(el.value);
+          }
+          updateKasihPreview();
+          saveKasihDraft();
+        });
+        el.addEventListener("change", () => { updateKasihPreview(); saveKasihDraft(); });
+      });
+      document.getElementById("rkkCopyBtn").addEventListener("click", async (e) => {
+        updateKasihPreview();
+        await copyText(document.getElementById("rkkPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("rkkSaveBtn").addEventListener("click", async () => {
+        const fields = getKasihFieldsFromForm();
+        await saveKasihReport(fields, generateKasihText(fields));
+        await renderKasihHistory();
+        document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
+        const sel = document.getElementById("rkkSelisihTipe"); if (sel) sel.value = "kurang";
+        clearKasihDraft();
+        updateKasihPreview();
+      });
+      document.getElementById("rkkResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportkasih input, #view-reportkasih textarea").forEach(el => el.value = "");
+        const sel = document.getElementById("rkkSelisihTipe"); if (sel) sel.value = "kurang";
+        clearKasihDraft();
+        updateKasihPreview();
+      });
+
+      // Reportan Salah Sorong
+      await renderSalahSorongHistory();
+      restoreSalahSorongDraft();
+      updateSalahSorongPreview();
+      document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rssNominal") el.value = formatNumberInputValue(el.value);
+          updateSalahSorongPreview();
+          saveSalahSorongDraft();
+        });
+      });
+      document.getElementById("rssCopyBtn").addEventListener("click", async (e) => {
+        updateSalahSorongPreview();
+        await copyText(document.getElementById("rssPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("rssSaveBtn").addEventListener("click", async () => {
+        const fields = getSalahSorongFieldsFromForm();
+        await saveSalahSorongReport(fields, generateSalahSorongText(fields));
+        await renderSalahSorongHistory();
+        document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => el.value = "");
+        clearSalahSorongDraft();
+        updateSalahSorongPreview();
+      });
+      document.getElementById("rssResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportsalahsorong input, #view-reportsalahsorong textarea").forEach(el => el.value = "");
+        clearSalahSorongDraft();
+        updateSalahSorongPreview();
+      });
+
+      // Reportan Salah Buang Dana
+      await renderSalahBuangHistory();
+      restoreSalahBuangDraft();
+      updateSalahBuangPreview();
+      document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => {
+        el.addEventListener("input", () => {
+          if (el.id === "rsbNominal") el.value = formatNumberInputValue(el.value);
+          updateSalahBuangPreview();
+          saveSalahBuangDraft();
+        });
+      });
+      document.getElementById("rsbCopyBtn").addEventListener("click", async (e) => {
+        updateSalahBuangPreview();
+        await copyText(document.getElementById("rsbPreview").textContent);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("rsbSaveBtn").addEventListener("click", async () => {
+        const fields = getSalahBuangFieldsFromForm();
+        await saveSalahBuangReport(fields, generateSalahBuangText(fields));
+        await renderSalahBuangHistory();
+        document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => el.value = "");
+        clearSalahBuangDraft();
+        updateSalahBuangPreview();
+      });
+      document.getElementById("rsbResetBtn").addEventListener("click", () => {
+        document.querySelectorAll("#view-reportsalahbuang input, #view-reportsalahbuang textarea").forEach(el => el.value = "");
+        clearSalahBuangDraft();
+        updateSalahBuangPreview();
+      });
+
+      // Pengembalian HP & Simcard
+      await renderPengembalianHistory();
+      restorePengembalianDraft();
+      renderPengembalianItems();
+      updatePengembalianPreview();
+      ["pbgBank","pbgTypeBank","pbgNamaRek","pbgNomorRek","pbgKelengkapan"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", () => savePengembalianDraft());
+      });
+      document.getElementById("pbgAddBtn").addEventListener("click", () => {
+        const fields = getPengembalianFormFields();
+        if (!fields.bank && !fields.namaRek && !fields.nomorRek) { alert("Isi minimal BANK atau NAMA REKENING."); return; }
+        addPengembalianItem(fields);
+        clearPengembalianForm();
+        renderPengembalianItems();
+        updatePengembalianPreview();
+        savePengembalianDraft();
+      });
+      document.getElementById("pbgClearFormBtn").addEventListener("click", () => { clearPengembalianForm(); savePengembalianDraft(); });
+      document.getElementById("pbgCopyBtn").addEventListener("click", async (e) => {
+        const text = document.getElementById("pengembalianPreview").textContent;
+        if (!text.trim()) { alert("Belum ada item."); return; }
+        await copyText(text);
+        flashButton(e.target, "Tersalin!");
+      });
+      document.getElementById("pbgSaveBtn").addEventListener("click", async () => {
+        const text = document.getElementById("pengembalianPreview").textContent;
+        if (!text.trim()) { alert("Belum ada item."); return; }
+        const items = getPengembalianItems();
+        await savePengembalianReport(items, text);
+        await renderPengembalianHistory();
+        resetPengembalianItems();
+        clearPengembalianForm();
+        clearPengembalianDraft();
+        renderPengembalianItems();
+        updatePengembalianPreview();
+      });
+      document.getElementById("pbgResetAllBtn").addEventListener("click", () => {
+        if (confirm("Hapus semua item?")) {
+          resetPengembalianItems();
+          clearPengembalianForm();
+          clearPengembalianDraft();
+          renderPengembalianItems();
+          updatePengembalianPreview();
+        }
+      });
+
+      // WD QRIS
+      restoreWdqrisDraft();
+      renderWdqrisHeader();
+      renderWdqrisRows();
+
+      document.querySelectorAll(".wdqris-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          setWdqrisMode(tab.dataset.mode);
+          saveWdqrisDraft();
+        });
+      });
+
+      const wdqrisInput = document.getElementById("wdqrisInput");
+      if (wdqrisInput) {
+        wdqrisInput.addEventListener("input", () => saveWdqrisDraft());
+      }
+
+      document.getElementById("wdqrisProcessBtn").addEventListener("click", () => {
+        processWdqris();
+      });
+
+      document.getElementById("wdqrisCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllWdqris();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("wdqrisClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearWdqris();
+        }
+      });
+
+      // Tarik WD
+      restoreTarikWdDraft();
+      renderTarikWdRows();
+
+      const tarikwdInput = document.getElementById("tarikwdInput");
+      if (tarikwdInput) {
+        tarikwdInput.addEventListener("input", () => saveTarikWdDraft());
+      }
+
+      document.getElementById("tarikwdProcessBtn").addEventListener("click", () => {
+        processTarikWd();
+      });
+
+      document.getElementById("tarikwdCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllTarikWd();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("tarikwdClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearTarikWd();
+        }
+      });
+
+      // Tarik WD PWR
+      restoreTarikWdPwrDraft();
+      renderTarikWdPwrRows();
+
+      const tarikwdpwrInput = document.getElementById("tarikwdpwrInput");
+      if (tarikwdpwrInput) {
+        tarikwdpwrInput.addEventListener("input", () => saveTarikWdPwrDraft());
+      }
+
+      document.getElementById("tarikwdpwrProcessBtn").addEventListener("click", () => {
+        processTarikWdPwr();
+      });
+
+      document.getElementById("tarikwdpwrCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllTarikWdPwr();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("tarikwdpwrClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearTarikWdPwr();
+        }
+      });
+
+      // Ubah Format WD
+      restoreUbahFormatWdDraft();
+      renderUbahFormatWdRows();
+
+      const ubahformatwdInput = document.getElementById("ubahformatwdInput");
+      if (ubahformatwdInput) {
+        ubahformatwdInput.addEventListener("input", () => saveUbahFormatWdDraft());
+      }
+
+      document.getElementById("ubahformatwdProcessBtn").addEventListener("click", () => {
+        processUbahFormatWd();
+      });
+
+      document.getElementById("ubahformatwdCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllUbahFormatWd();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("ubahformatwdClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearUbahFormatWd();
+        }
+      });
+
+    } catch (err) {
+      console.error(err);
+      document.body.innerHTML = `<div style="color:#fff;padding:40px;font-family:sans-serif;">Error: ${err.message}<br><br>Cek Console (F12).</div>`;
+    }
+  });
+</script>
 </body>
 </html>
