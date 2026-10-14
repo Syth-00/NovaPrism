@@ -48,6 +48,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4z"/><path d="M4 12h16v4H4z"/><path d="M4 20h16"/></svg>
         <span>Tarik WD PWR</span>
       </div>
+      <div class="nav-item" data-view="ubahformatwd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h16"/><circle cx="18" cy="12" r="2"/></svg>
+        <span>Ubah Format WD</span>
+      </div>
       <div class="nav-group">
         <div class="nav-group-header" data-group="reportan">
           <span>Reportan</span>
@@ -344,6 +348,43 @@
       </div>
     </div>
 
+    <!-- Ubah Format WD -->
+    <div class="view" id="view-ubahformatwd">
+      <div class="glass panel">
+        <div class="panel-head">
+          <div>
+            <h2>Ubah Format WD</h2>
+            <p>Ubah data WD dari doc → format: <strong>Jenis Bank, Nomor Rekening, Nama Rekening, Nominal</strong> (dipisah koma)</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ubahformatwdInput">Tempel data WD di sini</label>
+          <textarea id="ubahformatwdInput" rows="12" placeholder="Tempel data WD dari doc di sini...&#10;&#10;Contoh:&#10;2026-09-16 17:25:03	lunatogel	XPAY	&#10;Order : LNT-xxxx&#10;Bank : SEABANK&#10;Nama Rek : Riki&#10;No Rek : 901154404396&#10;setyarini	2.300.000	&#10;Validasi : Success"></textarea>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+          <button type="button" class="btn-primary" id="ubahformatwdProcessBtn" style="width:auto; padding:12px 24px;">Proses</button>
+          <button type="button" class="btn-ghost" id="ubahformatwdCopyAllBtn">Salin Semua</button>
+          <button type="button" class="btn-ghost" id="ubahformatwdClearBtn">Bersihkan</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:14px;">Hasil (<span id="ubahformatwdCount">0</span> baris)</strong>
+          <span style="font-size:11px; color:var(--text-muted);">Comma-separated — paste ke Docs/Excel</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table style="min-width:600px;">
+            <thead>
+              <tr><th>Jenis Bank</th><th>Nomor Rekening</th><th>Nama Rekening</th><th>Nominal</th><th></th></tr>
+            </thead>
+            <tbody id="ubahformatwdResultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Reportan Bank -->
     <div class="view" id="view-report">
       <div class="glass panel">
@@ -590,6 +631,9 @@
     processTarikWdPwr, clearTarikWdPwr, copyAllTarikWdPwr,
     restoreTarikWdPwrDraft, saveTarikWdPwrDraft, clearTarikWdPwrDraft,
     renderTarikWdPwrRows,
+    processUbahFormatWd, clearUbahFormatWd, copyAllUbahFormatWd,
+    restoreUbahFormatWdDraft, saveUbahFormatWdDraft, clearUbahFormatWdDraft,
+    renderUbahFormatWdRows,
     renderPengembalianItems, updatePengembalianPreview,
     getPengembalianFormFields, clearPengembalianForm,
     addPengembalianItem, resetPengembalianItems,
@@ -1014,6 +1058,30 @@
       document.getElementById("tarikwdpwrClearBtn").addEventListener("click", () => {
         if (confirm("Bersihkan input & hasil?")) {
           clearTarikWdPwr();
+        }
+      });
+
+      // Ubah Format WD
+      restoreUbahFormatWdDraft();
+      renderUbahFormatWdRows();
+
+      const ubahformatwdInput = document.getElementById("ubahformatwdInput");
+      if (ubahformatwdInput) {
+        ubahformatwdInput.addEventListener("input", () => saveUbahFormatWdDraft());
+      }
+
+      document.getElementById("ubahformatwdProcessBtn").addEventListener("click", () => {
+        processUbahFormatWd();
+      });
+
+      document.getElementById("ubahformatwdCopyAllBtn").addEventListener("click", async (e) => {
+        await copyAllUbahFormatWd();
+        flashButton(e.target, "Tersalin!");
+      });
+
+      document.getElementById("ubahformatwdClearBtn").addEventListener("click", () => {
+        if (confirm("Bersihkan input & hasil?")) {
+          clearUbahFormatWd();
         }
       });
 
