@@ -4,9 +4,10 @@
    + Master Account (username: syth)
    + Reportan (Bank / Kesalahan / Kasih / Salah Sorong / Salah Buang)
    + Pengembalian HP & Simcard
-   + WD QRIS (WD & Depo) — dengan prefix e-wallet
+   + WD QRIS (WD & Depo)
    + Tarik WD
    + Tarik WD PWR
+   + Ubah Format WD
    + Wallpaper Upload (Supabase Storage)
    ============================================ */
 
@@ -21,7 +22,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const SESSION_KEY = "novaprism_session";
 const BG_KEY = "novaprism_bg_image";
-const WALLPAPER_BUCKET = "Wallpaper";
+const WALLPAPER_BUCKET = "WALLPAPER";
 
 const DRAFT_KEYS = {
   report: "novaprism_draft_report",
@@ -32,6 +33,7 @@ const DRAFT_KEYS = {
   wdqris: "novaprism_draft_wdqris",
   tarikwd: "novaprism_draft_tarikwd",
   tarikwdpwr: "novaprism_draft_tarikwdpwr",
+  ubahformatwd: "novaprism_draft_ubahformatwd",
   pengembalianForm: "novaprism_draft_pbg_form",
   pengembalianItems: "novaprism_draft_pbg_items",
 };
@@ -50,6 +52,7 @@ const MENU_CONFIG = [
   { key: "wdqris", label: "WD QRIS" },
   { key: "tarikwd", label: "Tarik WD" },
   { key: "tarikwdpwr", label: "Tarik WD PWR" },
+  { key: "ubahformatwd", label: "Ubah Format WD" },
 ];
 
 // ============ DAFTAR USERNAME MASTER ============
@@ -186,7 +189,6 @@ async function uploadWallpaperFile(file) {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const fileName = `wallpaper_${Date.now()}.${ext}`;
 
-  // Hapus file lama (opsional)
   try {
     const { data: oldData } = await supabase
       .from("settings")
@@ -1042,15 +1044,6 @@ function parseTarikWdPwrInput(rawText) {
 }
 
 function buildPwrRow(cols) {
-  // Urutan kolom input:
-  // cols[0] = Member Code (ID player)        → heri56789
-  // cols[1] = Account No                     → 0895325131303
-  // cols[2] = Account Name                   → heri kuswanto
-  // cols[3] = Net Amount                     → 600,000.00
-  // cols[4] = Area Code                      → BCA_SUPRIYATNA_0541
-  // cols[5] = Bank Name                      → DANA2
-  // cols[6] = Member ID tambahan (diabaikan) → id_524472455
-
   const memberCode = (cols[0] || "").trim();
   const accountNo = (cols[1] || "").trim();
   const accountName = (cols[2] || "").trim();
@@ -1195,6 +1188,100 @@ function restoreTarikWdPwrDraft() {
   if (Array.isArray(data.rows)) _tarikwdpwrRows = data.rows;
 }
 function clearTarikWdPwrDraft() { clearDraft(DRAFT_KEYS.tarikwdpwr); }
+
+// ---------- UBAH FORMAT WD ----------
+let _ubahformatwdRows = [];
+
+// Parse input WD (sama seperti WD QRIS) → tapi hasilnya langsung dalam format:
+// jenis bank, nomor rekening, nama rekening, nominal (koma-separated)
+function parseUbahFormatWdInput(rawText) {
+  // Pakai parser yang sama dengan WD QRIS
+  const parsed = parseWdInput(rawText);
+  return parsed.map(r => ({
+    bank: r.bank || "",
+    nomor: r.noRek || "",
+    namaRek: r.namaRek || "",
+    nominal: r.nominal || "",
+  }));
+}
+
+function generateUbahFormatWdRowText(row) {
+  // Format: jenis bank, nomor rekening, nama rekening, nominal
+  return [row.bank, row.nomor, row.namaRek, row.nominal].join(",");
+}
+
+function renderUbahFormatWdRows() {
+  const container = document.getElementById("ubahformatwdResultBody");
+  const countEl = document.getElementById("ubahformatwdCount");
+  if (!container) return;
+  if (countEl) countEl.textContent = String(_ubahformatwdRows.length);
+
+  if (_ubahformatwdRows.length === 0) {
+    container.innerHTML = `<tr><td colspan="5"><div class="empty-state">Belum ada data. Tempel di atas, lalu klik "Proses".</div></td></tr>`;
+    return;
+  }
+
+  container.innerHTML = _ubahformatwdRows.map((r, i) => `
+    <tr>
+      <td>${r.bank || "—"}</td>
+      <td>${r.nomor || "—"}</td>
+      <td>${r.namaRek || "—"}</td>
+      <td>${r.nominal || "—"}</td>
+      <td><button type="button" class="btn-mini" data-copy-ufw="${i}">Salin</button></td>
+    </tr>
+  `).join("");
+
+  container.querySelectorAll("[data-copy-ufw]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const idx = Number(btn.dataset.copyUfw);
+      const row = _ubahformatwdRows[idx];
+      if (!row) return;
+      await copyText(generateUbahFormatWdRowText(row));
+      flashButton(e.target, "Tersalin!");
+    });
+  });
+}
+
+function processUbahFormatWd() {
+  const input = document.getElementById("ubahformatwdInput");
+  if (!input) return;
+  const raw = input.value;
+  if (!raw.trim()) { alert("Tempel dulu datanya."); return; }
+  _ubahformatwdRows = parseUbahFormatWdInput(raw);
+  renderUbahFormatWdRows();
+  saveUbahFormatWdDraft();
+}
+
+function clearUbahFormatWd() {
+  _ubahformatwdRows = [];
+  const input = document.getElementById("ubahformatwdInput");
+  if (input) input.value = "";
+  renderUbahFormatWdRows();
+  clearUbahFormatWdDraft();
+}
+
+async function copyAllUbahFormatWd() {
+  if (_ubahformatwdRows.length === 0) { alert("Belum ada data."); return; }
+  const lines = _ubahformatwdRows.map(r => generateUbahFormatWdRowText(r));
+  await copyText(lines.join("\n"));
+}
+
+function saveUbahFormatWdDraft() {
+  saveDraft(DRAFT_KEYS.ubahformatwd, {
+    input: (document.getElementById("ubahformatwdInput") || {}).value || "",
+    rows: _ubahformatwdRows,
+  });
+}
+function restoreUbahFormatWdDraft() {
+  const data = loadDraft(DRAFT_KEYS.ubahformatwd);
+  if (!data) return;
+  if (data.input) {
+    const input = document.getElementById("ubahformatwdInput");
+    if (input) input.value = data.input;
+  }
+  if (Array.isArray(data.rows)) _ubahformatwdRows = data.rows;
+}
+function clearUbahFormatWdDraft() { clearDraft(DRAFT_KEYS.ubahformatwd); }
 
 // ---------- Draft field list ----------
 const DRAFT_FIELDS = {
@@ -1463,7 +1550,6 @@ async function searchRekening(rawInput) {
     return;
   }
 
-  // Simpan hasil ke variable global biar bisa di-copy semua
   window._rekeningResults = matches.map(({ match }) => ({
     nama: match.nama || "",
     nomor: match.nomor || "",
@@ -1481,7 +1567,6 @@ async function searchRekening(rawInput) {
     </div>
   `).join("");
 
-  // Tombol "Salin Semua" muncul di atas hasil
   const existingCopyAll = document.getElementById("rekCopyAllBtn");
   if (existingCopyAll) existingCopyAll.remove();
   const copyAllBtn = document.createElement("button");
@@ -1499,7 +1584,6 @@ async function searchRekening(rawInput) {
   });
   resultList.parentElement.insertBefore(copyAllBtn, resultList);
 
-  // Handler tombol "Salin" per item
   resultList.querySelectorAll("[data-copy-rek]").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const raw = btn.dataset.copyRek || "";
@@ -1887,6 +1971,9 @@ export {
   processTarikWdPwr, clearTarikWdPwr, copyAllTarikWdPwr,
   restoreTarikWdPwrDraft, saveTarikWdPwrDraft, clearTarikWdPwrDraft,
   renderTarikWdPwrRows,
+  processUbahFormatWd, clearUbahFormatWd, copyAllUbahFormatWd,
+  restoreUbahFormatWdDraft, saveUbahFormatWdDraft, clearUbahFormatWdDraft,
+  renderUbahFormatWdRows,
   renderPengembalianItems, updatePengembalianPreview,
   getPengembalianFormFields, clearPengembalianForm,
   addPengembalianItem, resetPengembalianItems,
