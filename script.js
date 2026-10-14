@@ -1192,21 +1192,54 @@ function clearTarikWdPwrDraft() { clearDraft(DRAFT_KEYS.tarikwdpwr); }
 // ---------- UBAH FORMAT WD ----------
 let _ubahformatwdRows = [];
 
-// Parse input WD (sama seperti WD QRIS) → tapi hasilnya langsung dalam format:
-// jenis bank, nomor rekening, nama rekening, nominal (koma-separated)
+// Format input (5 kolom, TAB-separated):
+// BANK | No Rek | ID | Nama Rek | Nominal
+// Output: BANK, NoRek, NamaRek, Nominal (koma)
+// Kolom ID dibuang.
 function parseUbahFormatWdInput(rawText) {
-  // Pakai parser yang sama dengan WD QRIS
-  const parsed = parseWdInput(rawText);
-  return parsed.map(r => ({
-    bank: r.bank || "",
-    nomor: r.noRek || "",
-    namaRek: r.namaRek || "",
-    nominal: r.nominal || "",
-  }));
+  const rows = [];
+  const text = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = text
+    .split("\n")
+    .map(l => l.replace(/[\uFEFF\u200B\u00A0]/g, "").replace(/\s+$/, ""))
+    .filter(l => l.trim().length > 0);
+
+  for (const line of lines) {
+    // Coba split per TAB dulu
+    let cols = line.split("\t").map(c => c.trim()).filter((c, i, arr) => {
+      // Buang kolom kosong di tengah kalau perlu, tapi jaga posisi
+      return true;
+    });
+
+    // Kalau cuma dapat 1 kolom, coba split 2+ spasi
+    if (cols.length < 4) {
+      const cols2 = line.split(/\s{2,}/).map(c => c.trim()).filter(Boolean);
+      if (cols2.length >= 4) cols = cols2;
+    }
+
+    // Kalau masih kurang, coba split 1+ spasi (tapi hati-hati nama ada spasi)
+    if (cols.length < 4) {
+      const cols3 = line.split(/\s+/).map(c => c.trim()).filter(Boolean);
+      if (cols3.length >= 4) cols = cols3;
+    }
+
+    if (cols.length < 4) continue;
+
+    // Format: cols[0]=BANK, cols[1]=NoRek, cols[2]=ID, cols[3]=NamaRek, cols[4]=Nominal
+    const bank = (cols[0] || "").trim().toUpperCase();
+    const nomor = (cols[1] || "").trim();
+    // cols[2] = ID → DIBUANG
+    const namaRek = (cols[3] || "").trim();
+    const nominal = normalizeNominal((cols[4] || "").replace(/\.00$/, ""));
+
+    rows.push({ bank, nomor, namaRek, nominal });
+  }
+
+  return rows;
 }
 
 function generateUbahFormatWdRowText(row) {
-  // Format: jenis bank, nomor rekening, nama rekening, nominal
+  // Format output: jenis bank, nomor rekening, nama rekening, nominal (dipisah KOMA)
   return [row.bank, row.nomor, row.namaRek, row.nominal].join(",");
 }
 
